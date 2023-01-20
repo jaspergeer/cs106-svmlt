@@ -24,11 +24,33 @@
 #include "vmheap.h"
 #include "vmstring.h"
 
-void vmrun(VMState vm, struct VMFunction *fun) {
-  (void) vm;
-  (void) fun;
 
-  // Run code from `fun` until it executes a Halt instruction.
-  // Then return.
+void vmrun(VMState vm, struct VMFunction *fun) {
+    (void) vm;
+    (void) fun;
+    vm->code = fun->instructions;
+    vm->pc = vm->code;
+
+    while (1) {
+        uint32_t curr_inst = *(vm->pc);
+        switch(opcode(*(vm->pc))) {
+            default:
+                printf("opcode %d not implemented\n", opcode(curr_inst));
+                break;
+            case Print:
+                print("%v\n", vm->registers[uX(curr_inst)]);
+                break;
+            case Check:
+                // check(vm, uX(curr_inst), uYZ(curr_inst));
+                break;
+            case Expect:
+                // expect(vm, uX(curr_inst), uYZ(curr_inst));
+                break;
+            case Halt:
+                return; // and more stuff
+        }
+        ++vm->pc;
+    }
+
   return;
 }

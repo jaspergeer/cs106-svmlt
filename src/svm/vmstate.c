@@ -13,16 +13,18 @@
 #include "vmstate.h"
 #include "value.h"
 
-void freestatep(VMState *sp) {
-    assert(sp && *sp);
-    VMState vm = *sp;
-    (void)vm; // suppress compiler warnings
-    assert(0); // must free all memory associated with `vm`
+VMState newstate(void) {
+    VMState state = malloc(sizeof(struct VMState));
+    state->code = NULL;
+    state->pc = NULL;
+    return state;
 }
 
-VMState newstate(void) {
-    // allocate, initialize, and return a new state
-    assert(0);
+void freestatep(VMState *sp) {
+    // when free the address of sp, 
+    // it overwritten with NULL and will not be reused
+    // see Hanson's book
+    free(*sp); // what's the difference between free(sp), free(&sp), free(*sp)?
 }
 
 int literal_slot(VMState state, Value literal) {
@@ -44,10 +46,5 @@ Value literal_value(VMState state, unsigned index) {
 
 int literal_count(VMState state) {
   (void) state; // replace with real code
-  assert(0);
-}
-
-const char *global_name(VMState state, unsigned index) {
-  (void) state; (void) index; // replace with real code
   assert(0);
 }

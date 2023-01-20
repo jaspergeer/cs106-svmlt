@@ -8,29 +8,37 @@
 #define VMSTATE_INCLUDED
 
 #include <stdint.h>
+
 #include "value.h"
+
+#define LITERAL_POOL_SIZE 128
+#define GLOBAL_VARS_SIZE 128
 
 typedef struct VMState *VMState;
 
-// ... define the struct type here ...
+struct VMState {
+    // registers
+    Value *registers[256];
+
+    // literal pool
+    Value literals[LITERAL_POOL_SIZE];
+
+    // global variable table
+    Value *globals[GLOBAL_VARS_SIZE];
+ 
+    // instruction stream
+    uint32_t *code;
+
+    // program counter
+    uint32_t *pc;
+};
 
 VMState newstate(void);       // allocate and initialize (to empty)
-void freestatep(VMState *sp); // deallocate
-
-
-// The remaining functions won't be needed until module 2, but 
-// they are worth thinking about now---and possibly writing.
+void freestatep(VMState *sp);  // deallocate
 
 int literal_slot(VMState state, Value literal);
-  // return any index of literal in `literals`, adding if needed
-
-int global_slot(VMState state, Value name);
-  // return the unique index of `name` in `globals`, adding if needed.
-  // The `name` parameter must be a VM string or the result is
-  // a checked run-time error.
-
-
-// The last three functions are used only for disassembly.
+  // return index of literal in `literals`, adding if needed
+  // (at need, can be postponed to module 2)
 
 Value literal_value(VMState state, unsigned index);
   // Return the value at the given index. *Not* intended 
@@ -40,8 +48,5 @@ Value literal_value(VMState state, unsigned index);
 int literal_count(VMState state);
   // Returns N, the number of index values for which it
   // is ok to call `literal_value` (range 0 to N-1)
-
-const char *global_name(VMState state, unsigned index);
-  // Return the name of the global at the given index.
 
 #endif /* VMSTATE_INCLUDED */
