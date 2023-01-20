@@ -17,6 +17,12 @@ VMState newstate(void) {
     VMState state = malloc(sizeof(struct VMState));
     state->code = NULL;
     state->pc = NULL;
+    state->free_indices = IQ_create(LITERAL_POOL_SIZE);
+    for (int i = 0; i < LITERAL_POOL_SIZE; ++i)
+        IQ_enqueue(state->free_indices, i);
+    for (int i = 0; i < NUM_REGISTERS; ++i) {
+        state->registers[i] = &nilValue;
+    }
     return state;
 }
 
@@ -24,17 +30,14 @@ void freestatep(VMState *sp) {
     // when free the address of sp, 
     // it overwritten with NULL and will not be reused
     // see Hanson's book
-    free(*sp); // what's the difference between free(sp), free(&sp), free(*sp)?
+    IQ_free(&(*sp)->free_indices);
+    free(*sp);
 }
 
 int literal_slot(VMState state, Value literal) {
-    (void)state; // suppress compiler warnings
-    (void)literal;
-    // Return a slot containing the literal, updating literal pool if needed.
-    // For module 1, you can get away with putting the literal in slot 0
-    // and returning 0.  For module 2, you'll need something slightly
-    // more sophisticated.
-    assert(0);
+    int index = IQ_dequeue(state->free_indices);
+    state->literals[index] = literal;
+    return index;
 }
 
 // these are for module 2 and beyond

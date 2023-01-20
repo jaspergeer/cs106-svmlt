@@ -1,4 +1,5 @@
 #include "intqueue.h"
+#include <stdlib.h>
 
 void IQ_enqueue(IntQueue q, int val) {
     ++q->back;
@@ -11,8 +12,8 @@ void IQ_enqueue(IntQueue q, int val) {
 }
 
 int IQ_dequeue(IntQueue q) {
-    int val = q->front;
-    
+    int val = *q->front;
+
     ++q->front;
     if (q->front >= q->arr + q->size)
         q->front = q->arr;

@@ -35,7 +35,7 @@ void vmrun(VMState vm, struct VMFunction *fun) {
         uint32_t curr_inst = *(vm->pc);
         switch(opcode(*(vm->pc))) {
             default:
-                printf("opcode %d not implemented\n", opcode(curr_inst));
+                print("opcode %d not implemented\n", opcode(curr_inst));
                 break;
             case Print:
                 print("%v\n", vm->registers[uX(curr_inst)]);
