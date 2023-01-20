@@ -17,6 +17,10 @@ VMState newstate(void) {
     VMState state = malloc(sizeof(struct VMState));
     state->code = NULL;
     state->pc = NULL;
+    state->literals_count = 0;
+    for (int i = 0; i < NUM_REGISTERS; i++) {
+        state->registers[i] = &nilValue;
+    }
     return state;
 }
 
@@ -34,7 +38,9 @@ int literal_slot(VMState state, Value literal) {
     // For module 1, you can get away with putting the literal in slot 0
     // and returning 0.  For module 2, you'll need something slightly
     // more sophisticated.
-    assert(0);
+    state->literals[state->literals_count] = literal;
+    return state->literals_count++;
+
 }
 
 // these are for module 2 and beyond

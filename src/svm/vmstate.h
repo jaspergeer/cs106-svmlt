@@ -13,15 +13,17 @@
 
 #define LITERAL_POOL_SIZE 128
 #define GLOBAL_VARS_SIZE 128
+#define NUM_REGISTERS 256
 
 typedef struct VMState *VMState;
 
 struct VMState {
     // registers
-    Value *registers[256];
+    Value *registers[NUM_REGISTERS];
 
     // literal pool
     Value literals[LITERAL_POOL_SIZE];
+    int literals_count;
 
     // global variable table
     Value *globals[GLOBAL_VARS_SIZE];
