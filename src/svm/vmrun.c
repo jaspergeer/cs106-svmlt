@@ -41,10 +41,10 @@ void vmrun(VMState vm, struct VMFunction *fun) {
                 print("%v\n", vm->registers[uX(curr_inst)]);
                 break;
             case Check:
-                // check(vm, uX(curr_inst), uYZ(curr_inst));
+                check(vm, AS_CSTRING(vm, vm->literals[uYZ(curr_inst)]), *(vm->registers[uX(curr_inst)]));
                 break;
             case Expect:
-                // expect(vm, uX(curr_inst), uYZ(curr_inst));
+                expect(vm, AS_CSTRING(vm, vm->literals[uYZ(curr_inst)]), *(vm->registers[uX(curr_inst)]));
                 break;
             case Halt:
                 return; // and more stuff
