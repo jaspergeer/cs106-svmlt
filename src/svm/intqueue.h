@@ -1,13 +1,6 @@
 #ifndef INTQUEUE_H
 #define INTQUEUE_H
 
-// typedef struct IQNode* IQNode;
-
-// typedef struct IQNode {
-//     int val;
-//     struct IQNode *next;
-// } *IQNode;
-
 typedef struct IntQueue* IntQueue;
 
 struct IntQueue {
