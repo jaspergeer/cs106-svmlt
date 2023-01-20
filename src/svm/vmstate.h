@@ -14,7 +14,7 @@
 #define LITERAL_POOL_SIZE 128
 #define GLOBAL_VARS_SIZE 128
 
-typedef struct VMState *VMState;
+typedef struct VMState* VMState;
 
 struct VMState {
     // registers
