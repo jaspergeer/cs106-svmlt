@@ -42,17 +42,17 @@ void vmrun(VMState vm, struct VMFunction *fun) {
                 print("opcode %d not implemented\n", opcode(curr_inst));
                 break;
             case Halt:
-                return; // and more stuff
+                return;
             case Print:
                 print("%v\n", *(vm->registers[uX(curr_inst)]));
                 break;
             case Check:
                 check(vm, AS_CSTRING(vm, vm->literals[uYZ(curr_inst)]), 
-                          *(vm->registers[uX(curr_inst)]));
+                                         *(vm->registers[uX(curr_inst)]));
                 break;
             case Expect:
                 expect(vm, AS_CSTRING(vm, vm->literals[uYZ(curr_inst)]),
-                           *(vm->registers[uX(curr_inst)]));
+                                          *(vm->registers[uX(curr_inst)]));
                 break;
             case Add:
                 // add the value in uY and uZ and put it in uX
@@ -60,6 +60,17 @@ void vmrun(VMState vm, struct VMFunction *fun) {
                 *(vm->registers[uX(curr_inst)]) =
                     add(vm, *(vm->registers[uY(curr_inst)]), 
                             *(vm->registers[uZ(curr_inst)]));
+                break;
+            case SetZero:
+                // set the value in uX to 0
+                *(vm->registers[uX(curr_inst)]) = mkNumberValue(0);
+                break;
+            case Cast2Bool:
+                // examines the Value in uX and make it a boolean Value
+                // only cast int to bool, and 0 is false, others are true
+                *(vm->registers[uX(curr_inst)]) =
+                    mkBooleanValue(AS_BOOLEAN(vm, 
+                                              *(vm->registers[uX(curr_inst)])));
                 break;
             case Not:
                 // need to implement our own ASBOOLEAN projection function
