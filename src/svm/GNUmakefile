@@ -4,7 +4,7 @@ BUILD = $(TOP)/build
 BIN = $(TOP)/bin
 
 UNITS = testfuns vmheap vmrun vmstate vmrun vmstring value iformat \
-        printbuf print check-expect testfuns vmerror intqueue
+        printbuf print check-expect testfuns vmerror
 MAINS = svm-test
 
 
