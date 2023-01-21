@@ -76,8 +76,9 @@ void vmrun(VMState vm, struct VMFunction *fun) {
                 // need to implement our own ASBOOLEAN projection function
                 /* intersting that copilot generates ASBOOLEAN in this case
                    without ASBOOLEAN being defined */
-                // *(vm->registers[uX(curr_inst)]) =
-                //     mkBooleanValue(!(*(vm->registers[uY(curr_inst)])));
+                // cast the value in uX to boolean, and negate it
+                *(vm->registers[uX(curr_inst)]) =
+                    mkBooleanValue(!AS_BOOLEAN(vm, *(vm->registers[uX(curr_inst)])));
                 break;
         }
         ++vm->pc;
