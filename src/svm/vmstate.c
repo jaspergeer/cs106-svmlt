@@ -18,9 +18,9 @@ VMState newstate(void) {
     state->code = NULL;
     state->pc = NULL;
     state->literals_count = 0;
-    for (int i = 0; i < NUM_REGISTERS; i++) {
-        state->registers[i] = &nilValue;
-    }
+    // for (int i = 0; i < NUM_REGISTERS; i++) {
+    //     state->registers[i] = &nilValue;
+    // }
     return state;
 }
 
