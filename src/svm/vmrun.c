@@ -66,11 +66,8 @@ void vmrun(VMState vm, struct VMFunction *fun) {
                 vm->registers[uX(curr_inst)] = mkNumberValue(0);
                 break;
             case AsBool:
-                // examines the Value in uX and make it a boolean Value
-                // only cast int to bool, and 0 is false, others are true
-                vm->registers[uX(curr_inst)] =
-                    mkBooleanValue(AS_BOOLEAN(vm, 
-                                              vm->registers[uX(curr_inst)]));
+                // put the truthiness of the value in uY in uX
+                assert(0); // TODO
                 break;
             case Not:
                 // need to implement our own ASBOOLEAN projection function
@@ -81,7 +78,7 @@ void vmrun(VMState vm, struct VMFunction *fun) {
                     mkBooleanValue(!AS_BOOLEAN(vm, vm->registers[uX(curr_inst)]));
                 break;
         }
-        ++vm->pc;
+        ++vm->pc; // advance the program counter
     }
 
   return;
