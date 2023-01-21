@@ -25,10 +25,36 @@
 #include "vmstring.h"
 
 void vmrun(VMState vm, struct VMFunction *fun) {
-  (void) vm;
-  (void) fun;
-
+  // (void) vm;
+  // (void) fun;
+  // set up the instruction stream
+  vm -> code = fun -> instructions;
+  vm -> pc = vm -> code;
   // Run code from `fun` until it executes a Halt instruction.
   // Then return.
+  while(1) {
+    // get the current instruction
+    uint32_t curr_inst = *(vm -> pc);
+    switch(opcode(curr_inst)) {
+      case Unimp:
+        printf("opcode %d not implemented yet\n", opcode(curr_inst));
+        break;
+      case Halt:
+        return;
+      case Print:
+        print("%v\n", uX(curr_inst));
+        break;
+      case Check:
+        // check(vm, literal index in the YZ field, a register number in the X field)
+        check(vm, AS_CSTRING(vm, vm -> literals[uYZ(curr_inst)]), 
+                  vm -> registers[uX(curr_inst)]);
+        break;
+      case Expect:
+        expect(vm, AS_CSTRING(vm, vm -> literals[uYZ(curr_inst)]), 
+                  vm -> registers[uX(curr_inst)]);
+        break;
+    }
+    ++ vm -> pc;
+  }
   return;
 }

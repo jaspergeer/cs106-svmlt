@@ -9,10 +9,21 @@
 
 #include <stdint.h>
 #include "value.h"
+#include "vtable.h"
+
+#define LITERAL_INIT_LENGTH 128
 
 typedef struct VMState *VMState;
 
-// ... define the struct type here ...
+struct VMState {
+  Value *registers;
+  Value *literals;
+  uint32_t curLiteralSize;
+  uint32_t maxLiteralSize;
+  uint32_t *pc;
+  uint32_t *code;
+  VTable_T table;
+};
 
 VMState newstate(void);       // allocate and initialize (to empty)
 void freestatep(VMState *sp); // deallocate
