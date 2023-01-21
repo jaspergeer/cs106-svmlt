@@ -28,7 +28,6 @@ void freestatep(VMState *sp) {
     // when free the address of sp, 
     // it overwritten with NULL and will not be reused
     // see Hanson's book
-    IQ_free(&(*sp)->free_indices);
     free(*sp);
 }
 
