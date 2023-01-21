@@ -38,7 +38,7 @@ void vmrun(VMState vm, struct VMFunction *fun) {
                 print("opcode %d not implemented\n", opcode(curr_inst));
                 break;
             case Print:
-                print("%v\n", vm->registers[uX(curr_inst)]);
+                print("%v\n", *(vm->registers[uX(curr_inst)]));
                 break;
             case Check:
                 check(vm, AS_CSTRING(vm, vm->literals[uYZ(curr_inst)]), 
