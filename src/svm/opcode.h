@@ -12,6 +12,10 @@ typedef enum opcode {
                       Halt, // R0
                       Print, // R1
                       Check, Expect, // R1LIT
+                      Add,
+                      SetZero,
+                      Cast2Bool,
+                      Not,
                       Unimp, // stand-in for opcodes not yet implemented
 } Opcode;
 

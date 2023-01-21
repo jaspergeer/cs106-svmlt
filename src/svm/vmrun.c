@@ -24,6 +24,10 @@
 #include "vmheap.h"
 #include "vmstring.h"
 
+static inline Value add(VMState vm, Value a, Value b) {
+    return mkNumberValue(AS_NUMBER(vm, a) + AS_NUMBER(vm, b));
+}
+
 
 void vmrun(VMState vm, struct VMFunction *fun) {
     (void) vm;
@@ -37,18 +41,45 @@ void vmrun(VMState vm, struct VMFunction *fun) {
             default:
                 print("opcode %d not implemented\n", opcode(curr_inst));
                 break;
+            case Halt:
+                return;
             case Print:
-                print("%v\n", vm->registers[uX(curr_inst)]);
+                print("%v\n", *(vm->registers[uX(curr_inst)]));
                 break;
             case Check:
                 check(vm, AS_CSTRING(vm, vm->literals[uYZ(curr_inst)]), 
-                          vm->registers[uX(curr_inst)]);
+                                         *(vm->registers[uX(curr_inst)]));
                 break;
             case Expect:
-                expect(vm, AS_CSTRING(vm, vm->literals[uYZ(curr_inst)]), vm->registers[uX(curr_inst)]);
+                expect(vm, AS_CSTRING(vm, vm->literals[uYZ(curr_inst)]),
+                                          *(vm->registers[uX(curr_inst)]));
                 break;
-            case Halt:
-                return; // and more stuff
+            case Add:
+                // add the value in uY and uZ and put it in uX
+                // project t
+                *(vm->registers[uX(curr_inst)]) =
+                    add(vm, *(vm->registers[uY(curr_inst)]), 
+                            *(vm->registers[uZ(curr_inst)]));
+                break;
+            case SetZero:
+                // set the value in uX to 0
+                *(vm->registers[uX(curr_inst)]) = mkNumberValue(0);
+                break;
+            case Cast2Bool:
+                // examines the Value in uX and make it a boolean Value
+                // only cast int to bool, and 0 is false, others are true
+                *(vm->registers[uX(curr_inst)]) =
+                    mkBooleanValue(AS_BOOLEAN(vm, 
+                                              *(vm->registers[uX(curr_inst)])));
+                break;
+            case Not:
+                // need to implement our own ASBOOLEAN projection function
+                /* intersting that copilot generates ASBOOLEAN in this case
+                   without ASBOOLEAN being defined */
+                // cast the value in uX to boolean, and negate it
+                *(vm->registers[uX(curr_inst)]) =
+                    mkBooleanValue(!AS_BOOLEAN(vm, *(vm->registers[uX(curr_inst)])));
+                break;
         }
         ++vm->pc;
     }

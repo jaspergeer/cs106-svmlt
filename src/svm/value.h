@@ -95,6 +95,8 @@ static inline struct VMFunction *asVMFunction_
                                           (VMState, Value, const char *file, int line);
 static inline struct VMString *asVMString_(VMState, Value, const char *file, int line);
 
+static inline bool asBoolean (VMState, Value, const char *file, int line);
+
 #define AS_BLOCK(VM, V)      asBlock_     ((VM), (V), __FILE__, __LINE__)
 #define AS_CONS_CELL(VM, V)  asCons_      ((VM), (V), __FILE__, __LINE__)
 #define AS_CSTRING(VM, V)    asCString_   ((VM), (V), __FILE__, __LINE__)
@@ -103,6 +105,7 @@ static inline struct VMString *asVMString_(VMState, Value, const char *file, int
 #define AS_VMFUNCTION(VM, V) asVMFunction_((VM), (V), __FILE__, __LINE__)
 #define AS_VMSTRING(VM, V)   asVMString_  ((VM), (V), __FILE__, __LINE__)
 
+#define AS_BOOLEAN(VM, V)    asBoolean    ((VM), (V), __FILE__, __LINE__)
 
 // additional observers for values
 
@@ -205,6 +208,18 @@ static inline struct VMString *asVMString_(VMState vm, Value v, const char *file
   if (v.tag != String)
     typeerror(vm, "a string", v, file, line);
   return GCVALIDATE(v.s);
+}
+
+static inline bool asBoolean(VMState vm, Value v, const char *file, int line) {
+  if (v.tag == Boolean)
+      return v.b;
+  if (v.tag == Number) {
+      if (v.n == 0)
+          return false;
+      else
+          return true;
+  }
+  typeerror(vm, "only number can be casted", v, file, line);
 }
 
 ////////////////////////////////////////////////////////////////
