@@ -24,7 +24,7 @@ struct VMState {
 
     // literal pool
     Value literals[LITERAL_POOL_SIZE];
-    IntQueue free_indices;
+    int literals_count;
 
     // global variable table
     Value *globals[GLOBAL_VARS_SIZE];
