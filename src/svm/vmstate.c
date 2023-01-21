@@ -28,7 +28,8 @@ void freestatep(VMState *sp) {
     // when free the address of sp, 
     // it overwritten with NULL and will not be reused
     // see Hanson's book
-    free(*sp); // what's the difference between free(sp), free(&sp), free(*sp)?
+    IQ_free(&(*sp)->free_indices);
+    free(*sp);
 }
 
 int literal_slot(VMState state, Value literal) {
@@ -40,7 +41,6 @@ int literal_slot(VMState state, Value literal) {
     // more sophisticated.
     state->literals[state->literals_count] = literal;
     return state->literals_count++;
-
 }
 
 // these are for module 2 and beyond

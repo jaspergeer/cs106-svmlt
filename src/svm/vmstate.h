@@ -10,12 +10,13 @@
 #include <stdint.h>
 
 #include "value.h"
+#include "intqueue.h"
 
 #define LITERAL_POOL_SIZE 128
 #define GLOBAL_VARS_SIZE 128
 #define NUM_REGISTERS 256
 
-typedef struct VMState *VMState;
+typedef struct VMState* VMState;
 
 struct VMState {
     // registers
