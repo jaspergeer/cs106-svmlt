@@ -14,9 +14,10 @@ typedef enum opcode {
                       Check, Expect, // R1LIT
                       Add,
                       SetZero,
-                      AsBool,
+                      GetTruth,
                       Not,
                       Unimp, // stand-in for opcodes not yet implemented
+                      LoadLiteral, // R1U16
 } Opcode;
 
 #endif

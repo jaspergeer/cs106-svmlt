@@ -2,31 +2,33 @@ CS 106 Homework Submission
 
 What person or group is submitting this homework?
 
-  - 
+  - Jasper Geer, Alexander Bai, Weishi Ding
 
 Not counting code that was distributed to everyone, what code was
 contributed by other persons or groups?  Who were the contributors?
 
-  - 
+  - All code were written by the group
 
 What work are you proud of?
 
-  - 
+  - merging register and store (for efficiency and shorter code)
 
 What code would you like help improving?  Are there bugs you'd like
 help finding during code review?
 
-  - 
+  - The caching in vmrun, and how to actually reason with them.
 
 What code, if any, would you especially like the course staff to
 review?  Why?
 
-  -
+  - No for now
 
 For the first module, the instructor will present at a plenary code
 review.
 
   - In your group, who is willing to serve on the review panel?
+
+  
 
   - What would you like the instructor to present at the code review?
     (Ideally, choose some distributed code that you don't understand

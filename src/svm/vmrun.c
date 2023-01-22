@@ -23,6 +23,7 @@
 #include "vmerror.h"
 #include "vmheap.h"
 #include "vmstring.h"
+#include "string.h"
 
 static inline Value add(VMState vm, Value a, Value b) {
     return mkNumberValue(AS_NUMBER(vm, a) + AS_NUMBER(vm, b));
@@ -30,49 +31,58 @@ static inline Value add(VMState vm, Value a, Value b) {
 
 
 void vmrun(VMState vm, struct VMFunction *fun) {
-    vm->code = fun->instructions;
-    vm->pc = vm->code;
+    // instructon stream not used now
+    // load state into stack
+    // do we want to cache registers?
+    // Value registers[NUM_REGISTERS];
+    // memcpy(registers, vm->registers, NUM_REGISTERS * sizeof(Value));
+    uint32_t *pc = fun->instructions;
+    Value *registers = vm->registers;  // reduces one level of indirection
+    Value *literals = vm->literals;
+    // Value *globals = vm->globals;
 
     while (1) {
-        uint32_t curr_inst = *(vm->pc);
+        uint32_t curr_inst = *pc;
         switch(opcode(curr_inst)) {
             default:
                 print("opcode %d not implemented\n", opcode(curr_inst));
                 break;
             case Halt:
+                vm->pc = pc;
+                vm->code = fun->instructions;
                 return;
             case Print:
                 print("%v\n", vm->registers[uX(curr_inst)]);
                 break;
             case Check:
-                check(vm, AS_CSTRING(vm, vm->literals[uYZ(curr_inst)]), 
-                                         vm->registers[uX(curr_inst)]);
+                check(vm, AS_CSTRING(vm, literals[uYZ(curr_inst)]), 
+                                         registers[uX(curr_inst)]);
                 break;
             case Expect:
-                expect(vm, AS_CSTRING(vm, vm->literals[uYZ(curr_inst)]),
-                                          vm->registers[uX(curr_inst)]);
+                expect(vm, AS_CSTRING(vm, literals[uYZ(curr_inst)]),
+                                          registers[uX(curr_inst)]);
                 break;
             case Add:
                 // add the value in uY and uZ and put it in uX
                 // project t
-                vm->registers[uX(curr_inst)] =
-                    add(vm, vm->registers[uY(curr_inst)], 
-                            vm->registers[uZ(curr_inst)]);
+                registers[uX(curr_inst)] =
+                    add(vm, registers[uY(curr_inst)], 
+                            registers[uZ(curr_inst)]);
                 break;
             case SetZero:
                 // set the value in uX to 0
-                vm->registers[uX(curr_inst)] = mkNumberValue(0);
+                registers[uX(curr_inst)] = mkNumberValue(0);
                 break;
-            case AsBool:
+            case GetTruth:
                 // put the truthiness of the value in uY in uX
-                assert(0); // TODO
+                registers[ux(curr_inst)] = mkBooleanValue(GET_TRUTH(vm, registers[uY(curr_inst)]));
                 break;
             case Not:
-                vm->registers[uX(curr_inst)] =
-                    mkBooleanValue(!AS_BOOLEAN(vm, vm->registers[uY(curr_inst)]));
+                registers[uX(curr_inst)] =
+                    mkBooleanValue(!AS_BOOLEAN(vm, registers[uY(curr_inst)]));
                 break;
         }
-        ++vm->pc; // advance the program counter
+        ++pc; // advance the program counter
     }
 
   return;

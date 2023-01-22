@@ -26,7 +26,7 @@ struct VMState {
     int literals_count;
 
     // global variable table
-    Value *globals[GLOBAL_VARS_SIZE];
+    Value globals[GLOBAL_VARS_SIZE];
  
     // instruction stream
     uint32_t *code;
