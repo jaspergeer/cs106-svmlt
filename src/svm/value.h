@@ -104,8 +104,7 @@ static inline bool asBoolean (VMState, Value, const char *file, int line);
 #define AS_CLOSURE(VM, V)    asClosure_   ((VM), (V), __FILE__, __LINE__)
 #define AS_VMFUNCTION(VM, V) asVMFunction_((VM), (V), __FILE__, __LINE__)
 #define AS_VMSTRING(VM, V)   asVMString_  ((VM), (V), __FILE__, __LINE__)
-
-#define AS_BOOLEAN(VM, V)    asBoolean    ((VM), (V), __FILE__, __LINE__)
+#define AS_BOOLEAN(VM, V)    asBoolean_    ((VM), (V), __FILE__, __LINE__)
 
 // additional observers for values
 
@@ -209,17 +208,10 @@ static inline struct VMString *asVMString_(VMState vm, Value v, const char *file
     typeerror(vm, "a string", v, file, line);
   return GCVALIDATE(v.s);
 }
-
-static inline bool asBoolean(VMState vm, Value v, const char *file, int line) {
-  if (v.tag == Boolean)
-      return v.b;
-  if (v.tag == Number) {
-      if (v.n == 0)
-          return false;
-      else
-          return true;
-  }
-  typeerror(vm, "only number can be casted", v, file, line);
+static inline bool asBoolean_(VMState vm, Value v, const char *file, int line) {
+  if (v.tag != Boolean)
+    typeerror(vm, "only number can be casted", v, file, line);
+  return v.b;
 }
 
 ////////////////////////////////////////////////////////////////
