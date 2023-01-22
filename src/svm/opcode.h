@@ -12,13 +12,18 @@ typedef enum opcode {
                       Halt, // R0
                       Print, // R1
                       Check, Expect, // R1LIT
+                      Add,
+                      SetZero,
+                      GetTruth,
+                      Not,
                       Unimp, // stand-in for opcodes not yet implemented
                       Add, // R3
                       Sub, // R3
-                      Multiply, // R3 
+                      Mul, // R3 
                       Div, // R3
-                      AND, // R3
-                      OR, // R3
+                      And, // R3
+                      Or, // R3
+                      LoadLiteral, // R1U16
 } Opcode;
 
 #endif
