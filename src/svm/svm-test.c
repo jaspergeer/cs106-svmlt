@@ -32,6 +32,7 @@ int main(int argc, char **argv) {
     vmrun(vm, print0fun());
     fprintf(stderr, "Test: check $r0, ...; expect $r0, ...; halt\n");
     vmrun(vm, ce0fun(vm));
+    //fprintf(stderr, "Test: add $r1 $r2 expect $r0 = $r1 + $r2; halt\n");
     report_unit_tests();
 
     freestatep(&vm);

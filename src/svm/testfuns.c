@@ -43,3 +43,8 @@ struct VMFunction *ce0fun(VMState vm) {
   return fun;
 }
 
+struct VMFunction *add12fun(void) {
+  struct VMFunction *fun = newfunction(1);
+  fun -> instructions[0] = eR3(Add,0,1,2);
+  return fun;
+}

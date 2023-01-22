@@ -5,6 +5,7 @@
 // instructions.  You'll add other instructions as needed in future modules.
 
 #define _POSIX_C_SOURCE 200809L
+#define DENOMINATOR 4294967296
 
 #include <assert.h>
 #include <math.h>
@@ -53,6 +54,36 @@ void vmrun(VMState vm, struct VMFunction *fun) {
         expect(vm, AS_CSTRING(vm, vm -> literals[uYZ(curr_inst)]), 
                   vm -> registers[uX(curr_inst)]);
         break;
+      case Add:
+        (vm -> registers [uX(curr_inst)]).n =
+          ((vm -> registers[uY(curr_inst)]).n 
+            + (vm -> registers[uZ(curr_inst)]).n) ;
+        break;
+      case Sub:
+        (vm -> registers [uX(curr_inst)]).n =
+          ((vm -> registers[uY(curr_inst)]).n 
+            - (vm -> registers[uZ(curr_inst)]).n) ;
+        break;
+      case Multiply:
+        (vm -> registers [uX(curr_inst)]).n =
+          ((vm -> registers[uY(curr_inst)]).n 
+            * (vm -> registers[uZ(curr_inst)]).n) ;
+        break;
+      case Div:
+        (vm -> registers [uX(curr_inst)]).n =
+         ((vm -> registers[uY(curr_inst)]).n 
+            / (vm -> registers[uZ(curr_inst)]).n);
+        break;
+      case AND:
+        (vm -> registers [uX(curr_inst)]).b =
+          (vm -> registers[uY(curr_inst)]).b 
+            && (vm -> registers[uZ(curr_inst)]).b;
+        break;
+      case OR:
+        (vm -> registers [uX(curr_inst)]).b =
+          (vm -> registers[uY(curr_inst)]).b 
+            || (vm -> registers[uZ(curr_inst)]).b;
+        break;        
     }
     ++ vm -> pc;
   }
