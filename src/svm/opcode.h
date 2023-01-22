@@ -17,6 +17,12 @@ typedef enum opcode {
                       GetTruth,
                       Not,
                       Unimp, // stand-in for opcodes not yet implemented
+                      Add, // R3
+                      Sub, // R3
+                      Mul, // R3 
+                      Div, // R3
+                      And, // R3
+                      Or, // R3
                       LoadLiteral, // R1U16
 } Opcode;
 
