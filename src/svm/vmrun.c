@@ -30,14 +30,12 @@ static inline Value add(VMState vm, Value a, Value b) {
 
 
 void vmrun(VMState vm, struct VMFunction *fun) {
-    (void) vm;
-    (void) fun;
     vm->code = fun->instructions;
     vm->pc = vm->code;
 
     while (1) {
         uint32_t curr_inst = *(vm->pc);
-        switch(opcode(*(vm->pc))) {
+        switch(opcode(curr_inst)) {
             default:
                 print("opcode %d not implemented\n", opcode(curr_inst));
                 break;
@@ -70,12 +68,8 @@ void vmrun(VMState vm, struct VMFunction *fun) {
                 assert(0); // TODO
                 break;
             case Not:
-                // need to implement our own ASBOOLEAN projection function
-                /* intersting that copilot generates ASBOOLEAN in this case
-                   without ASBOOLEAN being defined */
-                // cast the value in uX to boolean, and negate it
                 vm->registers[uX(curr_inst)] =
-                    mkBooleanValue(!AS_BOOLEAN(vm, vm->registers[uX(curr_inst)]));
+                    mkBooleanValue(!AS_BOOLEAN(vm, vm->registers[uY(curr_inst)]));
                 break;
         }
         ++vm->pc; // advance the program counter
