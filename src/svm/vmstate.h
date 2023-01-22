@@ -8,11 +8,13 @@
 #define VMSTATE_INCLUDED
 
 #include <stdint.h>
+#include "value.h"
+#include "vtable.h"
+
+#define LITERAL_INIT_LENGTH 128
 
 #include "value.h"
 
-#define LITERAL_POOL_SIZE 128
-#define GLOBAL_VARS_SIZE 128
 #define NUM_REGISTERS 256
 
 typedef struct VMState* VMState;
@@ -22,11 +24,12 @@ struct VMState {
     Value registers[NUM_REGISTERS];
 
     // literal pool
-    Value literals[LITERAL_POOL_SIZE];
-    int literals_count;
+    Value *literals;
+    uint32_t curLiteralSize;
+    uint32_t maxLiteralSize;
 
     // global variable table
-    Value globals[GLOBAL_VARS_SIZE];
+    VTable_T globals;
  
     // instruction stream
     uint32_t *code;
