@@ -95,8 +95,6 @@ static inline struct VMFunction *asVMFunction_
                                           (VMState, Value, const char *file, int line);
 static inline struct VMString *asVMString_(VMState, Value, const char *file, int line);
 
-static inline bool asBoolean (VMState, Value, const char *file, int line);
-
 #define AS_BLOCK(VM, V)      asBlock_     ((VM), (V), __FILE__, __LINE__)
 #define AS_CONS_CELL(VM, V)  asCons_      ((VM), (V), __FILE__, __LINE__)
 #define AS_CSTRING(VM, V)    asCString_   ((VM), (V), __FILE__, __LINE__)
