@@ -95,6 +95,8 @@ static inline struct VMFunction *asVMFunction_
                                           (VMState, Value, const char *file, int line);
 static inline struct VMString *asVMString_(VMState, Value, const char *file, int line);
 
+static inline bool getTruth(VMState, Value v, const char *file, int line);
+
 #define AS_BLOCK(VM, V)      asBlock_     ((VM), (V), __FILE__, __LINE__)
 #define AS_CONS_CELL(VM, V)  asCons_      ((VM), (V), __FILE__, __LINE__)
 #define AS_CSTRING(VM, V)    asCString_   ((VM), (V), __FILE__, __LINE__)
@@ -102,7 +104,9 @@ static inline struct VMString *asVMString_(VMState, Value, const char *file, int
 #define AS_CLOSURE(VM, V)    asClosure_   ((VM), (V), __FILE__, __LINE__)
 #define AS_VMFUNCTION(VM, V) asVMFunction_((VM), (V), __FILE__, __LINE__)
 #define AS_VMSTRING(VM, V)   asVMString_  ((VM), (V), __FILE__, __LINE__)
+#define AS_BOOLEAN(VM, V)    asBoolean_    ((VM), (V), __FILE__, __LINE__)
 
+#define GET_TRUTH(VM, V)    getTruth    ((VM), (V), __FILE__, __LINE__)
 
 // additional observers for values
 
@@ -205,6 +209,24 @@ static inline struct VMString *asVMString_(VMState vm, Value v, const char *file
   if (v.tag != String)
     typeerror(vm, "a string", v, file, line);
   return GCVALIDATE(v.s);
+}
+static inline bool asBoolean_(VMState vm, Value v, const char *file, int line) {
+  if (v.tag != Boolean)
+    typeerror(vm, "a boolean", v, file, line);
+  return v.b;
+}
+
+static inline bool getTruth(VMState vm, Value v, const char *file, int line) {
+    switch (v.tag)
+    {
+    case Boolean:
+      return v.b;
+    case Number:
+      return v.n != 0;
+    // can add more cases for truthiness here
+    default:
+      typeerror(vm, "only number can be casted", v, file, line);      
+    }
 }
 
 ////////////////////////////////////////////////////////////////
