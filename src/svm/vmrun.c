@@ -76,35 +76,33 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         mkBooleanValue(!AS_BOOLEAN(vm, registers[uY(curr_inst)]));
       break;
     case Add: // use AS_NUMBER type safe???
-      (vm->registers[uX(curr_inst)]).n =
-        ((vm->registers[uY(curr_inst)]).n
-          + (vm->registers[uZ(curr_inst)]).n);
+      registers[uX(curr_inst)] = mkNumberValue(AS_NUMBER(vm ,registers[uY(curr_inst)]) +
+        AS_NUMBER(vm, registers[uZ(curr_inst)]));
       break;
     case Sub:
-      (vm->registers[uX(curr_inst)]).n =
-        ((vm->registers[uY(curr_inst)]).n
-          - (vm->registers[uZ(curr_inst)]).n);
+      registers[uX(curr_inst)] = mkNumberValue(AS_NUMBER(vm ,registers[uY(curr_inst)]) -
+        AS_NUMBER(vm, registers[uZ(curr_inst)]));
       break;
     case Mul:
-      (vm->registers[uX(curr_inst)]).n =
-        ((vm->registers[uY(curr_inst)]).n
-          * (vm->registers[uZ(curr_inst)]).n);
+      registers[uX(curr_inst)] = mkNumberValue(AS_NUMBER(vm ,registers[uY(curr_inst)]) *
+        AS_NUMBER(vm, registers[uZ(curr_inst)]));
       break;
     case Div:
-      (vm->registers[uX(curr_inst)]).n =
-        ((vm->registers[uY(curr_inst)]).n
-          / (vm->registers[uZ(curr_inst)]).n);
-        // TODO cast to int before division, catch div 0 edge case
+      {
+      int uZ_num = (int) AS_NUMBER(vm, registers[uZ(curr_inst)]);
+      if (uZ_num == 0)
+        runerror(vm, "divide by zero");
+      registers[uX(curr_inst)] = mkNumberValue((int) AS_NUMBER(vm , registers[uY(curr_inst)]) /
+        uZ_num);
+      }
       break;
     case And:
-      (vm->registers[uX(curr_inst)]).b =
-        (vm->registers[uY(curr_inst)]).b
-        && (vm->registers[uZ(curr_inst)]).b;
+      registers[uX(curr_inst)] = mkBooleanValue(AS_BOOLEAN(vm ,registers[uY(curr_inst)]) &&
+        AS_BOOLEAN(vm, registers[uZ(curr_inst)]));
       break;
     case Or:
-      (vm->registers[uX(curr_inst)]).b =
-        (vm->registers[uY(curr_inst)]).b
-        || (vm->registers[uZ(curr_inst)]).b;
+      registers[uX(curr_inst)] = mkBooleanValue(AS_BOOLEAN(vm ,registers[uY(curr_inst)]) ||
+        AS_BOOLEAN(vm, registers[uZ(curr_inst)]));
       break;
     }
     ++pc; // advance the program counter
