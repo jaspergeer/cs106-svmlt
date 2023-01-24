@@ -67,7 +67,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       // set the value in uX to 0
       registers[uX(curr_inst)] = mkNumberValue(0);
       break;
-    case GetTruth:
+    case Truth:
       // put the truthiness of the value in uY in uX
       registers[uX(curr_inst)] = mkBooleanValue(GET_TRUTH(vm, registers[uY(curr_inst)]));
       break;
