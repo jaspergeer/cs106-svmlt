@@ -75,7 +75,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       registers[uX(curr_inst)] =
         mkBooleanValue(!AS_BOOLEAN(vm, registers[uY(curr_inst)]));
       break;
-    case Add:
+    case Add: // use AS_NUMBER type safe???
       (vm->registers[uX(curr_inst)]).n =
         ((vm->registers[uY(curr_inst)]).n
           + (vm->registers[uZ(curr_inst)]).n);
@@ -94,6 +94,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       (vm->registers[uX(curr_inst)]).n =
         ((vm->registers[uY(curr_inst)]).n
           / (vm->registers[uZ(curr_inst)]).n);
+        // TODO cast to int before division, catch div 0 edge case
       break;
     case And:
       (vm->registers[uX(curr_inst)]).b =
