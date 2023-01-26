@@ -8,6 +8,8 @@
 #define VMSTATE_INCLUDED
 
 #include <stdint.h>
+#include "stable.h"
+#include "name.h"
 #include "value.h"
 #include "vtable.h"
 

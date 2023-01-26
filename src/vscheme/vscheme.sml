@@ -2123,6 +2123,7 @@ val primitiveBasis =
                               predOp (fn (PRIMITIVE _) => true | (CLOSURE  _) =>
                                                           true | _ => false)) ::
                         (* primitives for \uscheme\ [[::]] S209b *)
+                        ("mkclosure", binaryOp (fn (a, b) => PAIR (ref a, ref b))) ::
                         ("cons", binaryOp (fn (a, b) => PAIR (ref a, ref b))) ::
                         ("car",  unaryOp  (fn (PAIR (ref car, _)) => car 
                                             | NIL => raise RuntimeError
