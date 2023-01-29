@@ -83,9 +83,6 @@ static Instruction get_instruction(VMState vm, FILE *vofile, unsigned *maxregp) 
   Tokens itoks = tokens(ibuf);
 
   Name opcode = tokens_get_name(&itoks, ibuf);
-  if (opcode == strtoname(".load")) {
-    // do something
-  }
 
   Instruction i = parse_instruction(vm, opcode, itoks, maxregp);
 
