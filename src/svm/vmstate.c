@@ -17,7 +17,6 @@
 void freestatep(VMState* sp) {
   assert(sp && *sp);
   VMState vm = *sp;
-  free(vm->literals);
   free(vm);
   //(void)vm; // suppress compiler warnings
   //assert(0); // must free all memory associated with `vm`
