@@ -10,11 +10,11 @@
 #include "vmstate.h"
 #include "vtable.h"
 #include "value.h"
+#include "name.h"
 
 void freestatep(VMState *sp) {
     assert(sp && *sp);
     VMState vm = *sp;
-    STable_free(&vm->globals_by_name);    
     free(vm);
     *sp = NULL;
 }
@@ -22,7 +22,6 @@ void freestatep(VMState *sp) {
 VMState newstate(void) {
     VMState m = calloc(1, sizeof(*m)); // relies on tag for Nil == 0
     assert(m);
-    m->globals_by_name = STable_new();
     return m;
 }
 
@@ -41,21 +40,19 @@ int literal_count(VMState vm) {
     return vm->nlits;
 }
 
-
 int global_slot(VMState vm, Value nameval) {
-    const char *name = AS_CSTRING(vm, nameval);
-    const unsigned *slotp = STable_get(vm->globals_by_name, name);
-    if (slotp) {
-        return (int) *slotp;
-    } else {
-        int n = vm->nglobals++;
-        assert(n < NGLOBALS);
-        STable_put(vm->globals_by_name, name, (unsigned) n);
-        vm->globals[n].name = strtoname(name);
-        return n;
+    Name name = strtoname(AS_CSTRING(vm, nameval));
+    int slot;
+    for (slot = 0; slot < vm->nglobals; slot++) {
+      if (vm->global_names[slot] == name)
+        return slot;
     }
+    slot = vm->nglobals++;
+    assert(slot < NGLOBALS);
+    vm->global_names[slot] = name;
+    return slot;
 }
 
 const char *global_name(VMState vm, unsigned index) {
-    return nametostr(vm->globals[index].name);
+    return nametostr(vm->global_names[index]);
 }

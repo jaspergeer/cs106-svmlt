@@ -6,7 +6,8 @@
 #include <stdlib.h>
 #include <inttypes.h>
 
-#define Add 99  // blatant cheat for demo
+#define Add Unimp             // blatant cheat for demo
+#define ConsInstruction Unimp2 // blatant cheat for demo
 
 #include "vmstate.h"  // for demo, must come first.  Thanks, gcc!
 #include "check-expect.h"
@@ -41,10 +42,10 @@ void vmrun(VMState vm, struct VMFunction *fun) {
     case Halt:
       return;
     case Check:
-      check(AS_CSTRING(vm, vm->literals[uYZ(instr)]), reg0[uX(instr)]);
+      check(vm, AS_CSTRING(vm, vm->literals[uYZ(instr)]), reg0[uX(instr)]);
       break;
     case Expect:
-      expect(AS_CSTRING(vm, vm->literals[uYZ(instr)]), reg0[uX(instr)]);
+      expect(vm, AS_CSTRING(vm, vm->literals[uYZ(instr)]), reg0[uX(instr)]);
       break;
     case Print:
       print("%v\n", reg0[uX(instr)]);
@@ -54,11 +55,11 @@ void vmrun(VMState vm, struct VMFunction *fun) {
         mkNumberValue(AS_NUMBER(vm, reg0[uY(instr)]) + AS_NUMBER(vm, reg0[uZ(instr)]));
       break;
     case ConsInstruction: {
-        VMNEW(struct VMBlock *, block,  vmsize_cons());
+        VMNEW(struct VMBlock *, block,  sizeof *block + 2 * sizeof block->slots[0]);
         block->nslots = 2;
-        block->slots[0] = RY;
-        block->slots[1] = RZ;
-        RX = mkConsValue(block);
+        block->slots[0] = reg0[uY(instr)];
+        block->slots[1] = reg0[uZ(instr)];
+        reg0[uX(instr)] = mkConsValue(block);
         }
         break;
     default:
