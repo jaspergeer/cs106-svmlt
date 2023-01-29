@@ -11,13 +11,26 @@
 typedef enum opcode { 
     Halt, // R0
     Print, // R1
-    Check, Expect, // R1LIT
-    SetZero,
-    Truth,
-    Not,
-    Add, Sub, Mul, Div, // R3
-    And, Or, // R3
+    CondMove, // R3
+    Jump, // R0I24
+
+    // Load/Store
     LoadLiteral, // R1U16
+    LoadGlobal, // R1U16
+    StoreGlobal, // R1U16
+
+    // Check-Expect
+    Check, Expect, // R1LIT
+
+    // Arithmetic
+    Add, Sub, Mul, Div, // R3
+
+    // Boolean Logic
+    Truth, Not, And, Or, Xor, // R3
+
+    // Comparison
+    Cmp, Gt, Lt, Ge, Le, // R3
+    
     Unimp, // stand-in for opcodes not yet implemented
 } Opcode;
 
