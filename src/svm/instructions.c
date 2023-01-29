@@ -15,7 +15,6 @@ instruction_info instructions[] = {
   { "halt", Halt, parseR0, "halt" },
   { "print", Print, parseR1, "print rX" },
   { "println", Println, parseR1, "println rX" },
-  { "printu", Printu, parseR1, "printu rX" },
   { "loadliteral", LoadLiteral, parseR1LIT, "rX := LIT" },
   { "check", Check, parseR1LIT, "check LIT, rX" },
   { "expect", Expect, parseR1LIT, "expect LIT, rX" },
