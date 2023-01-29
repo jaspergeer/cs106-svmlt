@@ -23,8 +23,8 @@ instruction_info instructions[] = {
 
   // Load/Store
   { "loadliteral", LoadLiteral, parseR1LIT, "rX := LIT" },
-  { "getglobal", GetGLobal, parseR1LIT, "rX := GLOBAL" },
-  { "setglobal", SetGlobal, parseR1LIT, "GLOBAL := rX" },
+  { "getglobal", GetGLobal, parseR1GLO, "rX := GLOBAL" },
+  { "setglobal", SetGlobal, parseR1GLO, "GLOBAL := rX" },
 
   // Check/Expect
   { "check", Check, parseR1LIT, "check LIT, rX" },
@@ -54,7 +54,6 @@ instruction_info instructions[] = {
 int number_of_instructions = sizeof(instructions) / sizeof(instructions[0]);
 
 int isgetglobal(Opcode code) {
-  (void) code;
-  return 0; // change this for your SVM
+  return code == GetGLobal;
 }
 
