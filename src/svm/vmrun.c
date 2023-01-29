@@ -42,7 +42,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
   Value *globals = vm->globals;
   (void) globals;
 
-  while (1) {
+  for (;;) {
     uint32_t curr_inst = *stream_ptr;
     switch (opcode(curr_inst)) {
     default:
@@ -54,9 +54,9 @@ void vmrun(VMState vm, struct VMFunction* fun) {
     case Print:
       print("%v\n", RX);
       break;
-    case CondMove: // if rY, rX := rZ
-      if (AS_BOOLEAN(vm, RY))
-        RX = RZ;
+    case CondSkip:
+      if (AS_BOOLEAN(vm, RX))
+        ++stream_ptr;
       break;
     case Jump:
       stream_ptr += iXYZ(curr_inst);
@@ -66,10 +66,10 @@ void vmrun(VMState vm, struct VMFunction* fun) {
     case LoadLiteral:
       RX = literals[uYZ(curr_inst)];
       break;
-    case LoadGlobal:
+    case GetGLobal:
       RX = globals[uYZ(curr_inst)];
       break;
-    case StoreGlobal:
+    case SetGlobal:
       globals[uYZ(curr_inst)] = RX;
       break;
 
@@ -93,11 +93,14 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       break;
     case Div:
       {
-      int uZ_num = (int) AS_NUMBER(vm, RZ);
-      if (uZ_num == 0)
-        runerror(vm, "divide by zero");
-      RX = mkNumberValue((int) AS_NUMBER(vm, RY) / uZ_num);
+        int uZ_num = (int) AS_NUMBER(vm, RZ);
+        if (uZ_num == 0)
+          runerror(vm, "divide by zero");
+        RX = mkNumberValue((int) AS_NUMBER(vm, RY) / uZ_num);
       }
+      break;
+    case Mod:
+      RX = mkNumberValue((int) AS_NUMBER(vm, RY) % (int) AS_NUMBER(vm, RZ));
       break;
     
     // Boolean Logic

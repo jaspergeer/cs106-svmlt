@@ -14,16 +14,20 @@
 instruction_info instructions[] = {
   { "halt", Halt, parseR0, "halt" },
   { "print", Print, parseR1, "print rX" },
+
 //   { "println", Println, parseR1, "println rX" },
 //   { "printu", Printu, parseR1, "printu rX" },
-  { "loadliteral", LoadLiteral, parseR1LIT, "rX := LIT" },
-  { "cmov", Expect, parseR3, "if rY then rX := rZ" },
-  { "jmp", Jump, parseR0I24, "jmp iXYZ" },
+
+  // Branching
+  { "cskip", CondSkip, parseR3, "if rX then skip" },
+  { "jump", Jump, parseR0I24, "jump to iXYZ" },
 
   // Load/Store
-  { "loadlit", LoadLiteral, parseR1LIT, "rX := G[LIT]" },
+  { "loadliteral", LoadLiteral, parseR1LIT, "rX := LIT" },
+  { "getglobal", GetGLobal, parseR1LIT, "rX := GLOBAL" },
+  { "setglobal", SetGlobal, parseR1LIT, "GLOBAL := rX" },
 
-  // Check-Expect
+  // Check/Expect
   { "check", Check, parseR1LIT, "check LIT, rX" },
   { "expect", Expect, parseR1LIT, "expect LIT, rX" },
 
@@ -32,8 +36,9 @@ instruction_info instructions[] = {
   { "sub", Add, parseR3, "rX := rY - rZ" },
   { "mul", Add, parseR3, "rX := rY * rZ" },
   { "div", Add, parseR3, "rX := rY / rZ" },
+  { "mod", Add, parseR3, "rX := rY % rZ" },
 
-  // Boolean Logic
+  // Boolean
   { "truth", Truth, parseR3, "rX := truthiness rY" },
   { "and", And, parseR3, "rX := rY && rZ" },
   { "or", Or, parseR3, "rX := rY || rZ" },

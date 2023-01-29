@@ -95,14 +95,18 @@ Instruction parseR1LIT(VMState vm, Opcode opcode, Tokens operands, unsigned* max
   initnames(); // before comparing names, you must call this function
 
   // <register>
-  uint8_t r1 = tokens_get_byte(&operands, NULL);
+  uint8_t regX = tokens_get_byte(&operands, NULL);
 
   // <literal>
   Value literal = get_literal(&operands, NULL);
 
   int slot = literal_slot(vm, literal);
 
-  return eR1U16(opcode, r1, slot);
+  return eR1U16(opcode, regX, slot);
+}
+
+Instruction parseR1GLO(VMState vm, Opcode opcode, Tokens operands, unsigned* maxreg) {
+  // TODO
 }
 
 // <literal> ::=

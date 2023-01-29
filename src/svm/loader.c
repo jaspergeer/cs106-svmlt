@@ -31,6 +31,10 @@
 #include "vmstring.h"
 #include "value.h"
 
+#include "instructions.h"
+
+#define IBUF_INIT 32
+
 //// Variables and utility functions local to this module
 
 static bool saw_a_bad_opcode = false;  
@@ -71,12 +75,30 @@ static Instruction get_instruction(VMState vm, FILE *vofile, unsigned *maxregp);
   // May overwrite `buffer` and `bufsize` by calling `getline`.
 
 static Instruction get_instruction(VMState vm, FILE *vofile, unsigned *maxregp) {
-  (void) vm; (void) vofile; (void) maxregp; // replace with real code  
-  (void) parse_instruction; // replace with real code
-  assert(0);
+  char *ibuf = malloc(IBUF_INIT);
+  size_t ibuf_size = IBUF_INIT;
+
+  // get line and tokenize
+  getline(&ibuf, &ibuf_size, vofile);
+  Tokens itoks = tokens(ibuf);
+
+  Name iname = tokens_get_name(&itoks, ibuf);
+  if (iname == strtoname(".load")) {
+    // do something
+  }
+
+  struct instruction_info *entry = itable_entry(iname);
+
+  Instruction i = (entry->parser) (vm, entry->opcode, itoks, maxregp);
+
+  free_tokens(&itoks);
+  free(ibuf);
+
+  return i;
 }
 
 static struct VMFunction *loadfun(VMState vm, int arity, int count, FILE *vofile) {
+  
   (void) vm; (void) arity; (void) count; (void) vofile; // replace with real code
   (void) get_instruction; // replace with real code
   assert(0);

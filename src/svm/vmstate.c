@@ -51,3 +51,11 @@ Value literal_value(VMState state, unsigned index) {
 int literal_count(VMState state) {
   return state->num_literals;
 }
+
+int global_slot(VMState state, Value global) {
+  if (state->num_globals == GLOBALS_SIZE)
+    runerror(state, "globals limit reached");
+
+  state->globals[state->num_globals] = global;
+  return state->num_globals++;
+}
