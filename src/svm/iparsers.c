@@ -90,8 +90,12 @@ static void initnames(void) {
   }
 }
 
+static Value get_literal(Tokens* litp, const char* input);
+
 // <opcode> <register> <literal>
 Instruction parseR1LIT(VMState vm, Opcode opcode, Tokens operands, unsigned* maxreg) {
+  (void) maxreg;
+
   initnames(); // before comparing names, you must call this function
 
   // <register>
@@ -105,37 +109,41 @@ Instruction parseR1LIT(VMState vm, Opcode opcode, Tokens operands, unsigned* max
   return eR1U16(opcode, regX, slot);
 }
 
-Instruction parseR1GLO(VMState vm, Opcode opcode, Tokens operands, unsigned* maxreg) {
-  // TODO
-}
+// Instruction parseR1GLO(VMState vm, Opcode opcode, Tokens operands, unsigned* maxreg) {
+//   // TODO
+// }
+
+
+static Value get_string_literal(Tokens* strp, const char* input);
 
 // <literal> ::=
 static Value get_literal(Tokens* litp, const char* input) {
   initnames();
 
-  switch(first_token_type(litp)) {
+  switch(first_token_type(*litp)) {
     case TNAME:
-      Name tok_name = tokens_get_name(litp, input);
+      {
+        Name tok_name = tokens_get_name(litp, input);
 
-      // true | false
-      if (tok_name == falsename)
-        return mkBooleanValue(false);
-      if (tok_name == truename)
-        return mkBooleanValue(true);
+        // true | false
+        if (tok_name == falsename)
+          return mkBooleanValue(false);
+        if (tok_name == truename)
+          return mkBooleanValue(true);
 
-      // | emptylist
-      if (tok_name == emptyname)
-        return emptylistValue;
+        // | emptylist
+        if (tok_name == emptyname)
+          return emptylistValue;
 
-      // | nil
-      if (tok_name == nilname)
-        return nilValue;
+        // | nil
+        if (tok_name == nilname)
+          return nilValue;
 
-      // | string ...
-      if (tok_name == stringname)
-        return get_string_literal(litp, input);
-      break;
-
+        // | string ...
+        if (tok_name == stringname)
+          return get_string_literal(litp, input);
+        break;
+      }
     // | <number>
     case TDOUBLE:
       return mkNumberValue(tokens_get_signed_number(litp, input));
