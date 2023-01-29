@@ -13,7 +13,15 @@
 #include "value.h"
 #include "vtable.h"
 
-#define LITERAL_INIT_LENGTH 128
+#define TINY_VM
+
+#ifdef TINY_VM
+#define LITERALS_SIZE 16
+#define GLOBALS_SIZE 16
+#else
+#define LITERALS_SIZE 256
+#define GLOBALS_SIZE 256
+#endif
 
 #include "value.h"
 
@@ -26,18 +34,15 @@ struct VMState {
   Value registers[NUM_REGISTERS];
 
   // literal pool
-  Value* literals;
-  uint32_t curLiteralSize;
-  uint32_t maxLiteralSize;
+  Value literals[LITERALS_SIZE];
+  int num_literals;
 
   // global variable table
-  VTable_T globals;
-
-  // instruction stream
-  uint32_t* code;
+  Value globals[GLOBALS_SIZE];
+  int num_globals;
 
   // program counter
-  uint32_t* pc;
+  uint32_t pc; // assumes that the first instruction is at address 0x0
 };
 
 VMState newstate(void);       // allocate and initialize (to empty)

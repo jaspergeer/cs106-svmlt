@@ -12,11 +12,11 @@
 
 #include "vmstate.h"
 #include "value.h"
+#include "vmerror.h"
 
 void freestatep(VMState* sp) {
   assert(sp && *sp);
   VMState vm = *sp;
-  free(vm->literals);
   free(vm);
   //(void)vm; // suppress compiler warnings
   //assert(0); // must free all memory associated with `vm`
@@ -25,47 +25,37 @@ void freestatep(VMState* sp) {
 VMState newstate(void) {
   // allocate, initialize, and return a new state
   VMState vm = malloc(sizeof(struct VMState));
-  vm->literals = calloc(LITERAL_INIT_LENGTH, sizeof(struct Value));
-  vm->curLiteralSize = 0;
-  vm->maxLiteralSize = LITERAL_INIT_LENGTH;
-  vm->code = NULL;
-  vm->pc = NULL;
-  //assert(0);
+  vm->pc = 0;
+  vm->num_globals = 0;
+  vm->num_literals = 0;
+  for (int i = 0; i < 256; ++i) {
+    vm->registers[i] = nilValue;
+  }
   return vm;
 }
 
 int literal_slot(VMState state, Value literal) {
-  // (void)state; // suppress compiler warnings
-  // (void)literal;
-  // Return a slot containing the literal, updating literal pool if needed.
-  // For module 1, you can get away with putting the literal in slot 0
-  // and returning 0.  For module 2, you'll need something slightly
-  // more sophisticated.
-  if (state->curLiteralSize == 0) {
-    state->curLiteralSize += 1;
-    state->literals[0] = literal;
-    return 0;
-  }
-  if (state->curLiteralSize ==
-    (state->maxLiteralSize - 1)) {
-    state->maxLiteralSize *= 2;
-    state->literals = realloc(state->literals,
-      state->maxLiteralSize * sizeof(struct Value));
-  }
-  state->curLiteralSize += 1;
-  state->literals[state->curLiteralSize - 1] = literal;
-  return state->curLiteralSize - 1;
-  // assert(0);
+  if (state->num_literals == LITERALS_SIZE)
+    runerror(state, "literals limit reached");
+
+  state->literals[state->num_literals] = literal;
+  return state->num_literals++;
 }
 
 // these are for module 2 and beyond
 
 Value literal_value(VMState state, unsigned index) {
-  (void)state; (void)index; // replace with real code
-  assert(0);
+  return state->literals[index];
 }
 
 int literal_count(VMState state) {
-  (void)state; // replace with real code
-  assert(0);
+  return state->num_literals;
+}
+
+int global_slot(VMState state, Value global) {
+  if (state->num_globals == GLOBALS_SIZE)
+    runerror(state, "globals limit reached");
+
+  state->globals[state->num_globals] = global;
+  return state->num_globals++;
 }
