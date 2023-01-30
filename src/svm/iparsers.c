@@ -100,6 +100,7 @@ Instruction parseR1LIT(VMState vm, Opcode opcode, Tokens operands, unsigned* max
 
   // <register>
   uint8_t regX = tokens_get_byte(&operands, NULL);
+  SEE(regX);
 
   // <literal>
   Value literal = get_literal(&operands, NULL);
@@ -112,6 +113,7 @@ Instruction parseR1GLO(VMState vm, Opcode opcode, Tokens operands, unsigned* max
 
   // <register>
   uint8_t regX = tokens_get_byte(&operands, NULL);
+  SEE(regX);
 
   Name n = tokens_get_name(&operands, NULL);
 
