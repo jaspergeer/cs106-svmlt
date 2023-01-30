@@ -13,9 +13,9 @@
 
 instruction_info instructions[] = {
   { "halt", Halt, parseR0, "halt" },
-  { "print", Print, parseR1, "print rX" },
 
   // Printing
+  { "print", Print, parseR1, "print rX" },
   { "println", Println, parseR1, "println rX" },
   { "printu", Printu, parseR1, "printu rX" },
 
