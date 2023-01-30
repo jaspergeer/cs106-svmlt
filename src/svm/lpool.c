@@ -1,8 +1,13 @@
 #include "lpool.h"
 #include <stdlib.h>
 
+#ifdef TINY_LPOOL
 #define INIT_LITERALS_SIZE 8
 #define HASHES_SIZE 8
+#else
+#define INIT_LITERALS_SIZE 8
+#define HASHES_SIZE 1024
+#endif
 
 #define T LPool_T
 
