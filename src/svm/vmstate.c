@@ -59,3 +59,7 @@ int global_slot(VMState state, Value global) {
   state->globals[state->num_globals] = global;
   return state->num_globals++;
 }
+
+const char* global_name(VMState state, unsigned index) {
+  return AS_CSTRING(state, state->globals[index]);
+}
