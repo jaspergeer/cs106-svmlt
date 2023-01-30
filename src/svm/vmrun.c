@@ -38,7 +38,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
   vm->pc = 0;
   uint32_t *stream_ptr = fun->instructions + vm->pc;
   Value *registers = vm->registers;
-  Value *literals = vm->literals;
+  LPool_T literals = vm->literals;
   Value *globals = vm->globals;
   (void) globals;
 
@@ -64,7 +64,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
 
     // Load/Store
     case LoadLiteral:
-      RX = literals[uYZ(curr_inst)];
+      RX = LPool_get(literals, uYZ(curr_inst));
       break;
     case GetGLobal:
       RX = globals[uYZ(curr_inst)];
@@ -75,10 +75,10 @@ void vmrun(VMState vm, struct VMFunction* fun) {
 
     // Check-Expect
     case Check:
-      check(vm, AS_CSTRING(vm, literals[uYZ(curr_inst)]), RX);
+      check(vm, AS_CSTRING(vm, LPool_get(literals, uYZ(curr_inst))), RX);
       break;
     case Expect:
-      expect(vm, AS_CSTRING(vm, literals[uYZ(curr_inst)]), RX);
+      expect(vm, AS_CSTRING(vm, LPool_get(literals, uYZ(curr_inst))), RX);
       break;
     
     // Arithmetic
