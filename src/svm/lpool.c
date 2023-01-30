@@ -1,11 +1,13 @@
 #include "lpool.h"
 #include <stdlib.h>
 
+#define TINY_LPOOL
+
 #ifdef TINY_LPOOL
 #define INIT_LITERALS_SIZE 8
-#define HASHES_SIZE 8
+#define HASHES_SIZE 2
 #else
-#define INIT_LITERALS_SIZE 8
+#define INIT_LITERALS_SIZE 128
 #define HASHES_SIZE 1024
 #endif
 
@@ -42,12 +44,12 @@ Value LPool_get(T pool, uint16_t key) {
 uint16_t LPool_put(T pool, Value v) {
   uint32_t vhash = hashvalue(v);
 
-  Link *l = pool->hashes + vhash % HASHES_SIZE;
+  Link l = pool->hashes[vhash % HASHES_SIZE];
 
-  for (Link curr = *l; curr != NULL; curr = curr->next) {
+  for (Link curr = l; curr != NULL; curr = curr->next) {
     if (curr->hash == vhash)
       return curr->key;
-    l = &curr;
+    l = curr;
   }
 
   Link new_link = malloc(sizeof(struct link));
@@ -61,7 +63,7 @@ uint16_t LPool_put(T pool, Value v) {
   }
 
   pool->literals[pool->nlits] = v;
-  *l = new_link;
+  l = new_link;
   return pool->nlits++;
 }
 
