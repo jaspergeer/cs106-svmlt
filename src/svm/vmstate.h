@@ -24,6 +24,7 @@
 #endif
 
 #include "value.h"
+#include "lpool.h"
 
 #define NUM_REGISTERS 256
 
@@ -34,8 +35,7 @@ struct VMState {
   Value registers[NUM_REGISTERS];
 
   // literal pool
-  Value literals[LITERALS_SIZE];
-  int num_literals;
+  LPool_T literals;
 
   // global variable table
   Value globals[GLOBALS_SIZE];
