@@ -16,6 +16,8 @@ instruction_info instructions[] = {
   { "print", Print, parseR1, "print rX" },
 //   { "println", Println, parseR1, "println rX" },
 //   { "printu", Printu, parseR1, "printu rX" },
+  { "popen", PipeOpen, parseR1LIT, "open pipe from LIT" },
+  { "dload", DynLoad, parseR3, "load from rX" },
 
   // Branching
   { "cskip", CondSkip, parseR3, "if rX then skip" },

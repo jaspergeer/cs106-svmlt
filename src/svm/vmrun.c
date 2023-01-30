@@ -34,6 +34,8 @@
 #define RY registers[uY(curr_inst)]
 #define RZ registers[uZ(curr_inst)]
 
+#define LIT LPool_get(literals, uYZ(curr_inst))
+
 void vmrun(VMState vm, struct VMFunction* fun) {
   vm->pc = 0;
   uint32_t *stream_ptr = fun->instructions + vm->pc;
@@ -61,6 +63,21 @@ void vmrun(VMState vm, struct VMFunction* fun) {
     case Jump:
       stream_ptr += iXYZ(curr_inst);
       break;
+    
+    // Dynamic Loading
+    case PipeOpen:
+      FILE *f = popen(AS_CSTRING(vm, LIT), "r");
+      RX = mkNumberValue(fileno(f));
+      break;
+    case DynLoad: // load a list of modules from file with descriptor rX
+      FILE *input = fdopen(AS_NUMBER(vm, RX), "r");
+      for ( struct VMFunction *module = loadmodule(vm, input) // DONT KNOW IF THIS IS RIGHT???
+          ; module
+          ; module = loadmodule(vm, input)
+          ) {
+        vmrun(vm, module);
+      }
+      break;
 
     // Load/Store
     case LoadLiteral:
@@ -75,10 +92,10 @@ void vmrun(VMState vm, struct VMFunction* fun) {
 
     // Check-Expect
     case Check:
-      check(vm, AS_CSTRING(vm, LPool_get(literals, uYZ(curr_inst))), RX);
+      check(vm, AS_CSTRING(vm, LIT), RX);
       break;
     case Expect:
-      expect(vm, AS_CSTRING(vm, LPool_get(literals, uYZ(curr_inst))), RX);
+      expect(vm, AS_CSTRING(vm, LIT), RX);
       break;
     
     // Arithmetic
