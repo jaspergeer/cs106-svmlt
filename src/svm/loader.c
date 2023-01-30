@@ -94,7 +94,20 @@ static Instruction get_instruction(VMState vm, FILE *vofile, unsigned *maxregp) 
 }
 
 static struct VMFunction *loadfun(VMState vm, int arity, int count, FILE *vofile) {
+  // idea is from newfunction in testffuns.c
+  VMNEW(struct VMFunction *, fun, vmsize_fun(count + 1));
+  fun->arity = arity;
+  fun->size = count + 1;
+  fun->instructions[count] = eR0(Halt);
   
+  // The loadfun function takes a count parameter, and it reads instructions from the input by calling get_instruction count times.
+  for (int i = 0; i < count; i++) {
+    Instruction inst = get_instruction(vm, vofile, NULL);
+  }
+  // The count parameter says exactly how many instructions are in the loaded function, so loadfun can allocate space for them before it starts to read instructions. Protip: allocate space for one additional instruction at the end, and fill that space with a Halt instruction. This instruction acts as a “sentinel.”
+
+
+
   (void) vm; (void) arity; (void) count; (void) vofile; // replace with real code
   (void) get_instruction; // replace with real code
   assert(0);
