@@ -91,11 +91,13 @@ static Instruction get_instruction(VMState vm, FILE *vofile, unsigned *maxregp) 
   Instruction i;
   if (opcode == dotloadname) {
     uint8_t regX = tokens_get_byte(&itoks, ibuf);
+    (void) regX;
     assert(tokens_get_name(&itoks, ibuf) == fnname);
     int arity = tokens_get_int(&itoks, ibuf);
     int length = tokens_get_int(&itoks, ibuf);
     struct VMFunction *fun = loadfun(vm, arity, length, vofile);
     Value fun_value = mkVMFunctionValue(fun);
+    (void)fun_value;
     i = eR0(Halt);
   } else {
     i = parse_instruction(vm, opcode, itoks, maxregp);
