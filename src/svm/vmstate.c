@@ -16,6 +16,8 @@
 
 void freestatep(VMState* sp) {
   assert(sp && *sp);
+
+  LPool_free(&(*sp)->literals);
   VMState vm = *sp;
   free(vm);
   //(void)vm; // suppress compiler warnings
@@ -27,7 +29,7 @@ VMState newstate(void) {
   VMState vm = malloc(sizeof(struct VMState));
   vm->pc = 0;
   vm->num_globals = 0;
-  vm->num_literals = 0;
+  vm->literals = LPool_new();
   for (int i = 0; i < 256; ++i) {
     vm->registers[i] = nilValue;
   }
@@ -35,21 +37,15 @@ VMState newstate(void) {
 }
 
 int literal_slot(VMState state, Value literal) {
-  if (state->num_literals == LITERALS_SIZE)
-    runerror(state, "literals limit reached");
-
-  state->literals[state->num_literals] = literal;
-  return state->num_literals++;
+  return LPool_put(state->literals, literal);
 }
 
-// these are for module 2 and beyond
-
 Value literal_value(VMState state, unsigned index) {
-  return state->literals[index];
+  return LPool_get(state->literals, index);
 }
 
 int literal_count(VMState state) {
-  return state->num_literals;
+  return LPool_nlits(state->literals);
 }
 
 int global_slot(VMState state, Value global) {
