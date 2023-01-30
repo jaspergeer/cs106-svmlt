@@ -49,15 +49,19 @@ int literal_count(VMState state) {
 }
 
 int global_slot(VMState state, Value global) {
-  if (state->num_globals == GLOBALS_SIZE)
-    runerror(state, "globals limit reached");
-
-  state->globals[state->num_globals] = global;
-  return state->num_globals++;
+    Name name = strtoname(AS_CSTRING(state, global));
+    int slot;
+    for (slot = 0; slot < state->num_globals; slot++) {
+      if (state->global_names[slot] == name)
+        return slot;
+    }
+    slot = state->num_globals++;
+    assert(slot < GLOBALS_SIZE);
+    state->global_names[slot] = name;
+    return slot;
 }
 
-const char *global_name(VMState state, unsigned index) {
-    (void) state;
-    (void) index;
-    return "x";
+const char* global_name(VMState state, unsigned index) {
+  return AS_CSTRING(state, state->globals[index]);
 }
+

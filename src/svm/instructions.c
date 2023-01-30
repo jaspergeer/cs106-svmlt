@@ -41,6 +41,7 @@ instruction_info instructions[] = {
 
   // Boolean
   { "truth", Truth, parseR2, "rX := truthiness rY" },
+  { "not", Not, parseR2, "rX := !rY"},
   { "and", And, parseR3, "rX := rY && rZ" },
   { "or", Or, parseR3, "rX := rY || rZ" },
   { "xor", Xor, parseR3, "rX := rY ^ rZ" },

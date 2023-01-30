@@ -85,11 +85,13 @@ static Instruction get_instruction(VMState vm, FILE *vofile, unsigned *maxregp) 
   getline(&ibuf, &ibuf_size, vofile);
   Tokens itoks = tokens(ibuf);
 
+  // when do we read ".load instruction?"
   Name opcode = tokens_get_name(&itoks, ibuf);
 
   Instruction i;
   if (opcode == dotloadname) {
     uint8_t regX = tokens_get_byte(&itoks, ibuf);
+    (void) regX;
     assert(tokens_get_name(&itoks, ibuf) == fnname);
     int arity = tokens_get_int(&itoks, ibuf);
     int length = tokens_get_int(&itoks, ibuf);
@@ -107,7 +109,7 @@ static Instruction get_instruction(VMState vm, FILE *vofile, unsigned *maxregp) 
 }
 
 static struct VMFunction *loadfun(VMState vm, int arity, int count, FILE *vofile) {
-  struct VMFunction *fun = vmalloc_raw(3 * sizeof(int) + (count + 1) * sizeof(Instruction)); // should this be malloc?
+  struct VMFunction *fun = vmalloc_raw(3 * sizeof(int) + (count + 1) * sizeof(Instruction));
   fun->arity = arity;
   fun->size = count + 1;
   fun->instructions[count] = eR0(Halt); // sentinel
