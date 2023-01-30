@@ -30,83 +30,115 @@
 //     return mkNumberValue(AS_NUMBER(vm, a) + AS_NUMBER(vm, b));
 // }
 
+#define RX registers[uX(curr_inst)]
+#define RY registers[uY(curr_inst)]
+#define RZ registers[uZ(curr_inst)]
 
 void vmrun(VMState vm, struct VMFunction* fun) {
-  // instructon stream not used now
-  // load state into stack
-  // do we want to cache registers?
-  // Value registers[NUM_REGISTERS];
-  // memcpy(registers, vm->registers, NUM_REGISTERS * sizeof(Value));
-  uint32_t* pc = fun->instructions;
-  Value* registers = vm->registers;  // reduces one level of indirection
-  Value* literals = vm->literals;
-  // Value *globals = vm->globals;
+  vm->pc = 0;
+  uint32_t *stream_ptr = fun->instructions + vm->pc;
+  Value *registers = vm->registers;
+  Value *literals = vm->literals;
+  Value *globals = vm->globals;
+  (void) globals;
 
-  while (1) {
-    uint32_t curr_inst = *pc;
+  for (;;) {
+    uint32_t curr_inst = *stream_ptr;
     switch (opcode(curr_inst)) {
     default:
       print("opcode %d not implemented\n", opcode(curr_inst));
       break;
     case Halt:
-      vm->pc = pc;
-      vm->code = fun->instructions;
+      vm->pc = stream_ptr - fun->instructions;
       return;
     case Print:
-      print("%v\n", vm->registers[uX(curr_inst)]);
+      print("%v\n", RX);
       break;
+    case CondSkip:
+      if (AS_BOOLEAN(vm, RX))
+        ++stream_ptr;
+      break;
+    case Jump:
+      stream_ptr += iXYZ(curr_inst);
+      break;
+
+    // Load/Store
+    case LoadLiteral:
+      RX = literals[uYZ(curr_inst)];
+      break;
+    case GetGLobal:
+      RX = globals[uYZ(curr_inst)];
+      break;
+    case SetGlobal:
+      globals[uYZ(curr_inst)] = RX;
+      break;
+
+    // Check-Expect
     case Check:
-      check(vm, AS_CSTRING(vm, literals[uYZ(curr_inst)]),
-        registers[uX(curr_inst)]);
+      check(vm, AS_CSTRING(vm, literals[uYZ(curr_inst)]), RX);
       break;
     case Expect:
-      expect(vm, AS_CSTRING(vm, literals[uYZ(curr_inst)]),
-        registers[uX(curr_inst)]);
+      expect(vm, AS_CSTRING(vm, literals[uYZ(curr_inst)]), RX);
       break;
-    case SetZero:
-      // set the value in uX to 0
-      registers[uX(curr_inst)] = mkNumberValue(0);
-      break;
-    case GetTruth:
-      // put the truthiness of the value in uY in uX
-      registers[uX(curr_inst)] = mkBooleanValue(GET_TRUTH(vm, registers[uY(curr_inst)]));
-      break;
-    case Not:
-      registers[uX(curr_inst)] =
-        mkBooleanValue(!AS_BOOLEAN(vm, registers[uY(curr_inst)]));
-      break;
-    case Add:
-      (vm->registers[uX(curr_inst)]).n =
-        ((vm->registers[uY(curr_inst)]).n
-          + (vm->registers[uZ(curr_inst)]).n);
+    
+    // Arithmetic
+    case Add: // use AS_NUMBER type safe???
+      RX = mkNumberValue(AS_NUMBER(vm, RY) + AS_NUMBER(vm, RZ));
       break;
     case Sub:
-      (vm->registers[uX(curr_inst)]).n =
-        ((vm->registers[uY(curr_inst)]).n
-          - (vm->registers[uZ(curr_inst)]).n);
+      RX = mkNumberValue(AS_NUMBER(vm, RY) - AS_NUMBER(vm, RZ));
       break;
     case Mul:
-      (vm->registers[uX(curr_inst)]).n =
-        ((vm->registers[uY(curr_inst)]).n
-          * (vm->registers[uZ(curr_inst)]).n);
+      RX = mkNumberValue(AS_NUMBER(vm, RY) * AS_NUMBER(vm, RZ));
       break;
     case Div:
-      (vm->registers[uX(curr_inst)]).n =
-        ((vm->registers[uY(curr_inst)]).n
-          / (vm->registers[uZ(curr_inst)]).n);
+      {
+        int uZ_num = (int) AS_NUMBER(vm, RZ);
+        if (uZ_num == 0)
+          runerror(vm, "divide by zero");
+        RX = mkNumberValue((int) AS_NUMBER(vm, RY) / uZ_num);
+      }
+      break;
+    case Mod:
+      RX = mkNumberValue((int) AS_NUMBER(vm, RY) % (int) AS_NUMBER(vm, RZ));
+      break;
+    
+    // Boolean Logic
+    case Truth:
+      // put the truthiness of the value in uY in uX
+      RX = mkBooleanValue(GET_TRUTH(vm, RY));
+      break;
+    case Not:
+      RX = mkBooleanValue(!AS_BOOLEAN(vm, RY));
       break;
     case And:
-      (vm->registers[uX(curr_inst)]).b =
-        (vm->registers[uY(curr_inst)]).b
-        && (vm->registers[uZ(curr_inst)]).b;
+      RX = mkBooleanValue(AS_BOOLEAN(vm, RY) && AS_BOOLEAN(vm, RZ));
       break;
     case Or:
-      (vm->registers[uX(curr_inst)]).b =
-        (vm->registers[uY(curr_inst)]).b
-        || (vm->registers[uZ(curr_inst)]).b;
+      RX = mkBooleanValue(AS_BOOLEAN(vm, RY) || AS_BOOLEAN(vm, RZ));
+      break;
+    case Xor:
+      RX = mkBooleanValue(AS_BOOLEAN(vm, RY) ^ AS_BOOLEAN(vm, RZ));
+      break;
+
+    // Comparison
+    case Cmp:
+      RX = mkBooleanValue(eqvalue(RY, RZ));
+      break;
+    case Gt:
+      RX = mkBooleanValue(AS_NUMBER(vm, RY) > AS_NUMBER(vm, RZ));
+      break;
+    case Lt:
+      RX = mkBooleanValue(AS_NUMBER(vm, RY) < AS_NUMBER(vm, RZ));
+      break;
+    case Ge:
+      RX = mkBooleanValue(AS_NUMBER(vm, RY) >= AS_NUMBER(vm, RZ));
+      break;
+    case Le:
+      RX = mkBooleanValue(AS_NUMBER(vm, RY) >= AS_NUMBER(vm, RZ));
       break;
     }
-    ++pc; // advance the program counter
+    ++stream_ptr; // advance the stream pointer
   }
   return;
 }

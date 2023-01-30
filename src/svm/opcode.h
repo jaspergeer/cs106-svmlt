@@ -8,21 +8,35 @@
 #ifndef OPCODE_INCLUDED
 #define OPCODE_INCLUDED
 
-typedef enum opcode { 
+typedef enum opcode {
     Halt, // R0
     Print, // R1
-    Check, Expect, // R1LIT
-    SetZero,
-    GetTruth,
-    Not,
-    Add, // R3
-    Sub, // R3
-    Mul, // R3 
-    Div, // R3
-    And, // R3
-    Or, // R3
+
+    // Branching
+    CondSkip, // R3
+    Jump, // R0I24
+
+    // Load/Store
     LoadLiteral, // R1U16
+    GetGLobal, // R1U16
+    SetGlobal, // R1U16
+
+    // Check-Expect
+    Check, Expect, // R1LIT
+
+    // Arithmetic
+    Add, Sub, Mul, Div, Mod, // R3
+
+    // Boolean Logic
+    Truth, Not, And, Or, Xor, // R3
+
+    // Comparison
+    Cmp, Gt, Lt, Ge, Le, // R3
+    
     Unimp, // stand-in for opcodes not yet implemented
+    Unimp2, // stand-in for opcodes not yet implemented
 } Opcode;
+
+int isgetglobal(Opcode code); // update this for your SVM, in instructions.c
 
 #endif
