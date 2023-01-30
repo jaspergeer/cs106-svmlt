@@ -28,7 +28,7 @@ VMState newstate(void) {
   // allocate, initialize, and return a new state
   VMState vm = malloc(sizeof(struct VMState));
   vm->pc = 0;
-  vm->num_globals = 0;
+  vm->globals =  VTable_new(GLOBALS_SIZE);
   vm->literals = LPool_new();
   for (int i = 0; i < 256; ++i) {
     vm->registers[i] = nilValue;
@@ -49,9 +49,8 @@ int literal_count(VMState state) {
 }
 
 int global_slot(VMState state, Value global) {
-  if (state->num_globals == GLOBALS_SIZE)
-    runerror(state, "globals limit reached");
-
+  char* string = AS_CSTRING(state, global);
+  
   state->globals[state->num_globals] = global;
   return state->num_globals++;
 }
