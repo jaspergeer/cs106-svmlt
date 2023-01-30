@@ -75,6 +75,9 @@ static Instruction get_instruction(VMState vm, FILE *vofile, unsigned *maxregp);
   // May overwrite `buffer` and `bufsize` by calling `getline`.
 
 static Instruction get_instruction(VMState vm, FILE *vofile, unsigned *maxregp) {
+  Name dotloadname = strtoname(".load");
+  Name fnname = strtoname("function");
+
   char *ibuf = malloc(IBUF_INIT);
   size_t ibuf_size = IBUF_INIT;
 
@@ -85,7 +88,20 @@ static Instruction get_instruction(VMState vm, FILE *vofile, unsigned *maxregp) 
   // when do we read ".load instruction?"
   Name opcode = tokens_get_name(&itoks, ibuf);
 
-  Instruction i = parse_instruction(vm, opcode, itoks, maxregp);
+  Instruction i;
+  if (opcode == dotloadname) {
+    uint8_t regX = tokens_get_byte(&itoks, ibuf);
+    (void) regX;
+    assert(tokens_get_name(&itoks, ibuf) == fnname);
+    int arity = tokens_get_int(&itoks, ibuf);
+    int length = tokens_get_int(&itoks, ibuf);
+    struct VMFunction *fun = loadfun(vm, arity, length, vofile);
+    Value fun_value = mkVMFunctionValue(fun);
+    (void)fun_value;
+    i = eR0(Halt);
+  } else {
+    i = parse_instruction(vm, opcode, itoks, maxregp);
+  }
 
   free_tokens(&itoks);
   free(ibuf);
@@ -94,23 +110,18 @@ static Instruction get_instruction(VMState vm, FILE *vofile, unsigned *maxregp) 
 }
 
 static struct VMFunction *loadfun(VMState vm, int arity, int count, FILE *vofile) {
-  // idea is from newfunction in testffuns.c
-  VMNEW(struct VMFunction *, fun, vmsize_fun(count + 1));
+  struct VMFunction *fun = vmalloc_raw(3 * sizeof(int) + (count + 1) * sizeof(Instruction)); // should this be malloc?
   fun->arity = arity;
   fun->size = count + 1;
-  fun->instructions[count] = eR0(Halt);
+  fun->instructions[count] = eR0(Halt); // sentinel
+
+  unsigned maxregs = 0;
+  for (int i = 0; i < count; ++i)
+    fun->instructions[i] = get_instruction(vm, vofile, &maxregs);
   
-  // The loadfun function takes a count parameter, and it reads instructions from the input by calling get_instruction count times.
-  for (int i = 0; i < count; i++) {
-    Instruction inst = get_instruction(vm, vofile, NULL);
-  }
-  // The count parameter says exactly how many instructions are in the loaded function, so loadfun can allocate space for them before it starts to read instructions. Protip: allocate space for one additional instruction at the end, and fill that space with a Halt instruction. This instruction acts as a “sentinel.”
+  fun->nregs = maxregs + 1;
 
-
-
-  (void) vm; (void) arity; (void) count; (void) vofile; // replace with real code
-  (void) get_instruction; // replace with real code
-  assert(0);
+  return fun;
 }
 
 
