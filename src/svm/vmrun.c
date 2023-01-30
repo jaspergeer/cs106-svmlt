@@ -96,10 +96,10 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       RX = LPool_get(literals, uYZ(curr_inst));
       break;
     case GetGLobal:
-      RX = globals[global_slot(vm, GLO)];
+      RX = globals[uYZ(curr_inst)];
       break;
     case SetGlobal:
-      globals[global_slot(vm, GLO)] = RX;
+      globals[uYZ(curr_inst)] = RX;
       break;
 
     // Check-Expect
@@ -122,7 +122,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       break;
     case Div:
       {
-        int uZ_num = (int) AS_NUMBER(vm, RZ);
+        int uZ_num = AS_NUMBER(vm, RZ);
         if (uZ_num == 0)
           runerror(vm, "divide by zero");
         RX = mkNumberValue((int) AS_NUMBER(vm, RY) / uZ_num);
@@ -163,7 +163,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       RX = mkBooleanValue(AS_NUMBER(vm, RY) >= AS_NUMBER(vm, RZ));
       break;
     case Le:
-      RX = mkBooleanValue(AS_NUMBER(vm, RY) >= AS_NUMBER(vm, RZ));
+      RX = mkBooleanValue(AS_NUMBER(vm, RY) <= AS_NUMBER(vm, RZ));
       break;
     }
     ++stream_ptr;
