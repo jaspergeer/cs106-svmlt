@@ -1,7 +1,0 @@
-{
-    "files.associations": {
-        "__config": "cpp",
-        "__nullptr": "cpp",
-        "value.h": "c"
-    }
-}
