@@ -36,6 +36,7 @@
 #define RZ registers[uZ(curr_inst)]
 
 #define LIT LPool_get(literals, uYZ(curr_inst))
+#define GLO LPool_get(literals, uYZ(curr_inst))
 
 void vmrun(VMState vm, struct VMFunction* fun) {
   vm->pc = 0;
@@ -89,10 +90,10 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       RX = LPool_get(literals, uYZ(curr_inst));
       break;
     case GetGLobal:
-      RX = globals[global_slot(vm, registers[uYZ(curr_inst)])];
+      RX = globals[global_slot(vm, GLO)];
       break;
     case SetGlobal:
-      globals[global_slot(vm, registers[uYZ(curr_inst)])] = RX;
+      globals[global_slot(vm, GLO)] = RX;
       break;
 
     // Check-Expect
