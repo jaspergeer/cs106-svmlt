@@ -25,6 +25,7 @@
 #include "vmheap.h"
 #include "vmstring.h"
 #include "string.h"
+#include "loader.h"
 
 // static inline Value add(VMState vm, Value a, Value b) {
 //     return mkNumberValue(AS_NUMBER(vm, a) + AS_NUMBER(vm, b));
@@ -33,6 +34,8 @@
 #define RX registers[uX(curr_inst)]
 #define RY registers[uY(curr_inst)]
 #define RZ registers[uZ(curr_inst)]
+
+#define LIT LPool_get(literals, uYZ(curr_inst))
 
 void vmrun(VMState vm, struct VMFunction* fun) {
   vm->pc = 0;
@@ -60,6 +63,26 @@ void vmrun(VMState vm, struct VMFunction* fun) {
     case Jump:
       stream_ptr += iXYZ(curr_inst);
       break;
+    
+    // Dynamic Loading
+    case PipeOpen: // open pipe, store fd in register
+      {
+        FILE *f = popen(AS_CSTRING(vm, LIT), "r");
+        RX = mkNumberValue(fileno(f));
+      }
+      break;
+    case DynLoad: // load a list of modules from file with descriptor rX
+      {
+        FILE *input = fdopen(AS_NUMBER(vm, RX), "r");
+        for ( struct VMFunction *module = loadmodule(vm, input)
+            ; module
+            ; module = loadmodule(vm, input)
+            ) {
+          vmrun(vm, module);
+        }
+        fclose(input);
+      }
+      break;
 
     // Load/Store
     case LoadLiteral:
@@ -74,10 +97,10 @@ void vmrun(VMState vm, struct VMFunction* fun) {
 
     // Check-Expect
     case Check:
-      check(vm, AS_CSTRING(vm, LPool_get(literals, uYZ(curr_inst))), RX);
+      check(vm, AS_CSTRING(vm, LIT), RX);
       break;
     case Expect:
-      expect(vm, AS_CSTRING(vm, LPool_get(literals, uYZ(curr_inst))), RX);
+      expect(vm, AS_CSTRING(vm, LIT), RX);
       break;
     
     // Arithmetic

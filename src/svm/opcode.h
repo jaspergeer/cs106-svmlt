@@ -12,6 +12,10 @@ typedef enum opcode {
     Halt, // R0
     Print, // R1
 
+    // Dynamic Loading
+    PipeOpen, // R1LIT
+    DynLoad, // R3
+
     // Branching
     CondSkip, // R3
     Jump, // R0I24
