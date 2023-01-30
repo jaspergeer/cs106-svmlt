@@ -54,15 +54,16 @@ void vmrun(VMState vm, struct VMFunction* fun) {
     case Halt:
       vm->pc = stream_ptr - fun->instructions;
       return;
+
+    // Printing
     case Print:
+      print("%v", RX);
+      break;
+    case Println:
       print("%v\n", RX);
       break;
-    case CondSkip:
-      if (AS_BOOLEAN(vm, RX))
-        ++stream_ptr;
-      break;
-    case Jump:
-      stream_ptr += iXYZ(curr_inst);
+    case Printu:
+      print_utf8(AS_NUMBER(vm, RX));
       break;
     
     // Dynamic Loading
@@ -83,6 +84,15 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         }
         fclose(input);
       }
+      break;
+
+    // Branching
+    case CondSkip:
+      if (AS_BOOLEAN(vm, RX))
+        ++stream_ptr;
+      break;
+    case Jump:
+      stream_ptr += iXYZ(curr_inst);
       break;
 
     // Load/Store

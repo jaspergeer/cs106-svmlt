@@ -10,7 +10,11 @@
 
 typedef enum opcode {
     Halt, // R0
+
+    // Printing
     Print, // R1
+    Println,
+    Printu,
 
     // Dynamic Loading
     PipeOpen, // R1LIT
