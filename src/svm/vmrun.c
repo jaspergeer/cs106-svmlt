@@ -25,6 +25,7 @@
 #include "vmheap.h"
 #include "vmstring.h"
 #include "string.h"
+#include "loader.h"
 
 // static inline Value add(VMState vm, Value a, Value b) {
 //     return mkNumberValue(AS_NUMBER(vm, a) + AS_NUMBER(vm, b));
@@ -65,17 +66,22 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       break;
     
     // Dynamic Loading
-    case PipeOpen:
-      FILE *f = popen(AS_CSTRING(vm, LIT), "r");
-      RX = mkNumberValue(fileno(f));
+    case PipeOpen: // open pipe, store fd in register
+      {
+        FILE *f = popen(AS_CSTRING(vm, LIT), "r");
+        RX = mkNumberValue(fileno(f));
+      }
       break;
     case DynLoad: // load a list of modules from file with descriptor rX
-      FILE *input = fdopen(AS_NUMBER(vm, RX), "r");
-      for ( struct VMFunction *module = loadmodule(vm, input) // DONT KNOW IF THIS IS RIGHT???
-          ; module
-          ; module = loadmodule(vm, input)
-          ) {
-        vmrun(vm, module);
+      {
+        FILE *input = fdopen(AS_NUMBER(vm, RX), "r");
+        for ( struct VMFunction *module = loadmodule(vm, input)
+            ; module
+            ; module = loadmodule(vm, input)
+            ) {
+          vmrun(vm, module);
+        }
+        fclose(input);
       }
       break;
 

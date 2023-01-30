@@ -17,10 +17,10 @@ instruction_info instructions[] = {
 //   { "println", Println, parseR1, "println rX" },
 //   { "printu", Printu, parseR1, "printu rX" },
   { "popen", PipeOpen, parseR1LIT, "open pipe from LIT" },
-  { "dload", DynLoad, parseR3, "load from rX" },
+  { "dload", DynLoad, parseR1, "load from rX" },
 
   // Branching
-  { "cskip", CondSkip, parseR3, "if rX then skip" },
+  { "cskip", CondSkip, parseR1, "if rX then skip" },
   { "jump", Jump, parseR0I24, "jump to iXYZ" },
 
   // Load/Store
@@ -40,7 +40,7 @@ instruction_info instructions[] = {
   { "mod", Add, parseR3, "rX := rY % rZ" },
 
   // Boolean
-  { "truth", Truth, parseR3, "rX := truthiness rY" },
+  { "truth", Truth, parseR2, "rX := truthiness rY" },
   { "and", And, parseR3, "rX := rY && rZ" },
   { "or", Or, parseR3, "rX := rY || rZ" },
   { "xor", Xor, parseR3, "rX := rY ^ rZ" },
