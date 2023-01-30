@@ -40,8 +40,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
   Value *registers = vm->registers;
   LPool_T literals = vm->literals;
   Value *globals = vm->globals;
-  (void) globals;
-
+  
   for (;;) {
     uint32_t curr_inst = *stream_ptr;
     switch (opcode(curr_inst)) {
@@ -67,10 +66,10 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       RX = LPool_get(literals, uYZ(curr_inst));
       break;
     case GetGLobal:
-      RX = globals[uYZ(curr_inst)];
+      RX = globals[global_slot(vm, registers[uYZ(curr_inst)])];
       break;
     case SetGlobal:
-      globals[uYZ(curr_inst)] = RX;
+      globals[global_slot(vm, registers[uYZ(curr_inst)])] = RX;
       break;
 
     // Check-Expect

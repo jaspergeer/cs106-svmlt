@@ -137,3 +137,4 @@ void STable_free(STable_T *tableptr) {
   free(*tableptr);
   *tableptr = NULL;
 }
+

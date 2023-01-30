@@ -96,9 +96,8 @@ static Instruction get_instruction(VMState vm, FILE *vofile, unsigned *maxregp) 
     int arity = tokens_get_int(&itoks, ibuf);
     int length = tokens_get_int(&itoks, ibuf);
     struct VMFunction *fun = loadfun(vm, arity, length, vofile);
-    Value fun_value = mkVMFunctionValue(fun);
-    (void)fun_value;
-    i = eR0(Halt);
+    Value funv = mkVMFunctionValue(fun);
+    i = eR1U16(LoadLiteral, regX, literal_slot(vm, funv));
   } else {
     i = parse_instruction(vm, opcode, itoks, maxregp);
   }
@@ -110,7 +109,7 @@ static Instruction get_instruction(VMState vm, FILE *vofile, unsigned *maxregp) 
 }
 
 static struct VMFunction *loadfun(VMState vm, int arity, int count, FILE *vofile) {
-  struct VMFunction *fun = vmalloc_raw(3 * sizeof(int) + (count + 1) * sizeof(Instruction)); // should this be malloc?
+  struct VMFunction *fun = vmalloc_raw(3 * sizeof(int) + (count + 1) * sizeof(Instruction));
   fun->arity = arity;
   fun->size = count + 1;
   fun->instructions[count] = eR0(Halt); // sentinel
