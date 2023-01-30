@@ -38,7 +38,10 @@ struct VMState {
   LPool_T literals;
 
   // global variable table
-  VTable_T globals;
+  // STable_T vartoid;
+  int num_globals;
+  struct Name* global_names[GLOBALS_SIZE];
+  Value globals[GLOBALS_SIZE];
 
   // program counter
   uint32_t pc; // assumes that the first instruction is at address 0x0
