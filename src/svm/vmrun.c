@@ -27,15 +27,12 @@
 #include "string.h"
 #include "loader.h"
 
-// static inline Value add(VMState vm, Value a, Value b) {
-//     return mkNumberValue(AS_NUMBER(vm, a) + AS_NUMBER(vm, b));
-// }
-
 #define RX registers[uX(curr_inst)]
 #define RY registers[uY(curr_inst)]
 #define RZ registers[uZ(curr_inst)]
 
 #define LIT LPool_get(literals, uYZ(curr_inst))
+#define GLO LPool_get(literals, uYZ(curr_inst))
 
 void vmrun(VMState vm, struct VMFunction* fun) {
   vm->pc = 0;
@@ -53,25 +50,26 @@ void vmrun(VMState vm, struct VMFunction* fun) {
     case Halt:
       vm->pc = stream_ptr - fun->instructions;
       return;
+
+    // Printing
     case Print:
+      print("%v", RX);
+      break;
+    case Println:
       print("%v\n", RX);
       break;
-    case CondSkip:
-      if (AS_BOOLEAN(vm, RX))
-        ++stream_ptr;
-      break;
-    case Jump:
-      stream_ptr += iXYZ(curr_inst);
+    case Printu:
+      print_utf8(AS_NUMBER(vm, RX));
       break;
     
     // Dynamic Loading
-    case PipeOpen: // open pipe, store fd in register
+    case PipeOpen: // open pipe, store file descriptor
       {
         FILE *f = popen(AS_CSTRING(vm, LIT), "r");
         RX = mkNumberValue(fileno(f));
       }
       break;
-    case DynLoad: // load a list of modules from file with descriptor rX
+    case DynLoad: // load a list of modules from file
       {
         FILE *input = fdopen(AS_NUMBER(vm, RX), "r");
         for ( struct VMFunction *module = loadmodule(vm, input)
@@ -84,15 +82,24 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       }
       break;
 
+    // Branching
+    case CondSkip:
+      if (AS_BOOLEAN(vm, RX))
+        ++stream_ptr;
+      break;
+    case Jump:
+      stream_ptr += iXYZ(curr_inst);
+      break;
+
     // Load/Store
     case LoadLiteral:
       RX = LPool_get(literals, uYZ(curr_inst));
       break;
     case GetGLobal:
-      RX = globals[global_slot(vm, registers[uYZ(curr_inst)])];
+      RX = globals[global_slot(vm, GLO)];
       break;
     case SetGlobal:
-      globals[global_slot(vm, registers[uYZ(curr_inst)])] = RX;
+      globals[global_slot(vm, GLO)] = RX;
       break;
 
     // Check-Expect
@@ -104,7 +111,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       break;
     
     // Arithmetic
-    case Add: // use AS_NUMBER type safe???
+    case Add:
       RX = mkNumberValue(AS_NUMBER(vm, RY) + AS_NUMBER(vm, RZ));
       break;
     case Sub:
@@ -127,7 +134,6 @@ void vmrun(VMState vm, struct VMFunction* fun) {
     
     // Boolean Logic
     case Truth:
-      // put the truthiness of the value in uY in uX
       RX = mkBooleanValue(GET_TRUTH(vm, RY));
       break;
     case Not:
@@ -160,7 +166,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       RX = mkBooleanValue(AS_NUMBER(vm, RY) >= AS_NUMBER(vm, RZ));
       break;
     }
-    ++stream_ptr; // advance the stream pointer
+    ++stream_ptr;
   }
   return;
 }
