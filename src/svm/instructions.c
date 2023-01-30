@@ -13,9 +13,13 @@
 
 instruction_info instructions[] = {
   { "halt", Halt, parseR0, "halt" },
+
+  // Printing
   { "print", Print, parseR1, "print rX" },
-//   { "println", Println, parseR1, "println rX" },
-//   { "printu", Printu, parseR1, "printu rX" },
+  { "println", Println, parseR1, "println rX" },
+  { "printu", Printu, parseR1, "printu rX" },
+
+  // Dynamic Loading
   { "popen", PipeOpen, parseR1LIT, "open pipe from LIT" },
   { "dload", DynLoad, parseR1, "load from rX" },
 
