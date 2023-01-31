@@ -49,6 +49,7 @@ int literal_count(VMState state) {
 }
 
 int global_slot(VMState state, Value global) {
+    // (void) AsCString
     Name name = strtoname(AS_CSTRING(state, global));
     int slot;
     for (slot = 0; slot < state->num_globals; slot++) {
