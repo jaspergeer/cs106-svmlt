@@ -106,21 +106,18 @@ Instruction parseR1LIT(VMState vm, Opcode opcode, Tokens operands, unsigned* max
   Value literal = get_literal(&operands, NULL);
 
   assert(operands == NULL);
-  SEE(regX); // probably prevents register overflow
   return eR1U16(opcode, regX, literal_slot(vm, literal));
 }
 
 Instruction parseR1GLO(VMState vm, Opcode opcode, Tokens operands, unsigned* maxreg) {
   // <register>
+  initnames();
   uint8_t regX = tokens_get_byte(&operands, NULL);
-  SEE(regX);
-
-  Name n = tokens_get_name(&operands, NULL);
+  SEE(regX); // probably prevents register overflow
+  Value glo_var = get_literal(&operands, NULL);
   
   assert(operands == NULL);
-  Value name = mkStringValue(Vmstring_newc(nametostr(n)));
-  SEE(regX); // probably prevents register overflow
-  return eR1U16(opcode, regX, global_slot(vm, name));
+  return eR1U16(opcode, regX, global_slot(vm, glo_var));
 }
 
 
