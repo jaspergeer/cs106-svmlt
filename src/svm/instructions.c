@@ -38,10 +38,10 @@ instruction_info instructions[] = {
 
   // Arithmetic
   { "add", Add, parseR3, "rX := rY + rZ" },
-  { "sub", Add, parseR3, "rX := rY - rZ" },
-  { "mul", Add, parseR3, "rX := rY * rZ" },
-  { "div", Add, parseR3, "rX := rY / rZ" },
-  { "mod", Add, parseR3, "rX := rY % rZ" },
+  { "sub", Sub, parseR3, "rX := rY - rZ" },
+  { "mul", Mul, parseR3, "rX := rY * rZ" },
+  { "div", Div, parseR3, "rX := rY / rZ" },
+  { "mod", Mod, parseR3, "rX := rY % rZ" },
 
   // Boolean
   { "truth", Truth, parseR2, "rX := truthiness rY" },
