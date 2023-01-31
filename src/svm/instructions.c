@@ -38,10 +38,10 @@ instruction_info instructions[] = {
 
   // Arithmetic
   { "add", Add, parseR3, "rX := rY + rZ" },
-  { "sub", Add, parseR3, "rX := rY - rZ" },
-  { "mul", Add, parseR3, "rX := rY * rZ" },
-  { "div", Add, parseR3, "rX := rY / rZ" },
-  { "mod", Add, parseR3, "rX := rY % rZ" },
+  { "sub", Sub, parseR3, "rX := rY - rZ" },
+  { "mul", Mul, parseR3, "rX := rY * rZ" },
+  { "div", Div, parseR3, "rX := rY / rZ" },
+  { "mod", Mod, parseR3, "rX := rY % rZ" },
 
   // Boolean
   { "truth", Truth, parseR2, "rX := truthiness rY" },
@@ -55,7 +55,12 @@ instruction_info instructions[] = {
   { "gt", Gt, parseR3, "rX := rY > rZ" },
   { "lt", Lt, parseR3, "rX := rY < rZ" },
   { "ge", Ge, parseR3, "rX := rY >= rZ" },
-  { "le", Le, parseR3, "rX := rY <= rZ" }
+  { "le", Le, parseR3, "rX := rY <= rZ" },
+
+  // S-Expressions
+  { "cons", Cons, parseR3, "cons rX, rY, rZ" },
+  { "car", Car, parseR2, "car rX, rY" },
+  { "cdr", Cdr, parseR2, "cdr rX, rY" }
 };
 
 int number_of_instructions = sizeof(instructions) / sizeof(instructions[0]);
