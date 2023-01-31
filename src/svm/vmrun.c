@@ -165,6 +165,23 @@ void vmrun(VMState vm, struct VMFunction* fun) {
     case Le:
       RX = mkBooleanValue(AS_NUMBER(vm, RY) <= AS_NUMBER(vm, RZ));
       break;
+
+    // S-Expressions
+    case Cons:
+      {
+        VMNEW(struct VMBlock *, block,  sizeof *block + 2 * sizeof block->slots[0]);
+        block->nslots = 2;
+        block->slots[0] = RY;
+        block->slots[1] = RZ;
+        RX = mkConsValue(block);
+      }
+      break;
+    case Car:
+      RX = AS_CONS_CELL(vm, RY)->slots[0];
+      break;
+    case Cdr:
+      RX = AS_CONS_CELL(vm, RY)->slots[1];
+      break;
     }
     ++stream_ptr;
   }

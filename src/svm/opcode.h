@@ -40,6 +40,9 @@ typedef enum opcode {
 
     // Comparison
     Cmp, Gt, Lt, Ge, Le, // R3
+
+    // S-Expressions
+    Cons, Car, Cdr,
     
     Unimp, // stand-in for opcodes not yet implemented
     Unimp2, // stand-in for opcodes not yet implemented
