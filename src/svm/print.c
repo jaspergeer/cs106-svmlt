@@ -11,6 +11,7 @@
 #include "print.h"
 #include "value.h"
 #include "vmstring.h"
+#include "vmerror.h"
 
 
 void bprint(Printbuf output, const char *fmt, ...) {
@@ -225,7 +226,8 @@ void bprintquotedvalue(Printbuf output, va_list_box *box) {
 
 void fprint_utf8(FILE *output, unsigned code_point) {
   if ((code_point & 0x1fffff) != code_point)
-      runerror("%d does not represent a Unicode code point", (int)code_point);
+    //   runerror("%d does not represent a Unicode code point", (int)code_point);
+    assert(0);
   if (code_point > 0xffff) {     // 21 bits
       putc(0xf0 |  (code_point >> 18),         output);
       putc(0x80 | ((code_point >> 12) & 0x3f), output);
