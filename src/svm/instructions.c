@@ -55,7 +55,12 @@ instruction_info instructions[] = {
   { "gt", Gt, parseR3, "rX := rY > rZ" },
   { "lt", Lt, parseR3, "rX := rY < rZ" },
   { "ge", Ge, parseR3, "rX := rY >= rZ" },
-  { "le", Le, parseR3, "rX := rY <= rZ" }
+  { "le", Le, parseR3, "rX := rY <= rZ" },
+
+  // S-Expressions
+  { "cons", Cons, parseR3, "cons rX, rY, rZ" },
+  { "car", Car, parseR2, "car rX, rY" },
+  { "cdr", Cdr, parseR2, "cdr rX, rY" }
 };
 
 int number_of_instructions = sizeof(instructions) / sizeof(instructions[0]);
