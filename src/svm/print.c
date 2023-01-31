@@ -7,9 +7,11 @@
 #include <assert.h>
 #include <stdbool.h>
 
+#include "name.h"
 #include "print.h"
 #include "value.h"
 #include "vmstring.h"
+#include "vmerror.h"
 
 
 void bprint(Printbuf output, const char *fmt, ...) {
@@ -123,6 +125,11 @@ void printpointer(Printbuf output, va_list_box *box) {
 }
 
 
+void printname(Printbuf output, va_list_box *box) {
+    Name np = va_arg(box->ap, Name);
+    bufputs(output, np == NULL ? "<null>" : nametostr(np));
+}
+
 void printchar(Printbuf output, va_list_box *box) {
     int c = va_arg(box->ap, int);
     bufput(output, c);
@@ -134,6 +141,7 @@ void installprinters(void) {
     installprinter('d', printdecimal);
     installprinter(',', printcommadecimal);
     installprinter(';', print64commadecimal);
+    installprinter('n', printname);
     installprinter('s', printstring);
     installprinter('v', bprintvalue);
     installprinter('V', bprintquotedvalue);
@@ -218,7 +226,8 @@ void bprintquotedvalue(Printbuf output, va_list_box *box) {
 
 void fprint_utf8(FILE *output, unsigned code_point) {
   if ((code_point & 0x1fffff) != code_point)
-      runerror("%d does not represent a Unicode code point", (int)code_point);
+    //   runerror("%d does not represent a Unicode code point", (int)code_point);
+    assert(0);
   if (code_point > 0xffff) {     // 21 bits
       putc(0xf0 |  (code_point >> 18),         output);
       putc(0x80 | ((code_point >> 12) & 0x3f), output);

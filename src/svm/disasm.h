@@ -16,6 +16,14 @@
 //// simple printer, emits an approximation to assembly code
 
 void printasm(FILE *fp, VMState vm, Instruction i);
+  // Works by filling in the `unparsing_template` field
+  // in the global instruction table (see itable.h and instructions.h)
+  // with these replacements:
+  //     iXYZ         replaced with 24-bit signed XYZ field
+  //     YZ           replaced with 16-bit unsigned YZ field
+  //     X, Y, or Z   replaced with corresponding 8-bit unsigned field
+  //     LIT          replaced with literal value at index YZ
+  //     GLOBAL       replaced with *name* of global slot YZ
 
 void idump(FILE *fp, VMState vm, int pc, Instruction I, 
            Value *RX, Value *RY, Value *RZ);

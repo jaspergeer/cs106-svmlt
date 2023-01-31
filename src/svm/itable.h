@@ -33,7 +33,8 @@ typedef struct instruction_info {
   const char *string;              // name used in virtual object code
   Opcode opcode;                   // name used in `vmrun`
   InstructionParser parser;
-  const char *unparsing_template;  // used for disassembly (`disasm`)
+  const char *unparsing_template;  // used for disassembly (`disasm`);
+                                   // documented in disasm.h
   Name name;                       // == strtoname(string)
 } instruction_info;
 
