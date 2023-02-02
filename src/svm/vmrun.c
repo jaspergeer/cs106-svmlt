@@ -72,6 +72,10 @@ void vmrun(VMState vm, struct VMFunction* fun) {
     case DynLoad: // load a list of modules from file
       {
         FILE *input = fdopen(AS_NUMBER(vm, RX), "r");
+        // stash registers
+        Value reg_stash[NUM_REGISTERS];
+        memcpy(reg_stash, registers, NUM_REGISTERS * sizeof(registers[0]));
+
         for ( struct VMFunction *module = loadmodule(vm, input)
             ; module
             ; module = loadmodule(vm, input)
@@ -79,6 +83,9 @@ void vmrun(VMState vm, struct VMFunction* fun) {
           vmrun(vm, module);
         }
         fclose(input);
+
+        // restore registers
+        memcpy(registers, reg_stash, NUM_REGISTERS * sizeof(registers[0]));
       }
       break;
 
