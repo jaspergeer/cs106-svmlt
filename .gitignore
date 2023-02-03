@@ -61,3 +61,5 @@
 /bin/uft.old
 callgrind.out.*
 /.vscode/
+/src/svm/legacy
+a.out

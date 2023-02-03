@@ -55,8 +55,15 @@ $(BIN)/svm: $(OBJ) $(BUILD)/svm.o
 $(BIN)/svm-loader-instructions: $(OBJ) $(BUILD)/svm-loader-instructions.o
 	gcc $(CFLAGS) -o $@ $^ -lm
 
-# all: $(BUILD)/model-state.o
-# all: $(BUILD)/model-run.o
+all: $(BUILD)/model-state.o
+all: $(BUILD)/model-run.o
+
+$(BUILD)/model-state.o: model/vmstate.c model/vmstate.h
+	gcc -c -DMODEL $(CFLAGS) -Imodel -I. -o $@ model/vmstate.c
+$(BUILD)/model-run.o: model/vmrun.c model/vmstate.h
+	gcc -c -DMODEL $(CFLAGS) -Imodel -I. -o $@ model/vmrun.c
+
+
 
 # $(BUILD)/model-state.o: model/vmstate.c model/vmstate.h
 # 	gcc -c $(CFLAGS) -Imodel -I. -o $@ model/vmstate.c
