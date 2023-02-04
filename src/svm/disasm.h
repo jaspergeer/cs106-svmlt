@@ -23,7 +23,7 @@ void printasm(FILE *fp, VMState vm, Instruction i);
   //     YZ           replaced with 16-bit unsigned YZ field
   //     X, Y, or Z   replaced with corresponding 8-bit unsigned field
   //     LIT          replaced with literal value at index YZ
-  //     GLOBAL       replaced with *name* of global slot YZ
+  //     GLOBAL       replaced with *name* of global in slot YZ
 
 void idump(FILE *fp, VMState vm, int pc, Instruction I, 
            Value *RX, Value *RY, Value *RZ);

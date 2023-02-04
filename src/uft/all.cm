@@ -27,4 +27,16 @@ group is
   error-sig.sml
   error-module.sml
 
+  (* "producer" interface [parsing combinators] *)
 
+  producer-sig.sml
+  producer-functor.sml
+
+
+  asmlex.sml     (* lexer for assembly code, provided with module 3 *)
+  asmparse.sml   (* assembly parser, built in modules 3 & 4, template provided *)
+  assembler.sml  (* Assembler, built in module 4, not provided *)
+
+
+  (*********** UNIVERSAL FORWARD TRANSLATOR **********)
+  uft.sml

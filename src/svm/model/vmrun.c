@@ -6,9 +6,6 @@
 #include <stdlib.h>
 #include <inttypes.h>
 
-#define Add Unimp             // blatant cheat for demo
-#define ConsInstruction Unimp2 // blatant cheat for demo
-
 #include "vmstate.h"  // for demo, must come first.  Thanks, gcc!
 #include "check-expect.h"
 #include "disasm.h"
@@ -23,6 +20,11 @@
 #include "vmstring.h"
 #include "vtable.h"
 
+
+#ifdef MODEL
+#define Add Unimp
+#define ConsInstruction Unimp2
+#endif
 
 #define CANDUMP 1
 

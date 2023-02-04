@@ -38,7 +38,6 @@ struct VMState {
     Value literals[LITSIZE];
 };
 
-
 VMState newstate(void);       // allocate and initialize (to empty)
 void freestatep(VMState *sp); // deallocate
 
