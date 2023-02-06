@@ -4,6 +4,7 @@ data Literal
   = Int Int
   | Real Double
   | String String
+  | Bool Bool
   | EmptyList
   | Nil
 
@@ -16,3 +17,5 @@ data Instr
   | Goto Int
   | LoadFunc Reg Int [Instr]
   | RegInt Operator Reg Reg Int
+
+type Module = [Instr]

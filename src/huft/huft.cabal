@@ -28,7 +28,9 @@ executable huft
     -- must strictly match the file name
     other-modules:
         ASM,
-        ObjectCode
+        ObjectCode,
+        ObjectUnparser,
+        Languages
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:

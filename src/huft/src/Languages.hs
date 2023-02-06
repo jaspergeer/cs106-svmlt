@@ -1,10 +1,8 @@
 module Languages where
-import Data.Map
-import qualified Data.ByteString as Data.Map.Strict
+import qualified Data.Map as M
 
 data Language = HOX | HO | FO | CL | KN | VS | VO deriving (Enum, Eq, Show)
 instance Ord Language where
-  (<=) :: Language -> Language -> Bool
   a <= b = fromEnum a <= fromEnum b
 
 tableInit = 
@@ -16,19 +14,19 @@ tableInit =
     , (VS,  "vs",  "VM assembly language")
     , (VO,  "vo",  "VM object code")]
 
-table :: Map Language (String, String)
-table = Prelude.foldr (\(x, y, z) m -> insert x (y, z) m)  Data.Map.empty tableInit
+table :: M.Map Language (String, String)
+table = foldr (\(x, y, z) m -> M.insert x (y, z) m)  M.empty tableInit
   
 
-shortTable :: Map String Language
-shortTable = Prelude.foldr (\(x, y, _) m -> insert y x m)  Data.Map.empty tableInit
+shortTable :: M.Map String Language
+shortTable = foldr (\(x, y, _) m -> M.insert y x m)  M.empty tableInit
 
 pred :: Language -> Maybe Language
 pred HOX = Nothing
 pred l = Just $ Prelude.pred l
 
 find :: String -> Maybe Language
-find x = Data.Map.lookup x shortTable
+find x = M.lookup x shortTable
 
 description :: (String, String) -> String
 description (_, d) = d
