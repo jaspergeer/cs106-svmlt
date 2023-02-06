@@ -38,8 +38,7 @@ executable huft
     build-depends:
         base,
         containers,
-        parsec,
-        parsec3-numbers
+        parsec
         
     hs-source-dirs:   app, src
     default-language: Haskell2010
