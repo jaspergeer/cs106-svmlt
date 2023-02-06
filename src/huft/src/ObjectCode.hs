@@ -1,7 +1,7 @@
 module ObjectCode where
 
 data Literal
-  = Int Int
+  = Int Integer
   | Real Double
   | String String
   | Bool Bool

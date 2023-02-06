@@ -28,6 +28,7 @@ executable huft
     -- must strictly match the file name
     other-modules:
         ASM,
+        ASMParse,
         ObjectCode,
         ObjectUnparser,
         Languages
@@ -36,6 +37,9 @@ executable huft
     -- other-extensions:
     build-depends:
         base,
-        containers
+        containers,
+        parsec,
+        parsec3-numbers
+        
     hs-source-dirs:   app, src
     default-language: Haskell2010
