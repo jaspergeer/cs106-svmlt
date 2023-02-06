@@ -251,12 +251,10 @@ struct
 
   
   (* val unparse : AssemblyCode.instr list -> string list *)
-  fun unparse (i::is) = 
-      (case i of
-            A.LOADFUNC (x, arity, body) =>
-                List.concat [".loadfunc" :: (unparse body), 
-                             ".endload" :: (unparse is)]
-       | _ => (unparse1 i) :: (unparse is))
-    | unparse [] = [] 
-
+  fun unparse [] = []
+    | unparse (i::is) = (case i of
+                              A.LOADFUNC (x, arity, body) =>
+                                  List.concat [".loadfunc" :: (unparse body), 
+                                                ".endload" :: (unparse is)]
+                            | _ => (unparse1 i) :: (unparse is))
 end
