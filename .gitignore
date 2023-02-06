@@ -63,3 +63,4 @@ callgrind.out.*
 /.vscode/
 /src/svm/legacy
 a.out
+dist-newstyle

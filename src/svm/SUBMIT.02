@@ -2,49 +2,54 @@ CS 106 Homework Submission
 
 What person or group is submitting this homework?
 
-  - 
+  - Alexander Bai, Jaspeer Geer
 
 What work are you proud of?
 
-  - 
+  - literal pool (make L injective, saves memory), and keeping
+    makeLiteral and getLiteral constant time
 
 What code would you like help improving?  Are there bugs you'd like
 help finding during code review?
 
-  - 
+  - the data structure of globals, getting a global slot is linear time.
+    the semantics of SetGlobal and GetGlobal
 
 What code, if any, would you especially like the course staff to
 review?  Why?
 
-  -
+  - Don't look at our code 
 
 In this course, all code may be shared freely.  Aside from code that
 is distributed with the assignment, does your submission contain any
 other code that you got from someone else?  If so, what code is it
 (file names and line numbers please) and who supplied it?
 
-  - 
+  - We used Norman's code for globals, Cons instructions, in vmrun.c
+    vmstate.h, vmstate.c
 
 In response to last week's code review, have you made any material
 changes?  What were they?  By file name and line number, where are
 they found in the code?  If you remember, who helped you during code
 review?
 
-  - 
+  - all kinds of arithmetic instructions in vmrun.c used the Norman's
+    projection and embedding function
+  - Jump and CondSkip in vmrun.c are inspired by Roger in the code review
 
 
 We have a plenary code review tomorrow.  Are you willing to present
 (as a group, if applicable)?
 
-  - 
+  - Yes
 
 Supposing you are not selected to present at tomorrow's plenary code
 review, what code would you like to see presented?  What would you
 learn the most from?
 
-  - 
+  - literal pool 
 
 Again supposing you are not selected to present, who in your group is
 willing to serve on the review panel?
 
-  - 
+  - Both of us (Alex and Jasper)

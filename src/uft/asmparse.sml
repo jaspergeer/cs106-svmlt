@@ -106,6 +106,13 @@ struct
           of Error.OK [t, AsmLex.EOL] => sat (P.eq t) one >> succeed ()
            | _ => (app eprint ["fail: `", s, "`\n"]; Impossible.impossible "non-token in assembler parser")
 
+  val literal
+    = (O.INT <$> int)
+    <|> (O.STRING <$> string)
+    <|> (fn _ => O.NIL) <$> the "nil"
+    <|> (fn _ => O.EMPTYLIST) <$> the "emptylist"
+    <|> (fn _ => O.BOOL true) <$> the "true"
+    <|> (fn _ => O.BOOL false) <$> the "false"
 
 
   (***** instruction-building functions for parsers ****)
@@ -118,6 +125,7 @@ struct
   fun eR2 operator r1 r2    = regs operator [r1, r2]
   fun eR3 operator r1 r2 r3 = regs operator [r1, r2, r3]
 
+  fun eRLIT operator r1 lit = A.OBJECT_CODE (O.REGSLIT (operator, [r1], lit))
 
   (***** Example parser for you to extend *****)
 
@@ -174,6 +182,7 @@ struct
        before
           r1 := r3
      *)    
+    <|> eRLIT "loadliteral" <$> reg <*> literal
 
 
    (**** recursive parser that handles end-of-line and function loading ****)
@@ -226,23 +235,28 @@ struct
   val spaceSep = String.concatWith " "
 
 
-  fun unparse1 (A.OBJECT_CODE (O.REGS ("+", [x, y, z]))) =
-        spaceSep [reg x, ":=", reg y, "+", reg z]
-    | unparse1 (A.OBJECT_CODE (O.REGS ("swap", [x, y]))) =
-        spaceSep [reg x, ",", reg y, ":=", reg y, ",", reg x]
-    | unparse1 (A.OBJECT_CODE (O.REGS ("+imm", [x, y, z]))) =
-        let val n = z - 128
-        in  if n < 0 then
-                spaceSep [reg x, ":=", reg y, "-",  int (~n)]
-            else
-                spaceSep [reg x, ":=", reg y, "+",  int n]
-        end
+  fun unparse1 (A.OBJECT_CODE (O.REGS (opcode, [x, y, z]))) =
+        spaceSep [opcode, reg x, reg y, reg z]
+    | unparse1 (A.OBJECT_CODE (O.REGS (opcode, [x, y]))) =
+        spaceSep [opcode, reg x, reg y]
+    | unparse1 (A.OBJECT_CODE (O.REGS (opcode, [x]))) =
+        spaceSep [opcode, reg x]
+    | unparse1 (A.OBJECT_CODE (O.REGS (opcode, []))) =
+        opcode
+    | unparse1 (A.DEFLABEL label) = spaceSep ["def", label]
+    | unparse1 (A.GOTO_LABEL label) = spaceSep ["goto", label]
+    | unparse1 (A.IF_GOTO_LABEL (x, label)) =
+      spaceSep ["if", reg x, "goto", label]
     | unparse1 _ = "an unknown assembly-code instruction"
 
   
-  val unparse : AssemblyCode.instr list -> string list
-    = map unparse1  (* not good enough in presence of LOADFUNC *)
-        (* Note: When unparsed, the body of LOADFUNC should be indented *)
-
+  (* val unparse : AssemblyCode.instr list -> string list *)
+  fun unparse (i::is) = 
+      (case i of
+            A.LOADFUNC (x, arity, body) =>
+                List.concat [".loadfunc" :: (unparse body), 
+                             ".endload" :: (unparse is)]
+       | _ => (unparse1 i) :: (unparse is))
+    | unparse [] = [] 
 
 end
