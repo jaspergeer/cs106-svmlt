@@ -22,6 +22,8 @@ signature PRODUCER = sig
   val <$> : ('a -> 'b) * 'a producer -> 'b producer
   val <|> : 'a producer * 'a producer -> 'a producer
 
+  val >>= : 'a producer * ('a -> 'b producer) -> 'b producer
+
   (* shortcuts for parsing something and dropping the result *)
   val <~> : 'a producer * 'b producer -> 'a producer
   val >>  : 'a producer * 'b producer -> 'b producer
