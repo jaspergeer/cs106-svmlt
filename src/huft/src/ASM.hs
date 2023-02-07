@@ -1,13 +1,19 @@
 -- merged norman's asm.sml, asmlex.sml, and probably asmparse.sml
 
-module ASM (Instr) where
+module ASM where
+
+import qualified ObjectCode as O
+
+type Label = String
+type Arity = Int
 
 data Instr
-  = ObjectCode
-  | LoadFunc
-  | DefLabel String
-  | GotoLabel String
-  | IfGotoLabel
+  = ObjectCode O.Instr
+  | LoadFunc O.Reg Arity [Instr]
+  | DefLabel Label
+  | GotoLabel Label
+  | IfGotoLabel O.Reg Label
+  deriving Show
 
 
 

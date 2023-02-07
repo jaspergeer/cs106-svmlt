@@ -26,10 +26,19 @@ executable huft
 
     -- Modules included in this executable, other than Main.hs
     -- must strictly match the file name
-    other-modules: ASM, ObjectCode
+    other-modules:
+        ASM,
+        ASMParse,
+        ObjectCode,
+        ObjectUnparser,
+        Languages
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
-    build-depends:    base ^>=4.16.1.0
+    build-depends:
+        base,
+        containers,
+        parsec
+        
     hs-source-dirs:   app, src
     default-language: Haskell2010
