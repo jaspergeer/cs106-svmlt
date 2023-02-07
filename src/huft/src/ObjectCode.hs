@@ -7,6 +7,7 @@ data Literal
   | Bool Bool
   | EmptyList
   | Nil
+  deriving Show
 
 type Reg = Int
 type Operator = String
@@ -17,5 +18,6 @@ data Instr
   | Goto Int
   | LoadFunc Reg Int [Instr]
   | RegInt Operator Reg Reg Int
+  deriving Show
 
 type Module = [Instr]

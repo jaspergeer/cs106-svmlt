@@ -13,6 +13,7 @@ data Instr
   | DefLabel Label
   | GotoLabel Label
   | IfGotoLabel O.Reg Label
+  deriving Show
 
 
 
