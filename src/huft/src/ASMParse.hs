@@ -22,17 +22,16 @@ nat = read <$> many1 digit
 
 double :: Parser Double
 double = read <$> ((++) <$> whole <*> decimal)
-      <|> fromIntegral <$> integer
       where whole = (++) <$> option "" (string "-") <*> many1 digit
             decimal = (++) <$> string "." <*> many1 digit
 
 literal :: Parser O.Literal
-literal = O.Int <$> integer
-        <|> O.Real <$> double
-        <|> O.Bool True <$ string "true"
-        <|> O.Bool False <$ string "false"
-        <|> O.EmptyList <$ string "emptylist"
-        <|> O.Nil <$ string "nil"
+literal = try (O.Real <$> try double)
+        <|> try (O.Int <$> integer)
+        <|> try (O.Bool True <$ string "true")
+        <|> try (O.Bool False <$ string "false")
+        <|> try (O.EmptyList <$ string "emptylist")
+        <|> try (O.Nil <$ string "nil")
 
 regs :: O.Operator -> [O.Reg] -> A.Instr
 regs op operands = A.ObjectCode (O.Regs op operands)
