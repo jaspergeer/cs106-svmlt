@@ -54,12 +54,25 @@ struct
   infixr 4 <$>
   fun f <$> p = succeed f <*> p
 
+  (* not sure how to define join *)
+    
+  fun fmap f = (fn p => 
+                (fn xs => 
+                    case p xs
+                      of NONE => NONE
+                       | SOME (E.ERROR msg, ys) => SOME (E.ERROR msg, ys)
+                       | SOME (E.OK a, ys) => (succeed (f a)) ys))
+
+
+
   infix 4 >>=
 
   fun p >>= f = (fn xs => case p xs
                             of NONE => NONE
                              | SOME (E.ERROR msg, ys) => SOME (E.ERROR msg, ys)
                              | SOME (E.OK a, ys) => (f a) ys)
+
+
 
   infix 1 <|>
   fun t1 <|> t2 = (fn xs => case t1 xs of SOME y => SOME y | NONE => t2 xs) 
