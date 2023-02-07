@@ -182,7 +182,7 @@ struct
        before
           r1 := r3
      *)    
-    <|> eRLIT "loadliteral" <$> reg <*> literal
+    <|> eRLIT "loadliteral" <$> reg <~> the ":=" <*> literal
 
 
    (**** recursive parser that handles end-of-line and function loading ****)
@@ -231,12 +231,20 @@ struct
   (*************************** unparsing *****************************)
 
   val int = Int.toString
-  fun reg r = "r" ^ int r
+  fun reg r = "$r" ^ int r
   val spaceSep = String.concatWith " "
+  val lit_toString = ObjectUnparser.literal
 
-
-  fun unparse1 (A.OBJECT_CODE (O.REGS (opcode, [x, y, z]))) =
+  fun unparse1 (A.OBJECT_CODE (O.REGS ("+", [x, y, z]))) =
+        spaceSep [reg x, ":=", reg y, "+", reg z]
+    | unparse1 (A.OBJECT_CODE (O.REGS ("+imm", [x, y, z]))) =
+        spaceSep [reg x, ":=", reg y, "+", int z]
+    | unparse1 (A.OBJECT_CODE (O.REGSLIT ("loadliteral", x, y))) =
+        spaceSep ((map reg x) @ [":="] @ lit_toString y)
+        (* unspecified eR3 should be prefixed *)
+    | unparse1 (A.OBJECT_CODE (O.REGS (opcode, [x, y, z]))) =
         spaceSep [opcode, reg x, reg y, reg z]
+        (* same as eR2, eR1, eR*)
     | unparse1 (A.OBJECT_CODE (O.REGS (opcode, [x, y]))) =
         spaceSep [opcode, reg x, reg y]
     | unparse1 (A.OBJECT_CODE (O.REGS (opcode, [x]))) =
@@ -251,12 +259,10 @@ struct
 
   
   (* val unparse : AssemblyCode.instr list -> string list *)
-  fun unparse (i::is) = 
-      (case i of
-            A.LOADFUNC (x, arity, body) =>
-                List.concat [".loadfunc" :: (unparse body), 
-                             ".endload" :: (unparse is)]
-       | _ => (unparse1 i) :: (unparse is))
-    | unparse [] = [] 
-
+  fun unparse [] = []
+    | unparse (i::is) = (case i of
+                              A.LOADFUNC (x, arity, body) =>
+                                  List.concat [".loadfunc" :: (unparse body), 
+                                                ".endload" :: (unparse is)]
+                            | _ => (unparse1 i) :: (unparse is))
 end

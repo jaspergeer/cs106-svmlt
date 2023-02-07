@@ -2,49 +2,58 @@ CS 106 Homework Submission
 
 What person or group is submitting this homework?
 
-  - 
+  - Alexander Bai, Jasper Geer
 
 What work are you proud of?
 
-  - 
+  - understanding most of the UFT (how module interacts)
 
 What code would you like help improving?  Are there bugs you'd like
 help finding during code review?
 
-  - 
+  - some parsings of common tokens are missing, which affects how to
+    parse load_literal. Also want to cross check how it corresponds
+    to the `get` functions in `tokens.h`.
 
 What code, if any, would you especially like the course staff to
 review?  Why?
 
-  -
+  - line 185 of `asmparse.sml`, the loadliteral case of parsing
+    one line instr
 
 In this course, all code may be shared freely.  Aside from code that
 is distributed with the assignment, does your submission contain any
 other code that you got from someone else?  If so, what code is it
 (file names and line numbers please) and who supplied it?
 
-  - 
+  -  We are trying to work on a UFT in haskell, which will be based on
+     Parsec, and code from UCSD CSE 230 (programming languages)
+     https://github.com/ucsd-cse230-np/02-while
 
 In response to last week's code review, have you made any material
 changes?  What were they?  By file name and line number, where are
 they found in the code?  If you remember, who helped you during code
 review?
 
-  - 
+  - Norman pointed out why recursively calling vmrun with no limitation
+    to access the original vm reprentation leads to catastrophic behaviors.
+    We restore the register after dynamic load
 
 
 We have a plenary code review tomorrow.  Are you willing to present
 (as a group, if applicable)?
 
-  - 
+  - No (we spent most of the time exploring how to write uft in haskell,
+        our syntax design for virtual assembly code is problematic)
 
 Supposing you are not selected to present at tomorrow's plenary code
 review, what code would you like to see presented?  What would you
 learn the most from?
 
-  - 
+  - the unparse function. I will learn the most from other's perspective
+    on the parsing mechanism of the uft
 
 Again supposing you are not selected to present, who in your group is
 willing to serve on the review panel?
 
-  - 
+  - Alex and Jasper
