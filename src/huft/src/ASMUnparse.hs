@@ -20,6 +20,7 @@ binopSet :: S.Set String
 binopSet = S.fromList A.binops
 
 unparseObj1 :: O.Instr -> String
+unparseObj1 (O.Regs "zero" [r1]) = unwords [reg r1, ":=", "0"]
 unparseObj1 (O.Regs op regs) = case regs of
   [] -> op
   [r1] -> unwords [op, reg r1]
@@ -42,7 +43,7 @@ unparse1 i = case i of
 
 unparse :: [A.Instr] -> [String]
 unparse (i:is) = case i of
-    A.LoadFunc r arity body -> ".loadfunc" : unparse body ++
+    A.LoadFunc r arity body -> ".loadfunc" : map ("\t" ++) (unparse body) ++
                                ".endload" : unparse is
     A.ObjectCode (O.LoadFunc r arity body) ->
       unparse (A.LoadFunc r arity (map A.ObjectCode body):is)
