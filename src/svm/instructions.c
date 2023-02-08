@@ -13,6 +13,7 @@
 
 instruction_info instructions[] = {
   { "halt", Halt, parseR0, "halt" },
+  { "zero", Unimp, parseR1, "rX := 0" },
 
   // Printing
   { "print", Print, parseR1, "print rX" },
@@ -44,7 +45,7 @@ instruction_info instructions[] = {
   { "mod", Mod, parseR3, "rX := rY mod rZ" },
 
   // Boolean
-  { "truth", Truth, parseR2, "rX := truthiness rY" },
+  { "truth", Truth, parseR2, "rX := truth rY" },
   { "not", Not, parseR2, "rX := not rY"},
   { "and", And, parseR3, "rX := rY and rZ" },
   { "or", Or, parseR3, "rX := rY or rZ" },

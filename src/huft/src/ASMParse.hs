@@ -56,6 +56,7 @@ oneOfStr strs = choice (map string strs)
 singleLineInstr :: Parser A.Instr
 singleLineInstr = line
   (try binop
+  <|> try (eR1 "zero" <$> reg <* spc (string ":=") <* spc (char '0'))
   <|> try (regInstr eR3 A.opcodesR3 <*> spc reg <*> spc reg)
   <|> try (regInstr eR2 A.opcodesR2 <*> spc reg)
   <|> try (regInstr eR1LIT A.opcodesR1LIT <*> spc literal)

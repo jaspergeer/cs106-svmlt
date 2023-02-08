@@ -22,7 +22,7 @@ unparse1 i = case i of
   A.DefLabel label -> unwords ["def", label]
   A.GotoLabel label -> unwords ["goto", label]
   A.IfGotoLabel r label -> unwords ["if", reg r, "goto", label]
-  _ -> error "unkown assembly instruction"
+  _ -> error "IMPOSSIBLE: unknown assembly instruction"
 
 unparse :: [A.Instr] -> [String]
 unparse (i:is) =

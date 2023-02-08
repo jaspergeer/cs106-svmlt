@@ -10,6 +10,7 @@
 
 typedef enum opcode {
     Halt, // R0
+    Zero, // R1
 
     // Printing
     Print, // R1
