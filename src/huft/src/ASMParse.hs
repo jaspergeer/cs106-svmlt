@@ -1,12 +1,11 @@
 module ASMParse where
 import qualified ASM as A
 import qualified ObjectCode as O
+import qualified Data.Map as M
+import qualified Data.Set as S
 import Text.Parsec.String ( Parser )
 import Data.List (intercalate)
 import Text.Parsec ( digit, many1, (<|>), string, letter, alphaNum, char, option, oneOf, spaces, many, manyTill, space, newline, choice, parserFail, (<?>), parserZero, try, anyChar, getPosition)
-import qualified Text.Parsec.Token as T
-import qualified Data.Map as M
-import qualified Data.Set as S
 import Text.Parsec.Error (newErrorMessage, Message (Expect))
 
 -- parsing
@@ -51,25 +50,8 @@ eR1LIT op r1 lit = A.ObjectCode (O.RegsLit op [r1] lit)
 
 type Short = String
 
-binopTableInit :: [(Short, A.Binop)]
-binopTableInit = 
-  [("+", "add")
-    , ("-",  "sub")
-    , ("*",  "mul")
-    , ("/",  "div")]
-
-binopTable :: M.Map Short A.Binop
-binopTable = foldr (\(x, y) m -> M.insert x y m)  M.empty binopTableInit
-
 oneOfStr :: [String] -> Parser String
 oneOfStr strs = choice (map string strs)
-
-binopOpcode :: Parser O.Operator
-binopOpcode = do
-  short <- oneOfStr A.binops
-  case M.lookup short binopTable of
-    Just op -> return op
-    _ -> error "IMPOSSIBLE: binop table and list inconsistent"
 
 singleLineInstr :: Parser A.Instr
 singleLineInstr = line
@@ -89,7 +71,7 @@ singleLineInstr = line
           r1 <- reg
           spc (string ":=")
           r2 <- spc reg
-          op <- spc binopOpcode
+          op <- spc (oneOfStr A.binops)
           r3 <- spc reg
           return $ eR3 op r1 r2 r3
 
