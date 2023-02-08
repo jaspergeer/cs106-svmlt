@@ -6,17 +6,16 @@ instance Ord Language where
   a <= b = fromEnum a <= fromEnum b
 
 tableInit = 
-  [(HOX, "hox", "Higher-order vScheme with mutable variables in closures")
-    , (HO,  "ho",  "Higher-order vScheme")
-    , (FO,  "fo",  "First-order vScheme")
-    , (CL,  "cl",  "First-order vScheme with closure and capture forms")
-    , (KN,  "kn",  "K-Normal form")
-    , (VS,  "vs",  "VM assembly language")
-    , (VO,  "vo",  "VM object code")]
+  [ (HOX, "hox", "Higher-order vScheme with mutable variables in closures")
+  , (HO,  "ho",  "Higher-order vScheme")
+  , (FO,  "fo",  "First-order vScheme")
+  , (CL,  "cl",  "First-order vScheme with closure and capture forms")
+  , (KN,  "kn",  "K-Normal form")
+  , (VS,  "vs",  "VM assembly language")
+  , (VO,  "vo",  "VM object code") ]
 
 table :: M.Map Language (String, String)
 table = foldr (\(x, y, z) m -> M.insert x (y, z) m)  M.empty tableInit
-  
 
 shortTable :: M.Map String Language
 shortTable = foldr (\(x, y, _) m -> M.insert y x m)  M.empty tableInit
