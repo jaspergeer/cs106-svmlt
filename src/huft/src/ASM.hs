@@ -3,34 +3,73 @@
 module ASM where
 
 import qualified ObjectCode as O
+import qualified Data.Set as S
 
 type Label = String
-type Arity = Int
 
 data Instr
   = ObjectCode O.Instr
-  | LoadFunc O.Reg Arity [Instr]
+  | LoadFunc O.Reg Int [Instr]
   | DefLabel Label
   | GotoLabel Label
   | IfGotoLabel O.Reg Label
   deriving Show
 
+type Binop = String
+type Unop = String
 
+binops =
+  [ "+"
+  , "-"
+  , "*"
+  , "/"
+  , "mod"
+  , "and"
+  , "or"
+  , "xor"
+  , "n="
+  , "s="
+  , ">"
+  , "<"
+  , ">="
+  , "<=" ]
 
--- (* A basic representation of assembly code: 
---     it's essentially object code, but with labels. *)
+opcodesR3 =
+  [ "cons" ]
 
--- (* You'll need to understand what's going on here, and how it's used *)
+opcodesR2 =
+  [ "truth"
+  , "not"
+  , "car"
+  , "cdr" ]
 
--- structure AssemblyCode = struct
---   (* A valid object-code instruction is also a valid assembly-code instruction.
---      Instruction forms with labels appear only in assembly code. *)
+opcodesR1 =
+  [ "print"
+  , "println"
+  , "printu"
+  , "dload"
+  , "cskip" ]
 
---   datatype instr
---     = OBJECT_CODE of ObjectCode.instr                   (* an object-code instruction *)
---     | LOADFUNC    of ObjectCode.reg * int * instr list  (* body is assembly code *)
+opcodesR1LIT =
+  [ "popen"
+  , "loadliteral"
+  , "check"
+  , "expect" ]
 
---     | DEFLABEL      of string
---     | GOTO_LABEL    of string
---     | IF_GOTO_LABEL of ObjectCode.reg * string
--- end
+opcodesR1GLO =
+  [ "getglobal"
+  , "setglobal" ]
+
+opcodesR0I24 =
+  [ "jump" ]
+
+opcodesR0 =
+  [ "halt"]
+
+opcodes = concat
+  [ opcodesR3
+  , opcodesR2
+  , opcodesR1
+  , opcodesR0
+  , opcodesR1LIT
+  , opcodesR1GLO ]
