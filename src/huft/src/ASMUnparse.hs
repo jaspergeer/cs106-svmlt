@@ -6,6 +6,9 @@ import qualified ObjectCode as O
 reg :: Show a => a -> [Char]
 reg r = "r" ++ show r
 
+unparseLit :: O.Literal -> String
+unparseLit = error "not implemented"
+
 unparse1 :: A.Instr -> String
 unparse1 i = case i of
   A.ObjectCode (O.Regs op regs) -> unwords $ op : map reg regs
