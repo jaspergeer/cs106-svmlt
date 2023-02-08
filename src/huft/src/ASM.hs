@@ -6,11 +6,10 @@ import qualified ObjectCode as O
 import qualified Data.Set as S
 
 type Label = String
-type Arity = Int
 
 data Instr
   = ObjectCode O.Instr
-  | LoadFunc O.Reg Arity [Instr]
+  | LoadFunc O.Reg Int [Instr]
   | DefLabel Label
   | GotoLabel Label
   | IfGotoLabel O.Reg Label

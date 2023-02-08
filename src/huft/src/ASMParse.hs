@@ -46,7 +46,7 @@ eR0 op = regs op []
 eR1 op r1 = regs op [r1]
 eR2 op r1 r2 = regs op [r1, r2]
 eR3 op r1 r2 r3 = regs op [r1, r2, r3]
-eR1LIT op r1 lit = A.ObjectCode (O.RegsLit op [r1] lit)
+eR1LIT op r1 lit = A.ObjectCode (O.RegLit op r1 lit)
 
 type Short = String
 
@@ -62,7 +62,6 @@ singleLineInstr = line
   <|> try (regInstr eR1LIT A.opcodesR1LIT <*> spc literal)
   <|> try (regInstr eR1 A.opcodesR1)
   <|> try (eR0 <$> oneOfStr A.opcodesR0))
-  -- special form for setzero??
   where regInstr eRX opcodes = do
           r1 <- reg
           spc (string ":=")
