@@ -4,14 +4,18 @@
 // is a good one, but the function itself, `printasm`, is hard to read.
 // String processing in C is not much fun.
 
+#define _POSIX_C_SOURCE 200112L
+
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "disasm.h"
 #include "iformat.h"
 #include "itable.h"
 #include "print.h"
+#include "value.h"
 
 
 //// detailed info about an instruction's operands, for diagnostics
@@ -112,20 +116,47 @@ static OperandSet operands(Instruction i) {
   return used;
 }      
 
+static void fprintfunname(FILE *fp, VMState vm, Value v);
+  // if v is a function or closure, and if v is identical to the value
+  // of a global variable, write "(function $NAME)" to file descriptor fp, 
+  // where $NAME is replaced with the name of the global variable
+
+static void fprintfunname(FILE *fp, VMState vm, Value v) {
+  switch (v.tag) {
+    case VMFunction:
+    case VMClosure:
+      (void) fp;
+      (void) vm;
+      assert(0);
+      // You need here a loop through all your globals, searching
+      // for an `i` such that `identical(global number i, v)` holds.
+      // If you find one, print "(function $NAME)" where $NAME is
+      // the name of global number `i`.
+    default:
+      break;
+  }
+}
 
 
 void idump(FILE *fp, VMState vm, int pc, Instruction I,
            Value *RX, Value *RY, Value *RZ) {
+    bool tty = isatty(fileno(fp));
     OperandSet used = operands(I);
     fprintf(fp, "%60s", "");
-    if (used & has_uX) { assert(RX); fprint(fp, "  r%d = %V", uX(I), *RX); }
-    if (used & has_uY) { assert(RY); fprint(fp, "  r%d = %V", uY(I), *RY); }
-    if (used & has_uZ) { assert(RZ); fprint(fp, "  r%d = %V", uZ(I), *RZ); }
-    system("tput cr setaf 1");
+    if (used & has_uX) { assert(RX); fprint(fp, "  r%d = %V", uX(I), *RX);
+                         fprintfunname(fp, vm, *RX);
+                       }
+    if (used & has_uY) { assert(RY); fprint(fp, "  r%d = %V", uY(I), *RY);
+                         fprintfunname(fp, vm, *RY);
+                       }
+    if (used & has_uZ) { assert(RZ); fprint(fp, "  r%d = %V", uZ(I), *RZ);
+                         fprintfunname(fp, vm, *RZ);
+                       }
+    if (tty) system("tput cr setaf 1");
     fprintf(fp, "[%3d] ", pc);
-    system("tput setaf 5");
+    if (tty) system("tput setaf 5");
     printasm(fp, vm, I);
-    system("tput op");
+    if (tty) system("tput op");
     fprintf(fp, "\n");
 }
 

@@ -11,7 +11,7 @@ structure ObjectCode = struct
                      | NIL
 
     type reg = int
-    type operator = string
+    type operator = string (* opcode name recognized by the VM loader *)
 
     datatype instr
       = REGS    of operator * reg list
