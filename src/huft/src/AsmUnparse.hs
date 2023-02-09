@@ -1,6 +1,6 @@
-module ASMUnparse where
+module AsmUnparse where
 
-import qualified ASM as A
+import qualified Asm as A
 import qualified ObjectCode as O
 import qualified Data.Set as S
 

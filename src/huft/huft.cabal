@@ -27,8 +27,8 @@ executable huft
     -- Modules included in this executable, other than Main.hs
     -- must strictly match the file name
     other-modules:
-        ASM,
-        ASMParse,
+        Asm,
+        AsmParse,
         ObjectCode,
         ObjectUnparser,
         Languages
