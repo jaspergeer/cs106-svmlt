@@ -1,5 +1,6 @@
-module ASMParse where
-import qualified ASM as A
+module AsmParse where
+
+import qualified Asm as A
 import qualified ObjectCode as O
 import qualified Data.Map as M
 import qualified Data.Set as S
@@ -120,3 +121,6 @@ instruction = (try singleLineInstr
                     arity <- spc nat
                     return (\body -> loadFunc arity body (length body))
                   loadFunEnd = line $ string ".loadend"
+
+asmParse :: Parser [A.Instr]
+asmParse = many instruction

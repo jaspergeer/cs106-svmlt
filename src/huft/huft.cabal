@@ -27,11 +27,14 @@ executable huft
     -- Modules included in this executable, other than Main.hs
     -- must strictly match the file name
     other-modules:
-        ASM,
-        ASMParse,
+        Asm,
+        AsmParse,
+        AsmUnparse,
         ObjectCode,
         ObjectUnparser,
-        Languages
+        Languages,
+        Error,
+        UFT
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:

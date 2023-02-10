@@ -23,11 +23,16 @@ static inline bool init_called(void) {
   return instructions[0].name != NULL;
 }
 
+static struct instruction_info *info_by_code[256];
+  // cache for fast indexing by opcode
+
 void itable_init(void) {
-  for (int i = 0; i < number_of_instructions; i++) {
+  // go from back to front so first entry for each opcode governs
+  for (int i = number_of_instructions; i > 0; ) {
+    i--;
     instructions[i].name = strtoname(instructions[i].string);
+    info_by_code[instructions[i].opcode] = &instructions[i];
   }
-  // we could also build a data structure to speed up opcode_info
 }
 
 struct instruction_info *itable_entry(Name n) {
@@ -42,11 +47,8 @@ struct instruction_info *itable_entry(Name n) {
 
 struct instruction_info *itable_entry_by_code(Opcode opcode) {
   assert(init_called());
-  for (int i = 0; i < number_of_instructions; i++) {
-    if (opcode == instructions[i].opcode)
-      return instructions + i;
-  }
-  return NULL;
+  assert(opcode == (uint8_t) opcode);
+  return info_by_code[opcode];
 }
 
 /****************************************************************/

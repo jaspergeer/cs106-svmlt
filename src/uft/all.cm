@@ -34,6 +34,7 @@ group is
 
 
   asmlex.sml     (* lexer for assembly code, provided with module 3 *)
+  indentlex.sml  (* lexer that handles significant indentation, python style *)
   asmparse.sml   (* assembly parser, built in modules 3 & 4, template provided *)
   assembler.sml  (* Assembler, built in module 4, not provided *)
 
