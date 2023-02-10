@@ -19,4 +19,10 @@ find n rho = case M.lookup n rho of
 bind :: Name -> a -> Env a -> Env a
 bind = M.insert
 
+binds :: Env a -> Name -> Bool
+binds env n = M.member n env
+
+empty :: Env a
+empty = M.empty
+
 -- TODO toString?

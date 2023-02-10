@@ -29,9 +29,12 @@ executable huft
     other-modules:
         Asm,
         AsmParse,
+        AsmUnparse,
         ObjectCode,
         ObjectUnparser,
-        Languages
+        Languages,
+        Error,
+        UFT
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
