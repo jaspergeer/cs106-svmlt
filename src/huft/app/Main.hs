@@ -14,7 +14,7 @@ translationOf :: String -> (Handle, Handle) -> IO (E.Error (IO ()))
 translationOf spec =
     case split (=='-') (fromString spec) of 
         [from, to] -> case (L.find (unpack from), L.find (unpack to)) of
-                        (Just f, Just t) -> UFT.translate (f, t)
+                        (Just f, Just t) -> UFT.translate f t
                         _                -> error "oops"
         _          -> error "oops"
 
@@ -29,7 +29,7 @@ main = do
     -- mapM putStrLn args
     case args of -- stopgap implementation
         spec : args -> do
-            translation <- translationOf spec (stdin, stdout)
+            translation <- translationOf spec stdin stdout
             case translation of
                 Left e -> putStrLn e
                 Right r -> r

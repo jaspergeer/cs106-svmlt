@@ -5,7 +5,6 @@ import Control.Exception (Exception, throw)
 import Text.Parsec (runParser, ParseError)
 
 import GHC.IO.Handle (hGetContents', hPutStr, Handle)
-import Asm (Instr(ObjectCode))
 import Text.Parsec.String (Parser)
 import System.IO (hPutStrLn)
 import Error ( Error )
@@ -62,7 +61,7 @@ data UFTException = NotForward Language Language
   deriving (Show)
 instance Exception UFTException
 
-translate :: (Language, Language) -> (Handle, Handle) -> IO (Error (IO ()))
-translate (inLang, outLang) (infile, outfile) =
+translate :: Language -> Language -> Handle -> Handle -> IO (Error (IO ()))
+translate inLang outLang infile outfile =
   case outLang of
     VS -> vsOf inLang infile <&> (emitVS outfile <$>)
