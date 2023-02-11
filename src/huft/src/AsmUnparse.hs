@@ -31,7 +31,7 @@ unparseObj1 (O.RegLit "loadliteral" r1 lit) = unwords [reg r1, ":=", unparseLit 
 unparseObj1 (O.RegLit op r1 lit) = unwords [reg r1, ":=", op, unparseLit lit]
 unparseObj1 (O.RegGlo "getglobal" r1 name) = unwords [reg r1, ":= G[", name, "]"]
 unparseObj1 (O.RegGlo "setglobal" r1 name) = unwords ["G[", name, "] :=", reg r1]
-unparseObj1 (O.RegInt op r1 n) = unwords [reg r1, show n]
+-- unparseObj1 (O.RegInt op r1 n) = unwords [reg r1, show n]
 
 unparse1 :: A.Instr -> String
 unparse1 (A.ObjectCode instr) = unparseObj1 instr
