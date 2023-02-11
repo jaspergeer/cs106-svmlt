@@ -1,6 +1,6 @@
-module AsmParse where
+module ASMParse where
 
-import qualified Asm as A
+import qualified ASM as A
 import qualified ObjectCode as O
 import qualified Data.Map as M
 import qualified Data.Set as S
@@ -65,7 +65,7 @@ eR0 op = regs op []
 eR1 op r1 = regs op [r1]
 eR2 op r1 r2 = regs op [r1, r2]
 eR3 op r1 r2 r3 = regs op [r1, r2, r3]
-eR1LIT op r1 lit = A.ObjectCode (O.RegLit op r1 lit)
+eR1LIT op r1 lit = A.ObjectCode (O.RegsLit op [r1] lit)
 eR1GLO op r1 name = A.ObjectCode (O.RegGlo op r1 name)
 
 type Short = String

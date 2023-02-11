@@ -106,6 +106,11 @@ struct
           of Error.OK [t, AsmLex.EOL] => sat (P.eq t) one >> succeed ()
            | _ => (app eprint ["fail: `", s, "`\n"]; Impossible.impossible "non-token in assembler parser")
 
+  (* fun commaSep p = many (p <~> the ",") <|> succeed[] *)
+  fun commaSep p = (curry (op ::) <$> p <*> many (the "," >> p)) <|> succeed []
+  
+  val _ = op commaSep : 'a parser -> 'a list parser
+
   val literal
     = (O.INT <$> int)
     <|> (O.STRING <$> string)

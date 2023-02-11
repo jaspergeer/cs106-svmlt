@@ -1,5 +1,5 @@
 module ObjectCode where
-
+-- see norman's object-code.sml
 data Literal
   = Int Integer
   | Real Double
@@ -14,10 +14,10 @@ type Operator = String
 
 data Instr
   = Regs Operator [Reg]
-  | RegLit Operator Reg Literal
+  | RegsLit Operator [Reg] Literal
   | Goto Int
   | LoadFunc Reg Int [Instr]
-  | RegInt Operator Reg Int
+  | RegInt Operator Reg Reg Int
   | RegGlo Operator Reg String
   deriving Show
 
