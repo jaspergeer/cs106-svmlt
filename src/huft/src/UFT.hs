@@ -41,9 +41,8 @@ instance Exception InternalError
 -- Reader functions
 
 vsOfFile :: Reader [Asm.Instr]
+-- vsOfFile Handle -> IO (Error [Asm.Instr])
 vsOfFile infile = hGetContents' infile <&> parseAndErr AsmParse.asmParse 
-
--- create (Reader a) -> (a -> Error b) -> Reader b infix op
 
 -- Materializer functions
 
@@ -52,10 +51,10 @@ vsOf VS = vsOfFile
 vsOf _ = throw (NoTranslationTo VS)
 
 voOf :: Language -> Reader [ObjectCode.Instr]
-voOf VS = vsOfFile ==> Assembler.translate
-voOf _ = throw (NoTranslationTo VO)
+voOf VO     =  throw (NoTranslationTo VO)
+voOf inLang =  vsOf inLang ==> Assembler.translate
 
--- Emitter functions
+-- Emitter functionsz
 
 emitVO :: Emitter [ObjectCode.Instr]
 emitVO outfile = mapM_ (hPutStrLn outfile) . ObjectUnparser.unparseModule
