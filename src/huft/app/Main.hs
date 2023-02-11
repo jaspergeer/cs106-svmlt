@@ -10,7 +10,7 @@ import System.IO (stdin, openFile)
 import qualified UFT
 import qualified Error as E
 
-translationOf :: String -> (Handle, Handle) -> IO (E.Error (IO ()))
+translationOf :: String -> Handle -> Handle -> IO (E.Error (IO ()))
 translationOf spec =
     case split (=='-') (fromString spec) of 
         [from, to] -> case (L.find (unpack from), L.find (unpack to)) of
