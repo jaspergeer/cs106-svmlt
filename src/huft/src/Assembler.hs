@@ -53,6 +53,7 @@ labelElim ((A.DefLabel _ ):is) env = labelElim is env
 labelElim ((A.GotoLabel n):is) env = (O.RegsInt "jump" [] (E.find n env) :) <$> labelElim is env
 labelElim ((A.IfGotoLabel r1 n):is) env = ([O.Regs "cskip" [r1], O.RegsInt "jump" [] (E.find n env)] ++) <$> labelElim is env
 labelElim ((A.ObjectCode o):is) env = (o :) <$> labelElim is env
+labelElim [] env = Right []
 
 translate :: [A.Instr] -> Error [O.Instr]
 translate instrs = labelEnv instrs >>= labelElim instrs

@@ -22,7 +22,7 @@ import Text.Parsec
       choice,
       (<?>),
       try,
-      anyChar, eof )
+      anyChar, eof, endOfLine )
 
 -- parsing
 
@@ -83,17 +83,19 @@ singleLineInstr = line
   try binop
   <|> try (regInstr eR3 A.opcodesR3 <*> spc reg <*> spc reg)
   <|> try (regInstr eR2 A.opcodesR2 <*> spc reg)
-  <|> try (regInstr eR1LIT A.opcodesR1LIT <*> spc literal)
+
   <|> try (regInstr eR1 A.opcodesR1)
   <|> try (regInstr eR2U8 A.opcodesR2U8 <*> spc reg <*> spc integer)
   <|> try (regInstr eR1U16 A.opcodesR1U16 <*> spc integer)
   <|> try (eR0I24 <$> oneOfStr A.opcodesR0I24 <*> spc integer)
   <|> try (eR0 <$> oneOfStr A.opcodesR0)
-  -- syntactic sugar
+  -- special cases
   <|> try (eR1 "zero" <$> reg <* spc (string ":=") <* spc (char '0'))
   <|> try (eR1LIT "loadliteral" <$> reg <* spc (string ":=") <*> spc literal)
   <|> try (eR1GLO "loadglobal" <$> reg <* spc (string ":=") <*> name)
   <|> try (flip (eR1GLO "setglobal") <$> name <* string ":=" <*> spc reg)
+  <|> try (regInstr eR1LIT ["popen"] <*> spc literal)
+  <|> try (eR1LIT <$> oneOfStr ["check", "expect"] <*> spc reg <*> spc literal)
   )
   where regInstr eRX opcodes = do
           r1 <- reg
@@ -119,5 +121,8 @@ instruction = try singleLineInstr
                     return (\body -> loadFunc arity body (length body))
                   loadFunEnd = line $ string ".loadend"
 
+comment :: Parser ()
+comment = () <$ string ";;" <* manyTill endOfLine (many anyChar)
+
 asmParse :: Parser [A.Instr]
-asmParse = manyTill instruction eof
+asmParse = manyTill (many comment *> instruction <* many comment) eof

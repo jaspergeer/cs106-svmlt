@@ -30,7 +30,8 @@ unparseObj1 (O.Regs op regs) = case regs of
       _ -> error "IMPOSSIBLE: malformed binop instruction"
     else unwords ([reg r1, ":="] ++ map reg regs)
 unparseObj1 (O.RegLit "loadliteral" r1 lit) = unwords [reg r1, ":=", unparseLit lit]
-unparseObj1 (O.RegLit op r1 lit) = unwords [reg r1, ":=", op, unparseLit lit]
+unparseObj1 (O.RegLit "popen" r1 lit) = unwords [reg r1, ":= popen", unparseLit lit]
+unparseObj1 (O.RegLit op r1 lit) = unwords [op, reg r1, unparseLit lit]
 unparseObj1 (O.RegGlo "getglobal" r1 name) = unwords [reg r1, ":=", name]
 unparseObj1 (O.RegGlo "setglobal" r1 name) = unwords [name, ":=", reg r1]
 unparseObj1 (O.RegsInt op [] i24) = unwords [op, show i24]
