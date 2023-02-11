@@ -40,7 +40,7 @@ instance Exception InternalError
 -- Reader functions
 
 vsOfFile :: Reader [Asm.Instr]
-vsOfFile infile = parseAndErr AsmParse.asmParse <$> hGetContents' infile
+vsOfFile infile = hGetContents' infile <&> parseAndErr AsmParse.asmParse 
 
 -- create (Reader a) -> (a -> Error b) -> Reader b infix op
 

@@ -63,6 +63,12 @@ opcodesR1GLO =
 opcodesR0I24 =
   [ "jump" ]
 
+opcodesR1U16 =
+  []
+
+opcodesR2U8 =
+  []
+
 opcodesR0 =
   [ "halt"]
 

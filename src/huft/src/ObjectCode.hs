@@ -1,7 +1,7 @@
 module ObjectCode where
 -- see norman's object-code.sml
 data Literal
-  = Int Integer
+  = Int Int
   | Real Double
   | String String
   | Bool Bool

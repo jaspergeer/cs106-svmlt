@@ -22,7 +22,7 @@ import Text.Parsec
       choice,
       (<?>),
       try,
-      anyChar )
+      anyChar, eof )
 
 -- parsing
 
@@ -32,7 +32,7 @@ name = (:) <$> oneOf (['a'..'z'] ++ ['A'..'Z']) <*> many alphaNum
 line :: Parser a -> Parser a
 line p = spaces *> p <* newline
 
-integer :: Parser Integer
+integer :: Parser Int
 integer = read <$> ((++) <$> option "" (string "-") <*> many1 digit)
 
 nat :: Parser Int
@@ -56,7 +56,7 @@ regs :: O.Operator -> [O.Reg] -> A.Instr
 regs op operands = A.ObjectCode (O.Regs op operands)
 
 reg :: Parser Int
-reg = read <$> (char 'r' *> many1 digit)
+reg = read <$> (string "$r" *> many1 digit)
 
 spc :: Parser a -> Parser a
 spc p = space *> p
@@ -67,6 +67,9 @@ eR2 op r1 r2 = regs op [r1, r2]
 eR3 op r1 r2 r3 = regs op [r1, r2, r3]
 eR1LIT op r1 lit = A.ObjectCode (O.RegLit op r1 lit)
 eR1GLO op r1 name = A.ObjectCode (O.RegGlo op r1 name)
+eR1U16 op r1 u16 = A.ObjectCode (O.RegsInt op [r1] u16)
+eR2U8 op r1 r2 u8 = A.ObjectCode (O.RegsInt op [r1, r2] u8)
+eR0I24 op i24 = A.ObjectCode (O.RegsInt op [] i24)
 
 type Short = String
 
@@ -82,13 +85,15 @@ singleLineInstr = line
   <|> try (regInstr eR2 A.opcodesR2 <*> spc reg)
   <|> try (regInstr eR1LIT A.opcodesR1LIT <*> spc literal)
   <|> try (regInstr eR1 A.opcodesR1)
+  <|> try (regInstr eR2U8 A.opcodesR2U8 <*> spc reg <*> spc integer)
+  <|> try (regInstr eR1U16 A.opcodesR1U16 <*> spc integer)
+  <|> try (eR0I24 <$> oneOfStr A.opcodesR0I24 <*> spc integer)
   <|> try (eR0 <$> oneOfStr A.opcodesR0)
   -- syntactic sugar
   <|> try (eR1 "zero" <$> reg <* spc (string ":=") <* spc (char '0'))
   <|> try (eR1LIT "loadliteral" <$> reg <* spc (string ":=") <*> spc literal)
-  <|> try (eR1GLO "loadglobal" <$> reg <* spc (string ":=")
-        <* spc (string "G[") <*> name <* char ']')
-  <|> try setGlobal
+  <|> try (eR1GLO "loadglobal" <$> reg <* spc (string ":=") <*> name)
+  <|> try (flip (eR1GLO "setglobal") <$> name <* string ":=" <*> spc reg)
   )
   where regInstr eRX opcodes = do
           r1 <- reg
@@ -101,21 +106,13 @@ singleLineInstr = line
           r2 <- spc reg
           op <- spc (oneOfStr A.binops)
           r3 <- spc reg
-          return $ eR3 op r1 r2 r3
-        setGlobal = do
-          string "G["
-          n <- name
-          char ']'
-          spc (string ":=")
-          r1 <- spc reg
-          return (eR1GLO "setglobal" r1 n)
+          return (eR3 op r1 r2 r3)
 
 loadFunc arity body x = A.LoadFunc x arity body
 
 instruction :: Parser A.Instr
-instruction = (try singleLineInstr
-            <|> try (loadFunBegin <*> manyTill instruction loadFunEnd))
-            <?> "an assembly instruction"
+instruction = try singleLineInstr
+            <|> try (loadFunBegin <*> manyTill instruction loadFunEnd)
             where loadFunBegin = line $ do
                     string ".loadfunc"
                     arity <- spc nat
@@ -123,4 +120,4 @@ instruction = (try singleLineInstr
                   loadFunEnd = line $ string ".loadend"
 
 asmParse :: Parser [A.Instr]
-asmParse = many instruction
+asmParse = manyTill instruction eof
