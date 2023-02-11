@@ -26,11 +26,10 @@ main :: IO ()
 main = do  
     progName <- getProgName
     args <- getArgs
-    -- mapM putStrLn args
     case args of -- stopgap implementation
         spec : args -> do
             translation <- translationOf spec stdin stdout
             case translation of
                 Left e -> putStrLn e
                 Right r -> r
-        _ -> putStrLn ("Usage: "++progName++" inLang-outLang infile")
+        _ -> putStrLn ("Usage: " ++ progName ++ " inLang-outLang infile")

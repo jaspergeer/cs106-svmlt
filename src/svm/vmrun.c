@@ -98,7 +98,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         ++stream_ptr;
       break;
     case Jump:
-      stream_ptr += iXYZ(curr_inst);
+      stream_ptr = iXYZ(curr_inst);
       break;
 
     // Load/Store
