@@ -71,8 +71,6 @@ eR1U16 op r1 u16 = A.ObjectCode (O.RegsInt op [r1] u16)
 eR2U8 op r1 r2 u8 = A.ObjectCode (O.RegsInt op [r1, r2] u8)
 eR0I24 op i24 = A.ObjectCode (O.RegsInt op [] i24)
 
-type Short = String
-
 oneOfStr :: [String] -> Parser String
 oneOfStr strs = choice (map string strs)
 
@@ -96,6 +94,9 @@ singleLineInstr = line
   <|> try (flip (eR1GLO "setglobal") <$> name <* string ":=" <*> spc reg)
   <|> try (regInstr eR1LIT ["popen"] <*> spc literal)
   <|> try (eR1LIT <$> oneOfStr ["check", "expect"] <*> spc reg <*> spc literal)
+  <|> try (A.DefLabel <$> ( string "def" >> spc name))
+  <|> try (A.GotoLabel <$> (string "goto" >> spc name))
+  <|> try (A.IfGotoLabel <$> (string "if" >> spc reg) <*> (spc (string "goto") >> spc name))
   )
   where regInstr eRX opcodes = do
           r1 <- reg
