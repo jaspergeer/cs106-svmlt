@@ -36,35 +36,5 @@ struct
     end
 
   (* In lab, define `fold`, `lift`, `labelEnv`, `labelElim`, and `translate` here *)
-  (* val fold : (int * AssemblyCode.instr * 'a -> 'a) -> 'a -> AssemblyCode.instr list -> 'a *)
-
-  fun fold f acc intrs = 
-    let fun foldintr f acc [] count = acc
-          | foldintr f acc (i::is) count =
-              (case i of 
-                  A.DEFLABEL _      => foldintr f (f count i acc) is count
-                | A.IF_GOTO_LABEL _ => foldintr f (f count i acc) is (count+2)
-                | _                 => foldintr f (f count i acc) is (count+1))
-    in foldintr f acc intrs 0
-    end
-
-  (* val lift : ('a * 'b * 'c -> 'c error) -> ('a * 'b * 'c error -> 'c error) *)
-
-  fun lift f = fn (a, b, c) => case c of
-                                  Error.OK c' => f (a, b, c')
-                                | Error.ERROR s => Error.ERROR s
-
-  (* val labelEnv : AssemblyCode.instr list -> int Env.env error *)
-
-
-  (* To define fold, you need to know exactly how much space each assembly instruction takes up in the final object code:
-
-  A label definition takes no space.
-
-  An IF_GOTO_LABEL takes two slots (one for if and one for goto).
-
-  Every other instruction, including LOADFUNC, takes exactly one slot. (The LOADFUNC carries many instructions, but they go into a VMFunction that is added to the literal pool. As you know from your SVM, only a single load-literal instruction is emitted into the current instruction stream.) *)
-
-
 
 end

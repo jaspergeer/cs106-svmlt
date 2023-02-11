@@ -19,9 +19,6 @@ import qualified ObjectUnparser
 type Emitter a = Handle -> a -> IO ()
 type Reader a = Handle -> IO (Error a)
 
--- (<&>) = flip fmap
--- Just 2 <&> (+1)
--- fmap (+1) Just 2
 (==>) :: Reader a -> (a -> Error b) -> Reader b
 (r ==> f) h = r h <&> (f =<<)
 
