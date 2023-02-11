@@ -30,6 +30,8 @@ executable huft
         Asm,
         AsmParse,
         AsmUnparse,
+        Assembler,
+        Env,
         ObjectCode,
         ObjectUnparser,
         Languages,

@@ -15,6 +15,7 @@ import qualified AsmParse
 import qualified AsmUnparse
 import qualified ObjectCode
 import qualified ObjectUnparser
+import qualified Assembler
 
 type Emitter a = Handle -> a -> IO ()
 type Reader a = Handle -> IO (Error a)
@@ -40,7 +41,7 @@ instance Exception InternalError
 -- Reader functions
 
 vsOfFile :: Reader [Asm.Instr]
-vsOfFile infile = parseAndErr AsmParse.asmParse <$> hGetContents' infile
+vsOfFile infile = hGetContents' infile <&> parseAndErr AsmParse.asmParse 
 
 -- create (Reader a) -> (a -> Error b) -> Reader b infix op
 
@@ -49,6 +50,10 @@ vsOfFile infile = parseAndErr AsmParse.asmParse <$> hGetContents' infile
 vsOf :: Language -> Reader [Asm.Instr]
 vsOf VS = vsOfFile
 vsOf _ = throw (NoTranslationTo VS)
+
+voOf :: Language -> Reader [ObjectCode.Instr]
+voOf VS = vsOfFile ==> Assembler.translate
+voOf _ = throw (NoTranslationTo VO)
 
 -- Emitter functions
 
@@ -68,3 +73,4 @@ translate :: Language -> Language -> Handle -> Handle -> IO (Error (IO ()))
 translate inLang outLang infile outfile =
   case outLang of
     VS -> vsOf inLang infile <&> (emitVS outfile <$>)
+    VO -> voOf inLang infile <&> (emitVO outfile <$>)

@@ -1,6 +1,6 @@
 -- merged norman's asm.sml, asmlex.sml, and probably asmparse.sml
 
-module ASM where
+module Asm where
 
 import qualified ObjectCode as O
 import qualified Data.Set as S
@@ -62,6 +62,12 @@ opcodesR1GLO =
 
 opcodesR0I24 =
   [ "jump" ]
+
+opcodesR1U16 =
+  []
+
+opcodesR2U8 =
+  []
 
 opcodesR0 =
   [ "halt"]
