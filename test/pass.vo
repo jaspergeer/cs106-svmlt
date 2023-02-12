@@ -1,6 +1,0 @@
-.load module 5
-loadliteral 1 10
-truth 0 1
-check 0 string 8 40 110 111 116 32 49 48 41
-loadliteral 0 true
-expect 0 string 1 48

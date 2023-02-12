@@ -16,10 +16,11 @@ struct
   structure O = ObjectCode
 
   type 'a error = 'a Error.error
-  val (succeed, <*>, <$>, >=>) = (Error.succeed, Error.<*>, Error.<$>, Error.>=>)
+  val (succeed, <*>, <$>, >=>, >>=) = (Error.succeed, Error.<*>, Error.<$>, Error.>=>, Error.>>=)
   infixr 4 <$>
   infix 3  <*>
   infix 2  >=>
+  infix 4 >>=
   val fail = Error.ERROR
 
   fun curry f x y = f (x, y)
@@ -50,9 +51,15 @@ struct
 
   (* val lift : ('a * 'b * 'c -> 'c error) -> ('a * 'b * 'c error -> 'c error) *)
 
-  fun lift f = fn (a, b, c) => case c of
+  (* fun lift f = fn (a, b, c) => case c of
                                   Error.OK c' => f (a, b, c')
-                                | Error.ERROR s => Error.ERROR s
+                                | Error.ERROR s => Error.ERROR s *)
+
+  fun lift f (a, b, ce)= ce >>= (curry3 f a b)
+  val _ = lift : ('a * 'b * 'c -> 'c error) -> ('a * 'b * 'c error -> 'c error)
+
+  (* val labelEnv : AssemblyCode.instr list -> int Env.env error *)
+
 
   (* val labelEnv : AssemblyCode.instr list -> int Env.env error *)
 

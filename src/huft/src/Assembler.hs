@@ -32,8 +32,7 @@ foldrInstrStream f e instrs = let
   in fris f e instrs 0 
 
 lift3 :: (a -> b -> c -> Error c) -> a -> b -> Error c -> Error c
-lift3 f a b (Left c) = Left c
-lift3 f a b (Right c) = f a b c
+lift3 f a b ce = ce >>= f a b
 
 labelEnv :: [A.Instr] -> Error (E.Env Int)
 labelEnv = foldrInstrStream (lift3 f) (Right E.empty) where
