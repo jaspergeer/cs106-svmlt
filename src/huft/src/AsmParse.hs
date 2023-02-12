@@ -111,16 +111,38 @@ singleLineInstr = line
           r3 <- spc reg
           return (eR3 op r1 r2 r3)
 
-loadFunc arity body x = A.LoadFunc x arity body
+--  <instruction> ::= <one_line_instruction> EOL
+--                 |  <loadfunStart> {<instruction>} <loadfunEnd>
+
+-- Design concrete syntax to mark the start of a “load function” instruction. 
+-- This syntax must include the destination register into which the function will be loaded, 
+-- plus the number of arguments that the function is expecting. 
+-- If you have already implemented an unparser for the LOADFUNC form, start with that syntax.
+
+-- Implement the loadfunStart parser. The marker for a function start can be as simple as a single token or as fancy as you like.
+
+-- A “load function” instruction is followed by a sequence of assembly-language instructions, one per line. 
+-- This sequence should be followed by some sort of closing delimiter, perhaps on a line by itself. 
+-- Design concrete syntax for that delimiter, and implement it in the loadfunEnd parser.
+
+-- The delimiter can be as simple as a single token or as fancy as you like. But it must not look like an instruction.
+
+-- Create a test file loadfun.vs that exercises the new syntax.
+
+-- Confirm that assembling the file generates a “load function” for the SVM:
+
+-- uft vs-vo loadfun.vs | fgrep .load
+-- Confirm that the function loads without error:3
+
+-- uft vs-vo loadfun.vs | svm
+-- You’ll confirm that it loads correctly later, after you’ve made a small extension to the SVM.
+
 
 instruction :: Parser A.Instr
 instruction = try singleLineInstr
-            <|> try (loadFunBegin <*> manyTill instruction loadFunEnd)
-            where loadFunBegin = line $ do
-                    string ".loadfunc"
-                    arity <- spc nat
-                    return (\body -> loadFunc arity body (length body))
-                  loadFunEnd = line $ string ".loadend"
+            <|> try (A.LoadFunc <$> reg <* spc (string ":=") <* spc (string "fun") <*> spc integer <*> (spc (string "{") *> manyTill instruction loadFunEnd))
+            where 
+                  loadFunEnd = string "}" <* newline
 
 comment :: Parser ()
 comment = () <$ string ";;" <* manyTill endOfLine (many anyChar)

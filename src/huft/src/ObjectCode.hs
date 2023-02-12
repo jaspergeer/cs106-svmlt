@@ -12,12 +12,18 @@ data Literal
 type Reg = Int
 type Operator = String
 
+--   LOADFUNC (r, k, body) means:
+--       - body describes a function
+--         that expects k parameters
+--       - capture those instructions and insert the function
+--         into the literal pool
+--       - emit an instruction to load that literal into register r
+-- 
 data Instr
   = Regs Operator [Reg]
   | RegLit Operator Reg Literal
   | Goto Int
   | LoadFunc Reg Int [Instr]
-  | RegInt Operator Reg Reg Int
   | RegsInt Operator [Reg] Int
   | RegGlo Operator Reg String
   deriving Show

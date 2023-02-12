@@ -48,8 +48,8 @@ unparse1 i = case i of
 
 unparse :: [A.Instr] -> [String]
 unparse (i:is) = case i of
-    A.LoadFunc r arity body -> ".loadfunc" : map ("\t" ++) (unparse body) ++
-                               ".endload" : unparse is
+    A.LoadFunc r arity body -> reg r : ":= fun" : show r : "{" : map ("\t" ++) (unparse body) ++
+                               "}" : unparse is
     A.ObjectCode (O.LoadFunc r arity body) ->
       unparse (A.LoadFunc r arity (map A.ObjectCode body):is)
     _ -> unparse1 i : unparse is

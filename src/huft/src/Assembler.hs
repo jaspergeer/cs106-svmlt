@@ -45,6 +45,12 @@ labelEnv = foldrInstrStream (lift3 f) (Right E.empty) where
 
 -- Function labelElim calls translate when it needs to eliminate labels from the body of a LOADFUNC form.
 
+-- Label elimination takes two passes:
+-- The first pass computes and records the position of every label.
+-- The second pass replaces assembly-language GOTO_LABEL, which branches 
+-- to a label, with an object-code GOTO, which branches relative 
+-- to the position of the GOTO. And it discards the labels.
+
 labelElim :: [A.Instr] -> E.Env Int -> Error [O.Instr]
 -- use applicative functors
 labelElim ((A.LoadFunc reg arity body):is) env = (:) <$> (O.LoadFunc reg arity <$> translate body) <*> labelElim is env
