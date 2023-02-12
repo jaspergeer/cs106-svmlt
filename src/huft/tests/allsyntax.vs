@@ -1,5 +1,7 @@
 halt
+$r1 := 0
 $r1 := 5
+;; halt
 $r1 := $r2 + $r3
 check $r1 "check"
 expect $r1 "expect"

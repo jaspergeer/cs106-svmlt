@@ -16,6 +16,7 @@ import Text.Parsec
       oneOf,
       spaces,
       many,
+      optional,
       manyTill,
       space,
       newline,
@@ -142,10 +143,10 @@ instruction :: Parser A.Instr
 instruction = try singleLineInstr
             <|> try (A.LoadFunc <$> reg <* spc (string ":=") <* spc (string "fun") <*> spc integer <*> (spc (string "{") *> manyTill instruction loadFunEnd))
             where 
-                  loadFunEnd = string "}" <* newline
+                  loadFunEnd = string "}" <* spaces <* newline
 
 comment :: Parser ()
-comment = () <$ string ";;" <* manyTill endOfLine (many anyChar)
+comment = () <$ spaces <* string ";;" <* manyTill anyChar endOfLine
 
 asmParse :: Parser [A.Instr]
-asmParse = manyTill (many comment *> instruction <* many comment) eof
+asmParse = manyTill (optional comment *> instruction <* optional comment) eof
