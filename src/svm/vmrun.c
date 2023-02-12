@@ -98,7 +98,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         ++stream_ptr;
       break;
     case Jump:
-      stream_ptr = iXYZ(curr_inst);
+      *stream_ptr =  iXYZ(curr_inst);
       break;
 
     // Load/Store
@@ -191,6 +191,29 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       break;
     case Cdr:
       RX = AS_CONS_CELL(vm, RY)->slots[1];
+      break;
+
+    // type predicates
+    case IsFunc:
+      RX = mkBooleanValue(isFunction(RY));
+      break;
+    case IsPair:
+      RX = mkBooleanValue(isPair(RY));
+      break;
+    case IsSym:
+      RX = mkBooleanValue(isSymbol(RY));
+      break;
+    case IsNum:
+      RX = mkBooleanValue(isNumber(RY));
+      break;
+    case IsBool:
+      RX = mkBooleanValue(isBoolean(RY));
+      break;
+    case IsNull:
+      RX = mkBooleanValue(isNull(RY));
+      break;
+    case IsNil:
+      RX = mkBooleanValue(isNil(RY));
       break;
     }
     ++stream_ptr;

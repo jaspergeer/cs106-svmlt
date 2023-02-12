@@ -1,0 +1,7 @@
+.load module 6
+loadliteral 1 10
+number? 0 1
+check 0 string 0
+loadliteral 2 1
+truth 2 2
+expect 2 string 0

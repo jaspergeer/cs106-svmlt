@@ -1,0 +1,8 @@
+.load module 7
+loadliteral 1 0
+setglobal 1 true
+getglobal 2 string 2 117 116
+check 2 string 1 48
+loadliteral 0 0
+expect 1 string 1 49
+halt
