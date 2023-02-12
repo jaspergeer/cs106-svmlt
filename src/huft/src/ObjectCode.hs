@@ -17,6 +17,7 @@ data Instr
   | RegLit Operator Reg Literal
   | Goto Int
   | LoadFunc Reg Int [Instr]
+  | RegInt Operator Reg Reg Int
   | RegsInt Operator [Reg] Int
   | RegGlo Operator Reg String
   deriving Show

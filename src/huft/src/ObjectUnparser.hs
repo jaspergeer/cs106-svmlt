@@ -17,7 +17,7 @@ unparseInstr i = case i of
   O.RegLit op r1 lit ->
     unwords $ op : show r1 : unparseLiteral lit
   O.Goto offset -> unwords ["goto", show offset]
-  -- O.RegInt op r1 offset -> unwords [op, show r1, show offset]
+  O.RegInt op r1 r2 offset -> unwords [op, show r1, show r2, show offset]
   O.LoadFunc {} -> error "LoadFunc reached instr"
 
 list :: [Char] -> [O.Instr] -> [[Char]] -> [[Char]]
