@@ -51,6 +51,7 @@
 /bin/svm-loader-instructions
 /bin/uft.opt
 /bin/uft
+/bin/huft
 *.mlb
 /clones/
 /courseware
