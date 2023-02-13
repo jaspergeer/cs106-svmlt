@@ -16,7 +16,6 @@ data Instr
   deriving Show
 
 type Binop = String
-type Unop = String
 
 binops =
   [ "+"

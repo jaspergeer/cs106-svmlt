@@ -1,20 +1,44 @@
 Syntax of Virtual-Assembly Code
 
-<instruction> ::= ObjectCode 
-                | LoadFunc <arity> <body>
-                | DefLabel <Label>
-                | GotoLabel <Label>
-                | IfGotolabel <reg>
+Alexander Bai| Jasper Geer
+
+<instruction> ::= <objectcode>
+                | <reg> := fun <arity> { <body> }
+                | def <label>
+                | goto <label>
+                | if <reg> goto <label>
 
 <body>        ::= { <instruction> }
+
+<objectcode> ::= <reg> := <reg> <binop> <reg>
+               | <reg> := cons <reg>
+               | <reg> := <unop> <reg>
+               | <opcodesR1> <reg>
+               | <reg> := <literal>
+               | <reg> := <globals>
+               | <globals> := <reg>
+               | popen <literal>
+               | check <reg> <literal>
+               | expect <reg> <literal>
+               | reg := 0
+               | 
+
+<binop> ::= + | - | * | / | mod | idiv | and | or | xor  | n= | s= | 
+                > | < | >=| <=
+
+<unop> ::= truth | number? | not | car | cdr | function? | pair? | symbol? 
+                 | boolean? | null? | nil? | hash
+
+<opcodesR1> ::= print | println | printu | dload | cskip
 
 <literal>     ::= string | real | int | true | false | emptylist | nil
 
 <arity> is an integer literal
-<Label> is a string literal
-<reg> is an integer literal in the range 0..255
+<label> is a string literal
+<reg> is an integer literal (with prefix $) in the range 0..255
 
 
 Comments:
 
-Important distinction in <literal> is that string do not take in length, and is not ascii characters
+Important distinction in <literal> is that string do not take in length,
+and is not ascii characters
