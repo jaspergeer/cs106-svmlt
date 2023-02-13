@@ -45,6 +45,9 @@ typedef enum opcode {
     // S-Expressions
     Cons, Car, Cdr,
     
+    // type predicates
+    IsFunc, IsPair, IsSym, IsNum, IsBool, IsNull, IsNil ,
+
     Unimp, // stand-in for opcodes not yet implemented
     Unimp2, // stand-in for opcodes not yet implemented
 } Opcode;

@@ -32,8 +32,7 @@ foldrInstrStream f e instrs = let
   in fris f e instrs 0 
 
 lift3 :: (a -> b -> c -> Error c) -> a -> b -> Error c -> Error c
-lift3 f a b (Left c) = Left c
-lift3 f a b (Right c) = f a b c
+lift3 f a b ce = ce >>= f a b
 
 labelEnv :: [A.Instr] -> Error (E.Env Int)
 labelEnv = foldrInstrStream (lift3 f) (Right E.empty) where
@@ -46,12 +45,19 @@ labelEnv = foldrInstrStream (lift3 f) (Right E.empty) where
 
 -- Function labelElim calls translate when it needs to eliminate labels from the body of a LOADFUNC form.
 
+-- Label elimination takes two passes:
+-- The first pass computes and records the position of every label.
+-- The second pass replaces assembly-language GOTO_LABEL, which branches 
+-- to a label, with an object-code GOTO, which branches relative 
+-- to the position of the GOTO. And it discards the labels.
+
 labelElim :: [A.Instr] -> E.Env Int -> Error [O.Instr]
 -- use applicative functors
 labelElim ((A.LoadFunc reg arity body):is) env = (:) <$> (O.LoadFunc reg arity <$> translate body) <*> labelElim is env
 labelElim ((A.DefLabel _ ):is) env = labelElim is env
+-- labelElim ((A.GotoLabel n):is) env = (:) <$> O.Goto (E.find n env) <*> labelElim is env
 labelElim ((A.GotoLabel n):is) env = (O.RegsInt "jump" [] (E.find n env) :) <$> labelElim is env
-labelElim ((A.IfGotoLabel r1 n):is) env = ([O.Regs "cskip" [r1], O.RegsInt "jump" [] (E.find n env)] ++) <$> labelElim is env
+-- labelElim ((A.IfGotoLabel r1 n):is) env = ([O.Regs "cskip" [r1], O.RegsInt "jump" [] (E.find n env)] ++) <$> labelElim is env
 labelElim ((A.ObjectCode o):is) env = (o :) <$> labelElim is env
 labelElim [] env = Right []
 

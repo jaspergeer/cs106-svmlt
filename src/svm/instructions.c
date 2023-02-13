@@ -62,8 +62,17 @@ instruction_info instructions[] = {
   // S-Expressions
   { "cons", Cons, parseR3, "rX := cons rY rZ" },
   { "car", Car, parseR2, "rX := car rY" },
-  { "cdr", Cdr, parseR2, "rX := cdr rY" }
-};
+  { "cdr", Cdr, parseR2, "rX := cdr rY" },
+
+  // type predicates
+  { "function?", IsFunc, parseR2, "rX := function? rY" },
+  { "pair?", IsPair, parseR2, "rX := pair? rY" },
+  { "symbol?", IsSym, parseR2, "rX := symbol? rY" },
+  { "number?", IsNum, parseR2, "rX := number? rY" },
+  { "boolean?", IsBool, parseR2, "rX := boolean? rY" },
+  { "null?", IsNull, parseR2, "rX := null? rY" },
+  { "nil?", IsNil, parseR2, "rX := nil? rY"}
+  };
 
 int number_of_instructions = sizeof(instructions) / sizeof(instructions[0]);
 

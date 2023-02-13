@@ -288,7 +288,32 @@ static inline Value mkTableValue(struct VTable_T *t) {
   return val;
 }
 
+static inline bool isFunction(Value v) {
+  return v.tag == VMFunction || v.tag == VMClosure;
+}
 
+static inline bool isPair(Value v) {
+  return v.tag == ConsCell;
+}
 
+static inline bool isSymbol(Value v) {
+  return v.tag == String;
+}
+
+static inline bool isNumber(Value v) {
+  return v.tag == Number;
+}
+
+static inline bool isBoolean(Value v) {
+  return v.tag == Boolean;
+}
+
+static inline bool isNull(Value v) {
+  return v.tag == Emptylist;
+}
+
+static inline bool isNil(Value v) {
+  return eqvalue(v, nilValue);
+}
 
 #endif
