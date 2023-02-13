@@ -34,7 +34,7 @@ typedef enum opcode {
     Check, Expect, // R1LIT
 
     // Arithmetic
-    Add, Sub, Mul, Div, Mod, // R3
+    Add, Sub, Mul, Div, Mod, Idiv, // R3
 
     // Boolean Logic
     Truth, Not, And, Or, Xor, // R3

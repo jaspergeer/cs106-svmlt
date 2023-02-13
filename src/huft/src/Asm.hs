@@ -24,6 +24,7 @@ binops =
   , "*"
   , "/"
   , "mod"
+  , "idiv"
   , "and"
   , "or"
   , "xor"
@@ -39,9 +40,17 @@ opcodesR3 =
 
 opcodesR2 =
   [ "truth"
+  , "number?"
   , "not"
   , "car"
-  , "cdr" ]
+  , "cdr"
+  , "function?"
+  , "pair?"
+  , "symbol?"
+  , "boolean?"
+  , "null?"
+  , "nil?"
+  , "hash" ]
 
 opcodesR1 =
   [ "print"

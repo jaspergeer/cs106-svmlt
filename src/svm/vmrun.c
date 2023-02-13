@@ -132,14 +132,22 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       break;
     case Div:
       {
+        double uZ_num = AS_NUMBER(vm, RZ);
+        if (uZ_num == 0)
+          runerror(vm, "divide by zero");
+        RX = mkNumberValue(AS_NUMBER(vm, RY) / uZ_num);
+      }
+      break;
+    case Mod:
+      RX = mkNumberValue((int) AS_NUMBER(vm, RY) % (int) AS_NUMBER(vm, RZ));
+      break;
+    case Idiv: 
+      {
         int uZ_num = AS_NUMBER(vm, RZ);
         if (uZ_num == 0)
           runerror(vm, "divide by zero");
         RX = mkNumberValue((int) AS_NUMBER(vm, RY) / uZ_num);
       }
-      break;
-    case Mod:
-      RX = mkNumberValue((int) AS_NUMBER(vm, RY) % (int) AS_NUMBER(vm, RZ));
       break;
     
     // Boolean Logic

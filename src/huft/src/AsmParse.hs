@@ -143,7 +143,7 @@ instruction :: Parser A.Instr
 instruction = try singleLineInstr
             <|> try (A.LoadFunc <$> reg <* spc (string ":=") <* spc (string "fun") <*> spc integer <*> (spc (string "{") *> manyTill instruction loadFunEnd))
             where 
-                  loadFunEnd = string "}" <* spaces <* newline
+                  loadFunEnd = string "}" <* newline
 
 comment :: Parser ()
 comment = () <$ spaces <* string ";;" <* manyTill anyChar endOfLine

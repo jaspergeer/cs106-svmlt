@@ -43,6 +43,7 @@ instruction_info instructions[] = {
   { "*", Mul, parseR3, "rX := rY * rZ" },
   { "/", Div, parseR3, "rX := rY / rZ" },
   { "mod", Mod, parseR3, "rX := rY mod rZ" },
+  { "idiv", Idiv, parseR3, "rX := rY idiv rZ"},
 
   // Boolean
   { "truth", Truth, parseR2, "rX := truth rY" },
