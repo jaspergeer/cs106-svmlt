@@ -73,7 +73,7 @@ eR2U8 op r1 r2 u8 = A.ObjectCode (O.RegsInt op [r1, r2] u8)
 eR0I24 op i24 = A.ObjectCode (O.RegsInt op [] i24)
 
 oneOfStr :: [String] -> Parser String
-oneOfStr strs = choice (map string strs)
+oneOfStr strs = choice (map (try . string) strs)
 
 singleLineInstr :: Parser A.Instr
 singleLineInstr = line
@@ -149,4 +149,4 @@ comment :: Parser ()
 comment = () <$ spaces <* string ";;" <* manyTill anyChar endOfLine
 
 asmParse :: Parser [A.Instr]
-asmParse = manyTill (optional comment *> instruction <* optional comment) eof
+asmParse = manyTill (many comment *> instruction <* many comment) eof
