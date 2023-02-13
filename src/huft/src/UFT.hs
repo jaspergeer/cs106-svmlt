@@ -54,13 +54,16 @@ voOf :: Language -> Reader [ObjectCode.Instr]
 voOf VO     =  throw (NoTranslationTo VO)
 voOf inLang =  vsOf inLang ==> Assembler.translate
 
--- Emitter functionsz
+-- Emitter functions
+
+emitFrom :: (a -> [String]) -> Emitter a
+emitFrom f outfile = mapM_ (hPutStrLn outfile) . f
 
 emitVO :: Emitter [ObjectCode.Instr]
-emitVO outfile = mapM_ (hPutStrLn outfile) . ObjectUnparser.unparseModule
+emitVO = emitFrom ObjectUnparser.unparseModule
 
 emitVS :: Emitter [Asm.Instr]
-emitVS outfile = mapM_ (hPutStrLn outfile) . AsmUnparse.unparse
+emitVS = emitFrom AsmUnparse.unparse
 
 -- Universal Forward Translator
 
