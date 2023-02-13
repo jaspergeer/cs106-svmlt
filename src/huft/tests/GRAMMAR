@@ -1,0 +1,20 @@
+Syntax of Virtual-Assembly Code
+
+<instruction> ::= ObjectCode 
+                | LoadFunc <arity> <body>
+                | DefLabel <Label>
+                | GotoLabel <Label>
+                | IfGotolabel <reg>
+
+<body>        ::= { <instruction> }
+
+<literal>     ::= string | real | int | true | false | emptylist | nil
+
+<arity> is an integer literal
+<Label> is a string literal
+<reg> is an integer literal in the range 0..255
+
+
+Comments:
+
+Important distinction in <literal> is that string do not take in length, and is not ascii characters

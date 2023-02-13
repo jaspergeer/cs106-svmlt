@@ -13,7 +13,7 @@
 
 instruction_info instructions[] = {
   { "halt", Halt, parseR0, "halt" },
-  { "zero", Unimp, parseR1, "rX := 0" },
+  { "zero", Zero, parseR1, "rX := 0" },
 
   // Printing
   { "print", Print, parseR1, "print rX" },

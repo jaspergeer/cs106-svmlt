@@ -50,9 +50,6 @@ void vmrun(VMState vm, struct VMFunction* fun) {
     case Halt:
       vm->pc = stream_ptr - fun->instructions;
       return;
-    case Zero:
-      RX = mkNumberValue(0);
-      return;
 
     // Printing
     case Print:
@@ -98,7 +95,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         ++stream_ptr;
       break;
     case Jump:
-      *stream_ptr =  iXYZ(curr_inst);
+      *stream_ptr -= iXYZ(curr_inst);
       break;
 
     // Load/Store
@@ -121,6 +118,9 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       break;
     
     // Arithmetic
+    case Zero:
+      RX = mkNumberValue(0);
+      break;
     case Add:
       RX = mkNumberValue(AS_NUMBER(vm, RY) + AS_NUMBER(vm, RZ));
       break;

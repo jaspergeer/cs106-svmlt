@@ -64,8 +64,8 @@ labelElim instrs env = let
     (A.ObjectCode o) -> (o :) <$> is
 
   -- labelElim 
-  labelElim ((A.ObjectCode o):is) env = (o :) <$> labelElim is env
-  labelElim [] env = Right []
+  -- labelElim ((A.ObjectCode o):is) env = (o :) <$> labelElim is env
+  -- labelElim [] env = Right []
   in foldrInstrStream f (Right []) instrs
 
 translate :: [A.Instr] -> Error [O.Instr]
