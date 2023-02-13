@@ -23,7 +23,10 @@ import Text.Parsec
       choice,
       (<?>),
       try,
-      anyChar, eof, endOfLine, satisfy )
+      anyChar, 
+      eof, 
+      endOfLine )
+import Text.Parsec.Char (noneOf)
 
 -- parsing
 
@@ -44,14 +47,23 @@ double = read <$> ((++) <$> whole <*> decimal)
       where whole = (++) <$> option "" (string "-") <*> many1 digit
             decimal = (++) <$> string "." <*> many1 digit
 
--- stringLit :: Parser String
--- stringLit = (read . (\x -> '"' : x ++ "\"") <$>
---   (char '\"' *> manyTill anyChar (try strEnd)))
---   where strEnd = do
---           satisfy (\x -> x /= '\\')
---           char '"'
---           return ()
---         escape = \x y -> [x,y] <$> anyChar <*> oneOf "nr"
+-- same behavior as manyTill except first parser is tried before the second
+manyTill' :: Parser a -> Parser b -> Parser [a]
+manyTill' p1 p2 = try ((:) <$> p1 <*> manyTill' p1 p2) <|> ([] <$ p2)
+
+stringLit :: Parser String
+stringLit = char '"' *> manyTill' (try escape <|> noneOf "\n") (char '"')
+  where escape = do
+          char '\\'
+          c <- oneOf "abtnr\"\\"
+          return $ case c of
+            'a' -> '\a'
+            'b' -> '\b'
+            't' -> '\t'
+            'n' -> '\n'
+            'r' -> '\r'
+            '\"' -> '\"'
+            '\\' -> '\\'
 
 literal :: Parser O.Literal
 literal = try (O.String <$> stringLit)

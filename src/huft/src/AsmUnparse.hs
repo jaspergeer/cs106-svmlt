@@ -7,11 +7,24 @@ import qualified Data.Set as S
 reg :: Show a => a -> [Char]
 reg r = "$r" ++ show r
 
+unparseString :: String -> String
+unparseString s = '\"' : f s ++ "\""
+  where f s = case s of
+          '\a' : cs -> "\\a" ++ f cs
+          '\b' : cs -> "\\b" ++ f cs
+          '\t' : cs -> "\\t" ++ f cs
+          '\n' : cs -> "\\n" ++ f cs
+          '\r' : cs -> "\\r" ++ f cs
+          '\"' : cs -> "\\\"" ++ f cs
+          '\\' : cs -> "\\\\" ++ f cs
+          c : cs -> c : f cs
+          [] -> []
+
 unparseLit :: O.Literal -> String
 unparseLit lit = case lit of
   O.Int n -> show n
   O.Real n -> show n
-  O.String s -> '\"' : s ++ "\""
+  O.String s -> unparseString s
   O.Bool b -> if b then "#t" else "#f"
   O.EmptyList -> "'()"
   O.Nil -> "nil"
