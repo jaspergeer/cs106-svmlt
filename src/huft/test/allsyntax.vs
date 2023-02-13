@@ -2,6 +2,7 @@ $r1 := 0
 $r1 := 5
 ;; sadly newline cannot be printed
 $r2 := "\n"
+$r3 := "\"\""
 print $r1
 print $r2
 $r1 := $r1 + $r1

@@ -23,7 +23,7 @@ import Text.Parsec
       choice,
       (<?>),
       try,
-      anyChar, eof, endOfLine )
+      anyChar, eof, endOfLine, satisfy )
 
 -- parsing
 
@@ -44,8 +44,17 @@ double = read <$> ((++) <$> whole <*> decimal)
       where whole = (++) <$> option "" (string "-") <*> many1 digit
             decimal = (++) <$> string "." <*> many1 digit
 
+-- stringLit :: Parser String
+-- stringLit = (read . (\x -> '"' : x ++ "\"") <$>
+--   (char '\"' *> manyTill anyChar (try strEnd)))
+--   where strEnd = do
+--           satisfy (\x -> x /= '\\')
+--           char '"'
+--           return ()
+--         escape = \x y -> [x,y] <$> anyChar <*> oneOf "nr"
+
 literal :: Parser O.Literal
-literal = try (O.String <$> (char '\"' *> manyTill anyChar (char '\"')))
+literal = try (O.String <$> stringLit)
         <|> try (O.Real <$> double)
         <|> try (O.Int <$> integer)
         <|> try (O.Bool True <$ string "#t")
