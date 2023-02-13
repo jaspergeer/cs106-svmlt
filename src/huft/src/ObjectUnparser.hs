@@ -18,8 +18,8 @@ unparseInstr i = case i of
     unwords $ op : show r1 : unparseLiteral lit
   -- jump is goto in our instruction table
   O.Goto offset -> unwords ["jump", show offset]
-  -- O.RegInt op r1 r2 offset -> unwords [op, show r1, show r2, show offset]
-  O.LoadFunc {} -> error "LoadFunc reached instr"
+  O.RegsInt op regs offset -> unwords ((op : map show regs) ++ [show offset])
+  O.LoadFunc {} -> error "IMPOSSIBLE: LoadFunc reached instr"
 
 list :: [Char] -> [O.Instr] -> [[Char]] -> [[Char]]
 list prefix body tail =
