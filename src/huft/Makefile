@@ -4,7 +4,7 @@ BUILD=$(TOP)/build
 BIN=$(TOP)/bin
 
 huft:
-	cabal install --installdir=$(BIN)
+	cabal install --installdir=$(BIN) --overwrite-policy=always
 
 clean:
 	cabal clean
