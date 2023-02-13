@@ -82,8 +82,8 @@ singleLineInstr = line
   try binop
   <|> try (regInstr eR3 A.opcodesR3 <*> spc reg <*> spc reg)
   <|> try (regInstr eR2 A.opcodesR2 <*> spc reg)
-
-  <|> try (regInstr eR1 A.opcodesR1)
+  -- eR1 do not share the assignment operator
+  <|> try (eR1 <$> oneOfStr A.opcodesR1 <*> spc reg)
   <|> try (regInstr eR2U8 A.opcodesR2U8 <*> spc reg <*> spc integer)
   <|> try (regInstr eR1U16 A.opcodesR1U16 <*> spc integer)
   <|> try (eR0I24 <$> oneOfStr A.opcodesR0I24 <*> spc integer)
@@ -103,7 +103,7 @@ singleLineInstr = line
           r1 <- reg
           spc (string ":=")
           op <- spc (oneOfStr opcodes)
-          return (eRX op r1)
+          return (eRX op r1)          -- doesn't quite fit eR1 format
         binop = do
           r1 <- reg
           spc (string ":=")
@@ -143,7 +143,7 @@ instruction :: Parser A.Instr
 instruction = try singleLineInstr
             <|> try (A.LoadFunc <$> reg <* spc (string ":=") <* spc (string "fun") <*> spc integer <*> (spc (string "{") *> manyTill instruction loadFunEnd))
             where 
-                  loadFunEnd = string "}" <* spaces <* newline
+                  loadFunEnd = string "}" <* newline
 
 comment :: Parser ()
 comment = () <$ spaces <* string ";;" <* manyTill anyChar endOfLine

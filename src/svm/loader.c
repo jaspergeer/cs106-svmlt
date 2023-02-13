@@ -106,8 +106,8 @@ static Instruction get_instruction(VMState vm, FILE *vofile, unsigned *maxregp) 
   free_tokens(&itoks);
   free(ibuf);
 
-  printasm(stderr, vm, i);
-  fprintf(stderr, "\n");
+  // printasm(stderr, vm, i);
+  // fprintf(stderr, "\n");
 
   return i;
 }

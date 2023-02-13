@@ -28,7 +28,8 @@ unparseObj1 (O.Regs op regs) = case regs of
     then case regs of
       [r2, r3] -> unwords [reg r1, ":=", reg r2, op, reg r3]
       _ -> error "IMPOSSIBLE: malformed binop instruction"
-    else unwords ([reg r1, ":="] ++ map reg regs)
+    -- else unwords ([reg r1, ":="] ++ map reg regs) waht does this line mean, does not correpoind to eR2
+    else unwords ([reg r1, ":=", op] ++ map reg regs) -- I think the else branch only has R1, but correct me if I'm wrong
 unparseObj1 (O.RegLit "loadliteral" r1 lit) = unwords [reg r1, ":=", unparseLit lit]
 unparseObj1 (O.RegLit "popen" r1 lit) = unwords [reg r1, ":= popen", unparseLit lit]
 unparseObj1 (O.RegLit op r1 lit) = unwords [op, reg r1, unparseLit lit]
@@ -48,7 +49,7 @@ unparse1 i = case i of
 
 unparse :: [A.Instr] -> [String]
 unparse (i:is) = case i of
-    A.LoadFunc r arity body -> reg r : ":= fun" : show r : "{" : map ("\t" ++) (unparse body) ++
+    A.LoadFunc r arity body -> (reg r ++ " := fun " ++ show arity ++ " {") : map ("\t" ++) (unparse body) ++
                                "}" : unparse is
     A.ObjectCode (O.LoadFunc r arity body) ->
       unparse (A.LoadFunc r arity (map A.ObjectCode body):is)
