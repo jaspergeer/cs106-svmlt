@@ -50,6 +50,9 @@ void vmrun(VMState vm, struct VMFunction* fun) {
     case Halt:
       vm->pc = stream_ptr - fun->instructions;
       return;
+    case Hash:
+      RX = mkNumberValue(hashvalue(RY));
+      break;
 
     // Printing
     case Print:

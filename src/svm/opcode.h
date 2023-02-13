@@ -11,6 +11,7 @@
 typedef enum opcode {
     Halt, // R0
     Zero, // R1
+    Hash, // R2
 
     // Printing
     Print, // R1

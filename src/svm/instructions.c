@@ -14,6 +14,7 @@
 instruction_info instructions[] = {
   { "halt", Halt, parseR0, "halt" },
   { "zero", Zero, parseR1, "$rX := 0" },
+  { "hash", Hash, parseR2, "$rX := hash $rY"},
 
   // Printing
   { "print", Print, parseR1, "print $rX" },
