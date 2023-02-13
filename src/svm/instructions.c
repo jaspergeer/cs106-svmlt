@@ -13,44 +13,44 @@
 
 instruction_info instructions[] = {
   { "halt", Halt, parseR0, "halt" },
-  { "zero", Zero, parseR1, "rX := 0" },
+  { "zero", Zero, parseR1, "$rX := 0" },
 
   // Printing
-  { "print", Print, parseR1, "print rX" },
-  { "println", Println, parseR1, "println rX" },
-  { "printu", Printu, parseR1, "printu rX" },
+  { "print", Print, parseR1, "print $rX" },
+  { "println", Println, parseR1, "println $rX" },
+  { "printu", Printu, parseR1, "printu $rX" },
 
   // Dynamic Loading
   { "popen", PipeOpen, parseR1LIT, "open pipe from LIT" },
-  { "dload", DynLoad, parseR1, "load from rX" },
+  { "dload", DynLoad, parseR1, "load from $rX" },
 
   // Branching
-  { "cskip", CondSkip, parseR1, "if rX then skip" },
+  { "cskip", CondSkip, parseR1, "if $rX then skip" },
   { "jump", Jump, parseR0I24, "jump to iXYZ" },
 
   // Load/Store
-  { "loadliteral", LoadLiteral, parseR1LIT, "rX := LIT" },
-  { "getglobal", GetGLobal, parseR1GLO, "rX := GLOBAL" },
+  { "loadliteral", LoadLiteral, parseR1LIT, "$rX := LIT" },
+  { "getglobal", GetGLobal, parseR1GLO, "$rX := GLOBAL" },
   { "setglobal", SetGlobal, parseR1GLO, "GLOBAL := rX" },
 
   // Check/Expect
-  { "check", Check, parseR1LIT, "check LIT, rX" },
-  { "expect", Expect, parseR1LIT, "expect LIT, rX" },
+  { "check", Check, parseR1LIT, "check LIT, $rX" },
+  { "expect", Expect, parseR1LIT, "expect LIT, $rX" },
 
   // Arithmetic
-  { "+", Add, parseR3, "rX := rY + rZ" },
-  { "-", Sub, parseR3, "rX := rY - rZ" },
-  { "*", Mul, parseR3, "rX := rY * rZ" },
-  { "/", Div, parseR3, "rX := rY / rZ" },
-  { "mod", Mod, parseR3, "rX := rY mod rZ" },
-  { "idiv", Idiv, parseR3, "rX := rY idiv rZ"},
+  { "+", Add, parseR3, "$rX := $rY + $rZ" },
+  { "-", Sub, parseR3, "$rX := $rY - $rZ" },
+  { "*", Mul, parseR3, "$rX := $rY * $rZ" },
+  { "/", Div, parseR3, "$rX := $rY / $rZ" },
+  { "mod", Mod, parseR3, "$rX := $rY mod $rZ" },
+  { "idiv", Idiv, parseR3, "$rX := $rY idiv $rZ"},
 
   // Boolean
-  { "truth", Truth, parseR2, "rX := truth rY" },
-  { "not", Not, parseR2, "rX := not rY"},
-  { "and", And, parseR3, "rX := rY and rZ" },
-  { "or", Or, parseR3, "rX := rY or rZ" },
-  { "xor", Xor, parseR3, "rX := rY xor rZ" },
+  { "truth", Truth, parseR2, "$rX := truth $rY" },
+  { "not", Not, parseR2, "$rX := not $rY"},
+  { "and", And, parseR3, "$rX := $rY and $rZ" },
+  { "or", Or, parseR3, "$rX := $rY or $rZ" },
+  { "xor", Xor, parseR3, "$rX := $rY xor $rZ" },
 
   // Comparison
   { "n=", Cmp, parseR3, "rX := rY n= rZ"},
