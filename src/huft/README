@@ -1,0 +1,7 @@
+## To Use
+
+`cabal build` builds the executable
+
+`cabal run huft inLang-outLang infile/stdin` to run
+
+Now the haskell uft only supports vs-vs, vs-vo
