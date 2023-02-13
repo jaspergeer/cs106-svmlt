@@ -16,13 +16,13 @@ if $r1 goto hi
 $r1 := function? $r1
 $r1 := pair? $r1
 $r1 := symbol? $r1
-;; $r1 := number? $r1
-;; $r1 := not $r1
+$r1 := number? $r1
+$r1 := not $r1
 $r1 := boolean? $r1
-;; $r1 := null? $r1
-;; $r2 := nil? $r2   --- following S-expressions
+$r1 := null? $r1
+$r2 := nil? $r2
 $r1 := car $r1
-;; $r1 := cdr $r1
+$r1 := cdr $r1
 $r1 := cons $r1 $r1
 ;; arithmetic
 $r2 := 2
