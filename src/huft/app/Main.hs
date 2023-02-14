@@ -33,7 +33,7 @@ main = do
                 Left e -> putStrLn e
                 Right r -> r
         spec:infile:[] -> do
-            file <- (openFile infile ReadMode)
+            file <- openFile infile ReadMode
             translation <- translationOf spec file stdout
             case translation of
                 Left e -> putStrLn e

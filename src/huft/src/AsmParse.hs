@@ -163,14 +163,13 @@ comment :: Parser ()
 comment = () <$ spaces <* string ";;" <* manyTill anyChar endOfLine
 
 instruction :: Parser A.Instr
-instruction = skippable *> (try singleLineInstr
-            <|> try (A.LoadFunc <$> reg <* word ":=" <*
-              word "fun" <*> integer <*>
-              (word "{" *> manyTill instruction loadFunEnd)))
+instruction = skippable *> 
+              (try singleLineInstr
+           <|> try (A.LoadFunc <$> reg <* word ":=" <* word "fun" <*> integer <*>
+                                  (word "{" *> manyTill instruction (word "}"))))
               <* skippable
             where 
-              loadFunEnd = word "}"
-              skippable = (try (skipMany (lexeme comment)) <|> spaces)
+              skippable = try (skipMany (lexeme comment)) <|> spaces
 
 asmParse :: Parser [A.Instr]
 asmParse = manyTill instruction eof
