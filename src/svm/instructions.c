@@ -13,69 +13,69 @@
 
 instruction_info instructions[] = {
   { "halt", Halt, parseR0, "halt" },
-  { "zero", Zero, parseR1, "zero rX" },
-  { "hash", Hash, parseR2, "hash rX rY"},
-  { "copy", Copy, parseR2, "copy rX rY"},
-  { "err", Err, parseR1, "err rX" },
+  { "zero", Zero, parseR1, "$rX := 0" },
+  { "hash", Hash, parseR2, "$rX := hash $rY"},
+  { "copy", Copy, parseR2, "$rX := $rY"},
+  { "err", Err, parseR1, "err $rX" },
 
   // Printing
-  { "print", Print, parseR1, "print rX" },
-  { "println", Println, parseR1, "println rX" },
-  { "printu", Printu, parseR1, "printu rX" },
+  { "print", Print, parseR1, "print $rX" },
+  { "println", Println, parseR1, "println $rX" },
+  { "printu", Printu, parseR1, "printu $rX" },
 
   // Dynamic Loading
-  { "popen", PipeOpen, parseR1LIT, "popen rX LIT" },
-  { "dload", DynLoad, parseR1, "dload rX" },
+  { "popen", PipeOpen, parseR1LIT, "popen $rX LIT" },
+  { "dload", DynLoad, parseR1, "dload $rX" },
 
   // Branching
-  { "cskip", CondSkip, parseR1, "cskip rX" },
-  { "jump", Jump, parseR0I24, "jump iXYZ" },
+  { "cskip", CondSkip, parseR1, "if $rX goto 1" },
+  { "jump", Jump, parseR0I24, "goto iXYZ" },
 
   // Load/Store
-  { "loadliteral", LoadLiteral, parseR1LIT, "loadliteral rX LIT" },
-  { "getglobal", GetGlobal, parseR1GLO, "getglobal rX GLOBAL" },
-  { "setglobal", SetGlobal, parseR1GLO, "setglobal rX GLOBAL" },
+  { "loadliteral", LoadLiteral, parseR1LIT, "$rX := LIT" },
+  { "getglobal", GetGlobal, parseR1GLO, "$rX := G[GLOBAL]" },
+  { "setglobal", SetGlobal, parseR1GLO, "G[GLOBAL] := $rX" },
 
   // Check/Expect
-  { "check", Check, parseR1LIT, "check rX LIT" },
-  { "expect", Expect, parseR1LIT, "expect rX LIT" },
+  { "check", Check, parseR1LIT, "check $rX LIT" },
+  { "expect", Expect, parseR1LIT, "expect $rX LIT" },
 
   // Arithmetic
-  { "+", Add, parseR3, "+ rX rY rZ" },
-  { "-", Sub, parseR3, "- rX rY rZ" },
-  { "*", Mul, parseR3, "* rX rY rZ" },
-  { "/", Div, parseR3, "/ rX rY rZ" },
-  { "mod", Mod, parseR3, "mod rX rY rZ" },
-  { "idiv", Idiv, parseR3, "idiv rX rY rZ"},
+  { "+", Add, parseR3, "$rX := $rY + $rZ" },
+  { "-", Sub, parseR3, "$rX := $rY - $rZ" },
+  { "*", Mul, parseR3, "$rX := $rY * $rZ" },
+  { "/", Div, parseR3, "$rX := $rY / $rZ" },
+  { "mod", Mod, parseR3, "$rX := $rY mod $rZ" },
+  { "idiv", Idiv, parseR3, "$rX := $rY idiv $rZ"},
 
   // Boolean
-  { "truth", Truth, parseR2, "truth rX rY" },
-  { "not", Not, parseR2, "not rX rY"},
-  { "and", And, parseR3, "and rX rY rZ" },
-  { "or", Or, parseR3, "or rX rY rZ" },
-  { "xor", Xor, parseR3, "xor rX rY rZ" },
+  { "truth", Truth, parseR2, "$rX := truth $rY" },
+  { "not", Not, parseR2, "$rX := not $rY"},
+  { "and", And, parseR3, "$rX := $rY and $rZ" },
+  { "or", Or, parseR3, "$rX := $rY or $rZ" },
+  { "xor", Xor, parseR3, "$rX := $rY xor $rZ" },
 
   // Comparison
-  { "n=", Cmp, parseR3, "n= rX rY rZ"},
-  { "s=", Unimp, parseR3, "s= rX rY rZ"},
-  { ">", Gt, parseR3, "> rX rY rZ" },
-  { "<", Lt, parseR3, "< rX rY rZ" },
-  { ">=", Ge, parseR3, ">= rX rY rZ" },
-  { "<=", Le, parseR3, "<= rX rY rZ" },
+  { "n=", Cmp, parseR3, "$rX := $rY n= $rZ"},
+  { "s=", Unimp, parseR3, "$rX := $rY s= $rZ"},
+  { ">", Gt, parseR3, "$rX := $rY > $rZ" },
+  { "<", Lt, parseR3, "$rX := $rY < $rZ" },
+  { ">=", Ge, parseR3, "$rX := $rY >= $rZ" },
+  { "<=", Le, parseR3, "$rX := $rY <= $rZ" },
 
   // S-Expressions
-  { "cons", Cons, parseR3, "cons rX rY rZ" },
-  { "car", Car, parseR2, "car rX rY" },
-  { "cdr", Cdr, parseR2, "cdr rX rY" },
+  { "cons", Cons, parseR3, "$rX := cons $rY $rZ" },
+  { "car", Car, parseR2, "$rX := car $rY" },
+  { "cdr", Cdr, parseR2, "$rX := cdr $rY" },
 
   // type predicates
-  { "function?", IsFunc, parseR2, "function? rX rY" },
-  { "pair?", IsPair, parseR2, "pair? rX rY" },
-  { "symbol?", IsSym, parseR2, "symbol? rX rY" },
-  { "number?", IsNum, parseR2, "number? rX rY" },
-  { "boolean?", IsBool, parseR2, "boolean? rX rY" },
-  { "null?", IsNull, parseR2, "null? rX rY" },
-  { "nil?", IsNil, parseR2, "nil? rX rY"}
+  { "function?", IsFunc, parseR2, "$rX := function? $rY" },
+  { "pair?", IsPair, parseR2, "$rX := pair? $rY" },
+  { "symbol?", IsSym, parseR2, "$rX := symbol? $rY" },
+  { "number?", IsNum, parseR2, "$rX := number? $rY" },
+  { "boolean?", IsBool, parseR2, "$rX := boolean? $rY" },
+  { "null?", IsNull, parseR2, "$rX := null? $rY" },
+  { "nil?", IsNil, parseR2, "$rX := nil? $rY" }
   };
 
 int number_of_instructions = sizeof(instructions) / sizeof(instructions[0]);

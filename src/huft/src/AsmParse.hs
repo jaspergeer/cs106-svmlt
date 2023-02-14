@@ -30,20 +30,23 @@ import Text.Parsec.Char (noneOf)
 
 -- parsing
 
-name :: Parser String
-name = (:) <$> oneOf (['a'..'z'] ++ ['A'..'Z']) <*> many alphaNum
+lexeme :: Parser a -> Parser a
+lexeme p = spaces *> p <* spaces
 
-line :: Parser a -> Parser a
-line p = spaces *> p <* newline
+word :: String -> Parser String
+word w = lexeme $ string w
+
+name :: Parser String
+name = lexeme $ (:) <$> oneOf (['a'..'z'] ++ ['A'..'Z']) <*> many alphaNum
 
 integer :: Parser Int
-integer = read <$> ((++) <$> option "" (string "-") <*> many1 digit)
+integer = lexeme $ read <$> ((++) <$> option "" (string "-") <*> many1 digit)
 
 nat :: Parser Int
-nat = read <$> many1 digit
+nat = lexeme $ read <$> many1 digit
 
 double :: Parser Double
-double = read <$> ((++) <$> whole <*> decimal)
+double = lexeme $ read <$> ((++) <$> whole <*> decimal)
       where whole = (++) <$> option "" (string "-") <*> many1 digit
             decimal = (++) <$> string "." <*> many1 digit
 
@@ -52,7 +55,7 @@ manyTill' :: Parser a -> Parser b -> Parser [a]
 manyTill' p1 p2 = try ((:) <$> p1 <*> manyTill' p1 p2) <|> ([] <$ p2)
 
 stringLit :: Parser String
-stringLit = char '"' *> manyTill' (try escape <|> noneOf "\n") (char '"')
+stringLit = lexeme $ char '"' *> manyTill' (try escape <|> noneOf "\n") (char '"')
   where escape = do
           char '\\'
           c <- oneOf "abtnr\"\\"
@@ -66,7 +69,7 @@ stringLit = char '"' *> manyTill' (try escape <|> noneOf "\n") (char '"')
             '\\' -> '\\'
 
 literal :: Parser O.Literal
-literal = try (O.String <$> stringLit)
+literal = lexeme $ try (O.String <$> stringLit)
         <|> try (O.Real <$> double)
         <|> try (O.Int <$> integer)
         <|> try (O.Bool True <$ string "#t")
@@ -78,10 +81,7 @@ regs :: O.Operator -> [O.Reg] -> A.Instr
 regs op operands = A.ObjectCode (O.Regs op operands)
 
 reg :: Parser Int
-reg = read <$> (string "$r" *> many1 digit)
-
-spc :: Parser a -> Parser a
-spc p = space *> p
+reg = lexeme $ read <$> (string "$r" *> many1 digit)
 
 eR0 op = regs op []
 eR1 op r1 = regs op [r1]
@@ -100,37 +100,37 @@ singleLineInstr :: Parser A.Instr
 singleLineInstr =
   -- standard cases
   try binop
-  <|> try (regInstr eR3 A.opcodesR3 <*> spc reg <*> spc reg)
-  <|> try (regInstr eR2 A.opcodesR2 <*> spc reg)
+  <|> try (regInstr eR3 A.opcodesR3 <*> reg <*> reg)
+  <|> try (regInstr eR2 A.opcodesR2 <*> reg)
   -- eR1 do not share the assignment operator
-  <|> try (eR1 <$> oneOfStr A.opcodesR1 <*> spc reg)
-  <|> try (regInstr eR2U8 A.opcodesR2U8 <*> spc reg <*> spc integer)
-  <|> try (regInstr eR1U16 A.opcodesR1U16 <*> spc integer)
-  <|> try (eR0I24 <$> oneOfStr A.opcodesR0I24 <*> spc integer)
+  <|> try (eR1 <$> oneOfStr A.opcodesR1 <*> reg)
+  <|> try (regInstr eR2U8 A.opcodesR2U8 <*> reg <*> integer)
+  <|> try (regInstr eR1U16 A.opcodesR1U16 <*> integer)
+  <|> try (eR0I24 <$> oneOfStr A.opcodesR0I24 <*> integer)
   <|> try (eR0 <$> oneOfStr A.opcodesR0)
   -- special cases
-  <|> try (eR2 "copy" <$> reg <* spc (string ":=") <*> spc reg)
-  <|> try (eR1 "zero" <$> reg <* spc (string ":=") <* spc (char '0'))
-  <|> try (eR1LIT "loadliteral" <$> reg <* spc (string ":=") <*> spc literal)
-  <|> try (eR1GLO "getglobal" <$> reg <* spc (string ":=") <*> (spc (string "G[") *> name <* string "]"))
+  <|> try (eR2 "copy" <$> reg <* word ":=" <*> reg)
+  <|> try (eR1 "zero" <$> reg <* word ":=" <* word "0")
+  <|> try (eR1LIT "loadliteral" <$> reg <* word ":=" <*> literal)
+  <|> try (eR1GLO "getglobal" <$> reg <* word ":=" <*> (word "G[" *> name <* word "]"))
   <|> try (flip (eR1GLO "setglobal") <$>
-    (string "G[" *> name <* string "]") <* spc (string ":=") <*> spc reg)
-  <|> try (regInstr eR1LIT ["popen"] <*> spc literal)
-  <|> try (eR1LIT <$> oneOfStr ["check", "expect"] <*> spc reg <*> spc literal)
-  <|> try (A.DefLabel <$> (string "def" *> spc name))
-  <|> try (A.GotoLabel <$> (string "goto" *> spc name))
-  <|> try (A.IfGotoLabel <$> (string "if" *> spc reg) <*> (spc (string "goto") *> spc name))
+    (string "G[" *> name <* string "]") <* word ":=" <*> reg)
+  <|> try (regInstr eR1LIT ["popen"] <*> literal)
+  <|> try (eR1LIT <$> oneOfStr ["check", "expect"] <*> reg <*> literal)
+  <|> try (A.DefLabel <$> (string "def" *> name))
+  <|> try (A.GotoLabel <$> (string "goto" *> name))
+  <|> try (A.IfGotoLabel <$> (string "if" *> reg) <*> (word "goto" *> name))
   where regInstr eRX opcodes = do
           r1 <- reg
-          spc (string ":=")
-          op <- spc (oneOfStr opcodes)
+          word ":="
+          op <- (oneOfStr opcodes)
           return (eRX op r1)          -- doesn't quite fit eR1 format
         binop = do
           r1 <- reg
-          spc (string ":=")
-          r2 <- spc reg
-          op <- spc (oneOfStr A.binops)
-          r3 <- spc reg
+          (string ":=")
+          r2 <- reg
+          op <- (oneOfStr A.binops)
+          r3 <- reg
           return (eR3 op r1 r2 r3)
 
 --  <instruction> ::= <one_line_instruction> EOL
@@ -162,18 +162,15 @@ singleLineInstr =
 comment :: Parser ()
 comment = () <$ spaces <* string ";;" <* manyTill anyChar endOfLine
 
-spaced :: Parser a -> Parser a
-spaced p = spaces *> p <* spaces
-
 instruction :: Parser A.Instr
 instruction = skippable *> (try singleLineInstr
-            <|> try (A.LoadFunc <$> reg <* spc (string ":=") <*
-              spc (string "fun") <*> spc integer <*>
-              (spc (string "{") *> manyTill instruction loadFunEnd)))
+            <|> try (A.LoadFunc <$> reg <* word ":=" <*
+              word "fun" <*> integer <*>
+              (word "{" *> manyTill instruction loadFunEnd)))
               <* skippable
             where 
-              loadFunEnd = string "}" <* newline
-              skippable = (try (skipMany (spaced comment)) <|> spaces)
+              loadFunEnd = word "}"
+              skippable = (try (skipMany (lexeme comment)) <|> spaces)
 
 asmParse :: Parser [A.Instr]
 asmParse = manyTill instruction eof

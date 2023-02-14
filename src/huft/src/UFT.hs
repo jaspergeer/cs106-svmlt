@@ -41,7 +41,6 @@ instance Exception InternalError
 -- Reader functions
 
 vsOfFile :: Reader [Asm.Instr]
--- vsOfFile Handle -> IO (Error [Asm.Instr])
 vsOfFile infile = hGetContents' infile <&> parseAndErr AsmParse.asmParse 
 
 -- Materializer functions

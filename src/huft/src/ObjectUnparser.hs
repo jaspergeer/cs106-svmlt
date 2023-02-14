@@ -22,14 +22,14 @@ unparseInstr i = case i of
   O.RegsInt op regs offset -> unwords ((op : map show regs) ++ [show offset])
   O.LoadFunc {} -> error "IMPOSSIBLE: LoadFunc reached instr"
 
-list :: [Char] -> [O.Instr] -> [[Char]] -> [[Char]]
-list prefix body tail =
-  unwords [prefix, show $ length body] : foldr add tail body
+unparseFunc :: [Char] -> [O.Instr] -> [[Char]] -> [[Char]]
+unparseFunc prefix body tail =
+  unwords [prefix, show (length body)] : foldr add tail body
 
 add :: O.Instr -> [[Char]] -> [[Char]]
 add i tail = case (i, tail) of
   (O.LoadFunc reg k body, tail) ->
-    list (unwords [".load", show reg, "function", show k]) body tail
+    unparseFunc (unwords [".load", show reg, "function", show k]) body tail
   (i, tail) -> unparseInstr i : tail
 
-unparseModule code = list ".load module" code []
+unparseModule code = unparseFunc ".load module" code []
