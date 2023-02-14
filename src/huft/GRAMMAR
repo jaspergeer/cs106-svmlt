@@ -11,7 +11,7 @@ Alexander Bai | Jasper Geer
 <body>        ::= { <instruction> }
 
 <objectcode> ::= <reg> := <reg> <binop> <reg>
-               | <reg> := cons <reg>
+               | <reg> := cons <reg> <reg>
                | <reg> := <unop> <reg>
                | <opcodesR1> <reg>
                | <reg> := <literal>
