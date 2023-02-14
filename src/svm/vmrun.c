@@ -53,6 +53,12 @@ void vmrun(VMState vm, struct VMFunction* fun) {
     case Hash:
       RX = mkNumberValue(hashvalue(RY));
       break;
+    case Copy:
+      RX = RY;
+      break;
+    case Err:
+      runerror(vm, "%v", RX);
+      break;
 
     // Printing
     case Print:
@@ -105,7 +111,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
     case LoadLiteral:
       RX = LPool_get(literals, uYZ(curr_inst));
       break;
-    case GetGLobal:
+    case GetGlobal:
       RX = globals[uYZ(curr_inst)];
       break;
     case SetGlobal:

@@ -49,14 +49,16 @@ opcodesR2 =
   , "boolean?"
   , "null?"
   , "nil?"
-  , "hash" ]
+  , "hash"
+  , "copy" ]
 
 opcodesR1 =
   [ "print"
   , "println"
   , "printu"
   , "dload"
-  , "cskip" ]
+  , "cskip"
+  , "err" ]
 
 opcodesR1LIT =
   [ "popen"

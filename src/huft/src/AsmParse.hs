@@ -97,9 +97,8 @@ oneOfStr :: [String] -> Parser String
 oneOfStr strs = choice (map (try . string) strs)
 
 singleLineInstr :: Parser A.Instr
-singleLineInstr = line
+singleLineInstr =
   -- standard cases
-  (
   try binop
   <|> try (regInstr eR3 A.opcodesR3 <*> spc reg <*> spc reg)
   <|> try (regInstr eR2 A.opcodesR2 <*> spc reg)
@@ -110,6 +109,7 @@ singleLineInstr = line
   <|> try (eR0I24 <$> oneOfStr A.opcodesR0I24 <*> spc integer)
   <|> try (eR0 <$> oneOfStr A.opcodesR0)
   -- special cases
+  <|> try (eR2 "copy" <$> reg <* spc (string ":=") <*> spc reg)
   <|> try (eR1 "zero" <$> reg <* spc (string ":=") <* spc (char '0'))
   <|> try (eR1LIT "loadliteral" <$> reg <* spc (string ":=") <*> spc literal)
   <|> try (eR1GLO "getglobal" <$> reg <* spc (string ":=") <*> (spc (string "G[") *> name <* string "]"))
@@ -120,7 +120,6 @@ singleLineInstr = line
   <|> try (A.DefLabel <$> (string "def" *> spc name))
   <|> try (A.GotoLabel <$> (string "goto" *> spc name))
   <|> try (A.IfGotoLabel <$> (string "if" *> spc reg) <*> (spc (string "goto") *> spc name))
-  )
   where regInstr eRX opcodes = do
           r1 <- reg
           spc (string ":=")
@@ -160,21 +159,21 @@ singleLineInstr = line
 -- uft vs-vo loadfun.vs | svm
 -- You’ll confirm that it loads correctly later, after you’ve made a small extension to the SVM.
 
-
-instruction :: Parser A.Instr
-instruction = try singleLineInstr
-            <|> try (A.LoadFunc <$> reg <* spc (string ":=") <*
-              spc (string "fun") <*> spc integer <*>
-              (spc (string "{") *> manyTill instruction loadFunEnd))
-            where 
-                  loadFunEnd = string "}" <* newline
-
 comment :: Parser ()
 comment = () <$ spaces <* string ";;" <* manyTill anyChar endOfLine
 
 spaced :: Parser a -> Parser a
 spaced p = spaces *> p <* spaces
 
+instruction :: Parser A.Instr
+instruction = skippable *> (try singleLineInstr
+            <|> try (A.LoadFunc <$> reg <* spc (string ":=") <*
+              spc (string "fun") <*> spc integer <*>
+              (spc (string "{") *> manyTill instruction loadFunEnd)))
+              <* skippable
+            where 
+              loadFunEnd = string "}" <* newline
+              skippable = (try (skipMany (spaced comment)) <|> spaces)
+
 asmParse :: Parser [A.Instr]
-asmParse = manyTill (skippable *> instruction <* skippable) eof
-  where skippable = (try (skipMany (spaced comment)) <|> spaces)
+asmParse = manyTill instruction eof

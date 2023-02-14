@@ -12,6 +12,8 @@ typedef enum opcode {
     Halt, // R0
     Zero, // R1
     Hash, // R2
+    Copy, // R2
+    Err, // R1
 
     // Printing
     Print, // R1
@@ -28,7 +30,7 @@ typedef enum opcode {
 
     // Load/Store
     LoadLiteral, // R1U16
-    GetGLobal, // R1U16
+    GetGlobal, // R1U16
     SetGlobal, // R1U16
 
     // Check-Expect
