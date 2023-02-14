@@ -1,9 +1,6 @@
--- merged norman's asm.sml, asmlex.sml, and probably asmparse.sml
-
 module Asm where
 
 import qualified ObjectCode as O
-import qualified Data.Set as S
 
 type Label = String
 

@@ -1,7 +1,7 @@
 module UFT where
 
 import Languages
-import Control.Exception (Exception, throw)
+import Control.Exception (Exception, throw, handle, catch)
 import Text.Parsec (runParser, ParseError)
 
 import GHC.IO.Handle (hGetContents', hPutStr, Handle)
@@ -33,10 +33,10 @@ parseAndErr p input = case runParser p () "" input of
 
 -- support for materialization
 
-data InternalError = Backward
-                   | NoTranslationTo Language
+data InternalException = Backward
+                       | NoTranslationTo Language
                   deriving (Show)
-instance Exception InternalError
+instance Exception InternalException
 
 -- Reader functions
 
@@ -50,7 +50,7 @@ vsOf VS = vsOfFile
 vsOf _ = throw (NoTranslationTo VS)
 
 voOf :: Language -> Reader [ObjectCode.Instr]
-voOf VO     =  throw (NoTranslationTo VO)
+voOf VO     =  \_ -> return (Left "There is no reader for .vo")
 voOf inLang =  vsOf inLang ==> Assembler.translate
 
 -- Emitter functions
@@ -71,7 +71,10 @@ data UFTException = NotForward Language Language
 instance Exception UFTException
 
 translate :: Language -> Language -> Handle -> Handle -> IO (Error (IO ()))
-translate inLang outLang infile outfile =
-  case outLang of
+translate inLang outLang infile outfile = catch
+  (case outLang of
     VS -> vsOf inLang infile <&> (emitVS outfile <$>)
-    VO -> voOf inLang infile <&> (emitVO outfile <$>)
+    VO -> voOf inLang infile <&> (emitVO outfile <$>))
+  (\e -> case e of
+    Backward -> throw (NotForward inLang outLang)
+    NoTranslationTo l -> throw (NotForward inLang l))

@@ -52,23 +52,21 @@ labelEnv = foldrInstrStream (lift3 f) (Right E.empty) where
 -- to the position of the GOTO. And it discards the labels.
 
 labelElim :: [A.Instr] -> E.Env Int -> Error [O.Instr]
--- use applicative functors
 labelElim instrs env = let
   f pos i is = case i of
+    -- loadfunc
     (A.LoadFunc reg arity body) -> (:) <$>
       (O.LoadFunc reg arity <$> translate body) <*> is
-    (A.DefLabel _ ) -> is
+    -- goto
     (A.GotoLabel n) -> case E.find n env of
       Just x -> (O.Goto (x - pos - 1) :) <$> is
       _ -> Left ("Name '" ++ n ++ "' not bound")
     (A.IfGotoLabel r1 n) -> case E.find n env of
       Just x -> ([O.Regs "cskip" [r1], O.Goto (x - pos - 1)] ++) <$> is
       _ -> Left ("Name " ++ n ++ " not bound")
+    -- base cases
     (A.ObjectCode o) -> (o :) <$> is
-
-  -- labelElim 
-  -- labelElim ((A.ObjectCode o):is) env = (o :) <$> labelElim is env
-  -- labelElim [] env = Right []
+    (A.DefLabel _ ) -> is
   in foldrInstrStream f (Right []) instrs
 
 translate :: [A.Instr] -> Error [O.Instr]
