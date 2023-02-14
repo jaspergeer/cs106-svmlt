@@ -7,11 +7,24 @@ import qualified Data.Set as S
 reg :: Show a => a -> [Char]
 reg r = "$r" ++ show r
 
+unparseString :: String -> String
+unparseString s = '\"' : f s ++ "\""
+  where f s = case s of
+          '\a' : cs -> "\\a" ++ f cs
+          '\b' : cs -> "\\b" ++ f cs
+          '\t' : cs -> "\\t" ++ f cs
+          '\n' : cs -> "\\n" ++ f cs
+          '\r' : cs -> "\\r" ++ f cs
+          '\"' : cs -> "\\\"" ++ f cs
+          '\\' : cs -> "\\\\" ++ f cs
+          c : cs -> c : f cs
+          [] -> []
+
 unparseLit :: O.Literal -> String
 unparseLit lit = case lit of
   O.Int n -> show n
   O.Real n -> show n
-  O.String s -> '\"' : s ++ "\""
+  O.String s -> unparseString s
   O.Bool b -> if b then "#t" else "#f"
   O.EmptyList -> "'()"
   O.Nil -> "nil"
@@ -33,8 +46,8 @@ unparseObj1 (O.Regs op regs) = case regs of
 unparseObj1 (O.RegLit "loadliteral" r1 lit) = unwords [reg r1, ":=", unparseLit lit]
 unparseObj1 (O.RegLit "popen" r1 lit) = unwords [reg r1, ":= popen", unparseLit lit]
 unparseObj1 (O.RegLit op r1 lit) = unwords [op, reg r1, unparseLit lit]
-unparseObj1 (O.RegGlo "getglobal" r1 name) = unwords [reg r1, ":=", name]
-unparseObj1 (O.RegGlo "setglobal" r1 name) = unwords [name, ":=", reg r1]
+unparseObj1 (O.RegGlo "getglobal" r1 name) = unwords [reg r1, ":= G[" ++ name ++ "]"]
+unparseObj1 (O.RegGlo "setglobal" r1 name) = unwords ["G[" ++ name ++ "] :=", reg r1]
 unparseObj1 (O.RegsInt op [] i24) = unwords [op, show i24]
 unparseObj1 (O.RegsInt op [r1] u16) = unwords [reg r1, ":=", op, show u16]
 unparseObj1 (O.RegsInt op [r1, r2] u8) = unwords [reg r1, ":=", op, reg r2, show u8]

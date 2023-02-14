@@ -58,9 +58,12 @@ labelElim instrs env = let
     (A.LoadFunc reg arity body) -> (:) <$>
       (O.LoadFunc reg arity <$> translate body) <*> is
     (A.DefLabel _ ) -> is
-    (A.GotoLabel n) -> (O.RegsInt "jump" [] (E.find n env - pos - 1) :) <$> is
-    (A.IfGotoLabel r1 n) -> ([O.Regs "cskip" [r1], O.RegsInt "jump" []
-      (E.find n env - pos - 1)] ++) <$> is
+    (A.GotoLabel n) -> case E.find n env of
+      Just x -> (O.Goto (x - pos - 1) :) <$> is
+      _ -> Left ("Name '" ++ n ++ "' not bound")
+    (A.IfGotoLabel r1 n) -> case E.find n env of
+      Just x -> ([O.Regs "cskip" [r1], O.Goto (x - pos - 1)] ++) <$> is
+      _ -> Left ("Name " ++ n ++ " not bound")
     (A.ObjectCode o) -> (o :) <$> is
 
   -- labelElim 

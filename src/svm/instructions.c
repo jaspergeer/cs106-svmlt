@@ -14,6 +14,9 @@
 instruction_info instructions[] = {
   { "halt", Halt, parseR0, "halt" },
   { "zero", Zero, parseR1, "$rX := 0" },
+  { "hash", Hash, parseR2, "$rX := hash $rY"},
+  { "copy", Copy, parseR2, "$rX := $rY"},
+  { "err", Err, parseR1, "err $rX" },
 
   // Printing
   { "print", Print, parseR1, "print $rX" },
@@ -21,21 +24,21 @@ instruction_info instructions[] = {
   { "printu", Printu, parseR1, "printu $rX" },
 
   // Dynamic Loading
-  { "popen", PipeOpen, parseR1LIT, "open pipe from LIT" },
-  { "dload", DynLoad, parseR1, "load from $rX" },
+  { "popen", PipeOpen, parseR1LIT, "popen $rX LIT" },
+  { "dload", DynLoad, parseR1, "dload $rX" },
 
   // Branching
-  { "cskip", CondSkip, parseR1, "if $rX then skip" },
-  { "jump", Jump, parseR0I24, "jump to iXYZ" },
+  { "cskip", CondSkip, parseR1, "if $rX goto 1" },
+  { "jump", Jump, parseR0I24, "goto iXYZ" },
 
   // Load/Store
   { "loadliteral", LoadLiteral, parseR1LIT, "$rX := LIT" },
-  { "getglobal", GetGLobal, parseR1GLO, "$rX := GLOBAL" },
-  { "setglobal", SetGlobal, parseR1GLO, "GLOBAL := rX" },
+  { "getglobal", GetGlobal, parseR1GLO, "$rX := G[GLOBAL]" },
+  { "setglobal", SetGlobal, parseR1GLO, "G[GLOBAL] := $rX" },
 
   // Check/Expect
-  { "check", Check, parseR1LIT, "check LIT, $rX" },
-  { "expect", Expect, parseR1LIT, "expect LIT, $rX" },
+  { "check", Check, parseR1LIT, "check $rX LIT" },
+  { "expect", Expect, parseR1LIT, "expect $rX LIT" },
 
   // Arithmetic
   { "+", Add, parseR3, "$rX := $rY + $rZ" },
@@ -53,31 +56,31 @@ instruction_info instructions[] = {
   { "xor", Xor, parseR3, "$rX := $rY xor $rZ" },
 
   // Comparison
-  { "n=", Cmp, parseR3, "rX := rY n= rZ"},
-  { "s=", Unimp, parseR3, "rX := rY s= rZ"},
-  { ">", Gt, parseR3, "rX := rY > rZ" },
-  { "<", Lt, parseR3, "rX := rY < rZ" },
-  { ">=", Ge, parseR3, "rX := rY >= rZ" },
-  { "<=", Le, parseR3, "rX := rY <= rZ" },
+  { "n=", Cmp, parseR3, "$rX := $rY n= $rZ"},
+  { "s=", Unimp, parseR3, "$rX := $rY s= $rZ"},
+  { ">", Gt, parseR3, "$rX := $rY > $rZ" },
+  { "<", Lt, parseR3, "$rX := $rY < $rZ" },
+  { ">=", Ge, parseR3, "$rX := $rY >= $rZ" },
+  { "<=", Le, parseR3, "$rX := $rY <= $rZ" },
 
   // S-Expressions
-  { "cons", Cons, parseR3, "rX := cons rY rZ" },
-  { "car", Car, parseR2, "rX := car rY" },
-  { "cdr", Cdr, parseR2, "rX := cdr rY" },
+  { "cons", Cons, parseR3, "$rX := cons $rY $rZ" },
+  { "car", Car, parseR2, "$rX := car $rY" },
+  { "cdr", Cdr, parseR2, "$rX := cdr $rY" },
 
   // type predicates
-  { "function?", IsFunc, parseR2, "rX := function? rY" },
-  { "pair?", IsPair, parseR2, "rX := pair? rY" },
-  { "symbol?", IsSym, parseR2, "rX := symbol? rY" },
-  { "number?", IsNum, parseR2, "rX := number? rY" },
-  { "boolean?", IsBool, parseR2, "rX := boolean? rY" },
-  { "null?", IsNull, parseR2, "rX := null? rY" },
-  { "nil?", IsNil, parseR2, "rX := nil? rY"}
+  { "function?", IsFunc, parseR2, "$rX := function? $rY" },
+  { "pair?", IsPair, parseR2, "$rX := pair? $rY" },
+  { "symbol?", IsSym, parseR2, "$rX := symbol? $rY" },
+  { "number?", IsNum, parseR2, "$rX := number? $rY" },
+  { "boolean?", IsBool, parseR2, "$rX := boolean? $rY" },
+  { "null?", IsNull, parseR2, "$rX := null? $rY" },
+  { "nil?", IsNil, parseR2, "$rX := nil? $rY" }
   };
 
 int number_of_instructions = sizeof(instructions) / sizeof(instructions[0]);
 
 int isgetglobal(Opcode code) {
-  return code == GetGLobal;
+  return code == GetGlobal;
 }
 
