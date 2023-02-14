@@ -15,8 +15,9 @@ unparseInstr :: O.Instr -> [Char]
 unparseInstr i = case i of
   O.Regs op regs -> unwords (op : map show regs)
   O.RegLit op r1 lit ->
-    unwords $ op : show r1 : unparseLiteral lit
-  -- jump is goto in our instruction table
+    unwords (op : show r1 : unparseLiteral lit)
+  O.RegGlo op r1 n ->
+    unwords (op : show r1 : unparseLiteral (O.String n))
   O.Goto offset -> unwords ["jump", show offset]
   O.RegsInt op regs offset -> unwords ((op : map show regs) ++ [show offset])
   O.LoadFunc {} -> error "IMPOSSIBLE: LoadFunc reached instr"

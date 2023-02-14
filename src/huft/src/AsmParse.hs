@@ -23,9 +23,9 @@ import Text.Parsec
       choice,
       (<?>),
       try,
-      anyChar, 
-      eof, 
-      endOfLine )
+      anyChar,
+      eof,
+      endOfLine, skipMany )
 import Text.Parsec.Char (noneOf)
 
 -- parsing
@@ -112,13 +112,14 @@ singleLineInstr = line
   -- special cases
   <|> try (eR1 "zero" <$> reg <* spc (string ":=") <* spc (char '0'))
   <|> try (eR1LIT "loadliteral" <$> reg <* spc (string ":=") <*> spc literal)
-  <|> try (eR1GLO "loadglobal" <$> reg <* spc (string ":=") <*> name)
-  <|> try (flip (eR1GLO "setglobal") <$> name <* string ":=" <*> spc reg)
+  <|> try (eR1GLO "getglobal" <$> reg <* spc (string ":=") <*> (spc (string "G[") *> name <* string "]"))
+  <|> try (flip (eR1GLO "setglobal") <$>
+    (string "G[" *> name <* string "]") <* spc (string ":=") <*> spc reg)
   <|> try (regInstr eR1LIT ["popen"] <*> spc literal)
   <|> try (eR1LIT <$> oneOfStr ["check", "expect"] <*> spc reg <*> spc literal)
-  <|> try (A.DefLabel <$> ( string "def" >> spc name))
-  <|> try (A.GotoLabel <$> (string "goto" >> spc name))
-  <|> try (A.IfGotoLabel <$> (string "if" >> spc reg) <*> (spc (string "goto") >> spc name))
+  <|> try (A.DefLabel <$> (string "def" *> spc name))
+  <|> try (A.GotoLabel <$> (string "goto" *> spc name))
+  <|> try (A.IfGotoLabel <$> (string "if" *> spc reg) <*> (spc (string "goto") *> spc name))
   )
   where regInstr eRX opcodes = do
           r1 <- reg
@@ -162,12 +163,18 @@ singleLineInstr = line
 
 instruction :: Parser A.Instr
 instruction = try singleLineInstr
-            <|> try (A.LoadFunc <$> reg <* spc (string ":=") <* spc (string "fun") <*> spc integer <*> (spc (string "{") *> manyTill instruction loadFunEnd))
+            <|> try (A.LoadFunc <$> reg <* spc (string ":=") <*
+              spc (string "fun") <*> spc integer <*>
+              (spc (string "{") *> manyTill instruction loadFunEnd))
             where 
                   loadFunEnd = string "}" <* newline
 
 comment :: Parser ()
 comment = () <$ spaces <* string ";;" <* manyTill anyChar endOfLine
 
+spaced :: Parser a -> Parser a
+spaced p = spaces *> p <* spaces
+
 asmParse :: Parser [A.Instr]
-asmParse = manyTill (many comment *> instruction <* many comment) eof
+asmParse = manyTill (skippable *> instruction <* skippable) eof
+  where skippable = (try (skipMany (spaced comment)) <|> spaces)

@@ -1,6 +1,6 @@
 Syntax of Virtual-Assembly Code
 
-Alexander Bai| Jasper Geer
+Alexander Bai | Jasper Geer
 
 <instruction> ::= <objectcode>
                 | <reg> := fun <arity> { <body> }
@@ -15,8 +15,8 @@ Alexander Bai| Jasper Geer
                | <reg> := <unop> <reg>
                | <opcodesR1> <reg>
                | <reg> := <literal>
-               | <reg> := <globals>
-               | <globals> := <reg>
+               | <reg> := G[<global>]
+               | G[<global>] := <reg>
                | popen <literal>
                | check <reg> <literal>
                | expect <reg> <literal>

@@ -1,3 +1,8 @@
+if $r1 goto hi
+check $r1 "check"
+expect $r1 "expect"
+$r100 := G[halt]
+G[halt] := $r100
 $r1 := 0
 $r1 := 5
 ;; sadly newline cannot be printed
@@ -6,13 +11,10 @@ $r3 := "\"I contain \t escape \\ characters\"\n"
 print $r1
 print $r2
 $r1 := $r1 + $r1
-check $r1 "check"
-expect $r1 "expect"
 ;; infinite loops, does not work with svm
 def hi
 goto hi
 $r1 := truth $r1
-if $r1 goto hi
 ;; type predicates
 $r1 := function? $r1
 $r1 := pair? $r1
