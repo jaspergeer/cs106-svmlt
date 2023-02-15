@@ -2,7 +2,7 @@ module Assembler where
 
 import qualified Asm as A
 import qualified ObjectCode as O
-import Error ( Error )
+import Error
 import qualified Env as E
 
 -- fold, lift, labelEnv,  
@@ -35,11 +35,11 @@ lift3 :: (a -> b -> c -> Error c) -> a -> b -> Error c -> Error c
 lift3 f a b ce = ce >>= f a b
 
 labelEnv :: [A.Instr] -> Error (E.Env Int)
-labelEnv = foldrInstrStream (lift3 f) (Right E.empty) where
+labelEnv = foldrInstrStream (lift3 f) (ERROR $ Right E.empty) where
   f pos (A.DefLabel n) env = if env `E.binds` n
-    then Left ("label '" ++ n ++ "' defined in more than one place")
-    else Right (E.bind n pos env)
-  f _ _ env = Right env
+    then ERROR $ Left ("label '" ++ n ++ "' defined in more than one place")
+    else ERROR $ Right (E.bind n pos env)
+  f _ _ env = ERROR $ Right env
 
 -- The mutual recursion works like this:
 
@@ -71,7 +71,7 @@ labelElim instrs env = let
     -- base cases
     (A.ObjectCode o) -> (o :) <$> is
     (A.DefLabel _ ) -> is
-  in foldrInstrStream f (Right []) instrs
+  in foldrInstrStream f (ERROR $ Right []) instrs
 
 translate :: [A.Instr] -> Error [O.Instr]
 translate instrs = labelEnv instrs >>= labelElim instrs
