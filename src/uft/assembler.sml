@@ -20,7 +20,6 @@ struct
   infixr 4 <$>
   infix 3  <*>
   infix 2  >=>
-  infix 4 >>=
   val fail = Error.ERROR
 
   fun curry f x y = f (x, y)

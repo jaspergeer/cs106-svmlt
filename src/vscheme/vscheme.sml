@@ -2350,7 +2350,7 @@ val primitiveBasis =
                      , "(define negated (n) (- 0 n))"
                      , "(define mod (m n) (- m (* n (idiv m n))))"
                      , "(define gcd (m n) (if (= n 0) m (gcd n (mod m n))))"
-                     , "(define lcm (m n) (if (= m 0) 0 (* m (/ n (gcd m n)))))"
+                     , "(define lcm (m n) (if (= m 0) 0 (* m (idiv n (gcd m n)))))"
                      , ";  predefined uScheme functions S151e "
                      , "(define list4 (x y z a)         (cons x (list3 y z a)))"
                      ,
@@ -2407,11 +2407,12 @@ val _ = op initialBasis : basis
 (*****************************************************************)
 
 (* function [[runAs]], which evaluates standard input given [[initialBasis]] S214c *)
+val currentBasis = ref initialBasis
 fun runAs interactivity = 
   let val _ = setup_error_format interactivity
       val prompts = if prompts interactivity then stdPrompts else noPrompts
       val xdefs = filexdefs ("standard input", TextIO.stdIn, prompts)
-  in  ignore (readEvalPrintWith eprintln (xdefs, initialBasis, interactivity))
+  in  currentBasis := readEvalPrintWith eprintln (xdefs, !currentBasis, interactivity)
   end 
 (* type declarations for consistency checking *)
 val _ = op runAs : interactivity -> unit
@@ -2422,7 +2423,7 @@ fun runPathAs interactivity "-" = runAs interactivity
       val prompts = if prompts interactivity then stdPrompts else noPrompts
       val fd = TextIO.openIn path
       val xdefs = filexdefs (path, fd, prompts)
-  in  ignore (readEvalPrintWith eprintln (xdefs, initialBasis, interactivity))
+  in  currentBasis := readEvalPrintWith eprintln (xdefs, !currentBasis, interactivity)
       before TextIO.closeIn fd
   end 
 (* type declarations for consistency checking *)

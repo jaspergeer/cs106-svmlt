@@ -1,0 +1,5 @@
+group is
+  $/basis.cm
+
+  Wpp-sig.sml
+  Wpp.sml

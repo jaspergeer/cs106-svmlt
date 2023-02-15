@@ -34,6 +34,17 @@ struct
 
   (**** Reader functions ****)
 
+  val schemeOfFile : instream -> VScheme.def list error =
+    lines                                   (* line list *)
+    >>>  SxParse.parse                      (* sx list error *)
+    >=>  Error.mapList VSchemeParsers.defs  (* def list list error *)
+    >>>  Error.map List.concat              (* def list error *)
+    >>>  Error.map VSchemeTests.delay
+    
+  val schemexOfFile : instream -> UnambiguousVScheme.def list error =
+    schemeOfFile >>>
+    Error.map (map Disambiguate.disambiguate)
+
   val VS_of_file : instream -> AssemblyCode.instr list error =
     lines                    (* line list *)
     >>> map AsmLex.tokenize  (* token list error list *)
@@ -53,6 +64,10 @@ struct
 
   (**** Materializer functions ****)
   
+  fun HO_of HO   = schemexOfFile
+    | HO_of HOX  = Impossible.unimp "imperative features (HOX to HO)"
+    | HO_of _    = raise Backward
+
   fun VS_of VS   = VS_of_file
     | VS_of inLang = raise NoTranslationTo VS
 
@@ -62,8 +77,17 @@ struct
 
   (**** Emitter functions ****)
 
+  val width =  (* parameter to prettyprinter *)
+    case Option.mapPartial Int.fromString (OS.Process.getEnv "WIDTH")
+      of SOME n => n
+       | NONE => 72
+
   fun emitVO outfile = app (outln outfile) o ObjectUnparser.module
   fun emitVS outfile = app (outln outfile) o AsmParse.unparse
+
+  fun emitScheme outfile = Wppx.toOutStream width outfile o WppScheme.pp
+
+  fun emitHO outfile = app (emitScheme outfile o Disambiguate.ambiguate)
 
 
   (**** The Universal Forward Translator ****)
@@ -74,6 +98,7 @@ struct
     (case outLang
        of VO => VO_of      inLang >>> ! (emitVO outfile)
         | VS => VS_of      inLang >>> ! (emitVS outfile)
+        | HO => HO_of      inLang >>> ! (emitHO outfile)
         | _  => raise NoTranslationTo outLang
     ) infile
     handle Backward => raise NotForward (inLang, outLang)
