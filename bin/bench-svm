@@ -1,0 +1,38 @@
+#!/bin/sh
+
+N=3
+medians=
+
+M=$(expr $N + 1)
+M=$(expr $M / 2)
+
+output=$(mktemp)
+
+predefvo=$(mktemp)
+vscheme -predef | uft ho-vo > $predefvo
+
+
+for i
+do
+  times=
+  for j in $(seq 1 $N)
+  do
+    uft ho-vo "$i" | /usr/bin/time -f '%e' -o $output svm $predefvo - > /dev/null
+    printf "%5.2f  %s\n" $(cat $output) "$i"
+    times="$times$(cat $output)
+"
+  done
+  median=$(echo "$times" | fgrep . | sort | sed -n ${M}p)
+  medians="$medians$median $i
+"
+done
+
+echo
+echo "Median times:"
+echo "$medians" | while read time bench; do
+  if test -n "$bench"; then
+    printf "%5.2f  %s\n" "$time" "$bench"
+  fi
+done
+
+rm -f $output $predefvo

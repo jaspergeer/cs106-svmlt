@@ -1,0 +1,23 @@
+#!/bin/sh
+
+##for i do
+##  case $i in
+##    *.sml) echo "You can't have meant $i.  Maybe a CM file?" >&2 ; exit 1 ;;
+##  esac
+##done
+
+
+{ echo " Control.polyEqWarn := false;"
+  echo "Control.MC.bindNonExhaustiveError := true;"
+  echo "Control.MC.matchNonExhaustiveError := true;"
+  echo "Control.MC.matchRedundantError := true;"
+
+  for i do
+    case $i in
+      *.sml) echo 'use "'"$i"'";' ;;
+      *.cm)  echo 'if CM.recomp "'"$i"'" handle _ => false then ()
+                   else OS.Process.exit OS.Process.failure;' ;;
+      *) echo "You can't have meant $i.  Maybe a CM file?" >&2 ; exit 1 ;;
+    esac
+  done
+} | sml

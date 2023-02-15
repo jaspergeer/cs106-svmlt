@@ -1,0 +1,5 @@
+#!/bin/bash
+
+length=$(echo -n "$*" | wc -c)
+bytes=$(echo -n "$*" | od -t d1 -A n)
+echo "string $length $bytes"
