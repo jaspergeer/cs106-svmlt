@@ -58,12 +58,16 @@ labelElim instrs env = let
     (A.LoadFunc reg arity body) -> (:) <$>
       (O.LoadFunc reg arity <$> translate body) <*> is
     -- goto
-    (A.GotoLabel n) -> case E.find n env of
-      Just x -> (O.Goto (x - pos - 1) :) <$> is
-      _ -> Left ("Name '" ++ n ++ "' not bound")
-    (A.IfGotoLabel r1 n) -> case E.find n env of
-      Just x -> ([O.Regs "cskip" [r1], O.Goto (x - pos - 1)] ++) <$> is
-      _ -> Left ("Name " ++ n ++ " not bound")
+    (A.GotoLabel n) -> 
+      -- case E.find n env of
+      -- Right x -> (O.Goto (x - pos - 1) :) <$> is
+      -- _ -> Left ("Name '" ++ n ++ "' not bound")
+      E.find n env >>= \x -> (O.Goto (x - pos - 1) :) <$> is
+    (A.IfGotoLabel r1 n) -> 
+      -- case E.find n env of
+      -- Right x -> ([O.Regs "cskip" [r1], O.Goto (x - pos - 1)] ++) <$> is
+      -- _ -> Left ("Name " ++ n ++ " not bound")
+      E.find n env >>= \x -> ([O.Regs "cskip" [r1], O.Goto (x - pos - 1)] ++) <$> is
     -- base cases
     (A.ObjectCode o) -> (o :) <$> is
     (A.DefLabel _ ) -> is
