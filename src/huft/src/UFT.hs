@@ -7,6 +7,7 @@ import Text.Parsec (runParser, ParseError)
 import GHC.IO.Handle (hGetContents', hPutStr, Handle)
 import Text.Parsec.String (Parser)
 import System.IO (hPutStrLn)
+import Error
 import Data.Functor ((<&>))
 
 import qualified Error as E
@@ -28,8 +29,8 @@ type Reader a = Handle -> IO (E.Error a)
 
 parseAndErr :: Parser a -> String -> E.Error a
 parseAndErr p input = case runParser p () "" input of
-  Left e -> E.Error $ Left (show e)
-  Right r -> E.Error $ Right r
+  Left e -> ERROR $ E.Error $ Left (show e)
+  Right r -> ERROR $ E.Error $ Right r
 
 -- support for materialization
 
@@ -50,7 +51,7 @@ vsOf VS = vsOfFile
 vsOf _ = throw (NoTranslationTo VS)
 
 voOf :: Language -> Reader [ObjectCode.Instr]
-voOf VO     =  \_ -> return (E.Error $ Left "There is no reader for .vo")
+voOf VO     =  \_ -> return (ERROR $ Left "There is no reader for .vo")
 voOf inLang =  vsOf inLang ==> Assembler.translate
 
 -- Emitter functions

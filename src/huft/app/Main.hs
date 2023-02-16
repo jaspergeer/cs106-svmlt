@@ -29,13 +29,13 @@ main = do
     case args of -- stopgap implementation
         [spec] -> do
             translation <- translationOf spec stdin stdout
-            case translation of
+            case E.getError translation of
                 Left e -> putStrLn e
                 Right r -> r
         spec:infile:[] -> do
             file <- openFile infile ReadMode
             translation <- translationOf spec file stdout
-            case translation of
+            case E.getError translation of
                 Left e -> putStrLn e
                 Right r -> r
         _ -> putStrLn ("Usage: " ++ progName ++ " inLang-outLang infile/stdin")
