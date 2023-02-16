@@ -8,9 +8,9 @@ data Exp = Literal Value
          | IfX     Exp Exp Exp
          | WhileX  Exp Exp
          | Begin   [Exp]
-         | Apply   [(Exp, Exp)]
+         | Apply   Exp [Exp]
          | LetX    LetKind [(Name, Exp)] Exp
-         | Lambda  Lambda
+         | Lambda  [Name] Exp
 
 data LetKind = Let | LetRec
 
@@ -20,10 +20,10 @@ data Value = Sym   Name
            | BoolV Bool
            | Pair  Value Value
            | EmptyList
-type Lambda = ([Name], Exp)
+           
 
 data DefLabel  = Val         Name Exp
-               | Define      Name Lambda
+               | Define      Name [Name] Exp
                | Exp         Exp
                | CheckExpect Exp Exp
                | CheckAssert Exp
