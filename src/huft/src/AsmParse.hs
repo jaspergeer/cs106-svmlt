@@ -100,24 +100,29 @@ singleLineInstr :: Parser A.Instr
 singleLineInstr =
   -- binops
   try ((\r1 r2 op r3 -> eR3 op r1 r2 r3) <$> reg <* setTo <*> reg <*> oneOfStr A.binops <*> reg)
+  
   -- standard cases
   <|> try (flip eR3 <$> reg <* setTo <*> oneOfStr A.opcodesR3 <*> reg <*> reg)
   <|> try (flip eR2 <$> reg <* setTo <*> oneOfStr A.opcodesR2 <*> reg)
-  -- eR1 does not share the assignment operator
   <|> try (eR1 <$> oneOfStr A.opcodesR1 <*> reg)
+  <|> try (eR0 <$> oneOfStr A.opcodesR0)
+
   <|> try (flip eR2U8 <$> reg <* setTo <*> oneOfStr A.opcodesR2U8 <*> reg <*> integer)
   <|> try (flip eR1U16<$> reg <* setTo <*> oneOfStr A.opcodesR1U16 <*> integer)
   <|> try (eR0I24 <$> oneOfStr A.opcodesR0I24 <*> integer)
-  <|> try (eR0 <$> oneOfStr A.opcodesR0)
+
   -- special cases
   <|> try (A.DefLabel <$> (string "def" *> name))
   <|> try (A.GotoLabel <$> (string "goto" *> name))
   <|> try (A.IfGotoLabel <$> (string "if" *> reg) <*> (word "goto" *> name))
+
   <|> try (eR2 "copy" <$> reg <* setTo <*> reg)
   <|> try (eR1 "zero" <$> reg <* setTo <* word "0")
-  <|> try (eR1LIT "loadliteral" <$> reg <* setTo <*> literal)
+
   <|> try (flip eR1LIT <$> reg <* setTo <*> word "popen" <*> literal)
+  <|> try (eR1LIT "loadliteral" <$> reg <* setTo <*> literal)
   <|> try (eR1LIT <$> oneOfStr ["check", "expect"] <*> reg <*> literal)
+
   <|> try (eR1GLO "getglobal" <$> reg <* setTo <*> (word "G[" *> name <* word "]"))
   <|> try (flip (eR1GLO "setglobal") <$> (word "G[" *> name <* string "]") <* setTo <*> reg)
   where setTo = word ":="

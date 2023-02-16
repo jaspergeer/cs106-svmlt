@@ -1,11 +1,15 @@
 module Env where
 import qualified Data.Map as M
+import qualified Error as E
 
 type Name = String
 type Env a = M.Map Name a
 
-find :: Name -> Env a -> Maybe a
-find = M.lookup
+-- might have a concise clausal definition
+find :: Name -> Env a -> E.Error a
+find n env = case M.lookup n env of
+    Just x -> E.ERROR $ Right x
+    Nothing -> E.ERROR $ Left ("Name '" ++ n ++ "' not bound")
 
 bind :: Name -> a -> Env a -> Env a
 bind = M.insert

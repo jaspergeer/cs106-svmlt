@@ -34,7 +34,8 @@ struct
   fun binds ([], x) = false
     | binds ((x', _)::env, x) = x = x' orelse binds (env, x)
 
-  val find = fn (x, rho) => find (x, rho)
+  (* to turn on environment debugging, change `val find_debug` to `val find` *)
+  val find_debug = fn (x, rho) => find (x, rho)
     handle e =>
       ( app eprint ["Environment binds:"]
       ; app (fn (y, _) => app eprint [" ", y]) rho

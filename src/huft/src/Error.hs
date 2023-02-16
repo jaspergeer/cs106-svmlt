@@ -1,3 +1,6 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Error where
 
-type Error a = Either String a
+
+newtype Error a = ERROR { runError :: Either String a}
+  deriving (Functor, Applicative, Monad)

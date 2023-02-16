@@ -39,5 +39,33 @@ group is
   assembler.sml  (* Assembler, built in module 4, not provided *)
 
 
+  (******* vScheme and its infrastructure ****)
+
+  primitives.sml   (* given to students; properties of primitives *)
+
+  vscheme.sml   (* vscheme and utilities; given to students *)
+
+  pp.cm              (* vscheme prettyprinter, with infrastructure; given to students *)
+  wpp.cm             (* [prettyprinter used to disambiguate check-expect] *)
+  ppwrapper.sml
+  wppscheme.sml
+
+  disambiguate.sml  (* vscheme disambiguation; completed by students *)
+
+  sxlex.sml          (* vscheme parser (and S-expressions); given to students *)
+  sx.sml
+  vscheme-parse.sml
+
+
+
+  (******* K-NORMAL FORM ********)
+
+
+  knf.sml       (* completed by students *)
+
+  knembed.sml       (* embedding and projection; completed by students *)
+  knproject.sml
+
+
   (*********** UNIVERSAL FORWARD TRANSLATOR **********)
   uft.sml

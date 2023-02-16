@@ -1,0 +1,49 @@
+#!/usr/bin/env lua5.1
+
+local function argv_files(arg)
+  if #arg == 0 then
+    local file = io.stdin
+    return function()
+             local answer = file
+             file = nil
+             return answer, nil
+           end
+  else
+    return coroutine.wrap(function ()
+                            for _, path in ipairs(arg) do
+                              local f, msg = io.open(path)
+                              if f then
+                                coroutine.yield(f, path)
+                                f:close()
+                              else
+                                error(path .. ': ' .. msg)
+                              end
+                            end
+                          end)
+  end
+end
+
+local ingroup = false
+
+io.write('$(SML_LIB)/basis/basis.mlb\n')
+for f in argv_files(arg) do
+  for l in f:lines() do
+    if l:find '^is%s*$' then
+      ingroup = false
+    elseif ingroup then
+      -- do nothing
+    elseif l:find '^group%s*$' then
+      ingroup = true
+    elseif l:find '%$/basis.cm' then
+      -- do nothing
+    elseif l:find '%$/smlnj%-lib%.cm' then
+      io.write('$(SML_LIB)/smlnj-lib/smlnj-lib.mlb\n')
+      io.write('$(SML_LIB)/smlnj-lib/Util/smlnj-lib.mlb\n')
+    elseif l:find '%$qcheck/qcheck.cm' then
+      io.write('/home/nr/net/qcheck/qcheck.mlb')
+    elseif not l:find 'group is' then
+      l = l:gsub('%(%*.-%*%)', '')
+      io.write((l:gsub('%.cm%s*$', '.mlb')), '\n')
+    end
+  end
+end
