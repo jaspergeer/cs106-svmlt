@@ -1,7 +1,7 @@
 module UFT where
 
 import Languages
-import Control.Exception (Exception, throw, handle, catch)
+import Control.Exception (Exception, throw, catch)
 import Text.Parsec (runParser, ParseError)
 
 import GHC.IO.Handle (hGetContents', hPutStr, Handle)
