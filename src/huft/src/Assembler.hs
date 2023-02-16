@@ -5,22 +5,6 @@ import qualified ObjectCode as O
 import Error ( Error )
 import qualified Env as E
 
--- fold, lift, labelEnv,  
-
--- foldlInstStream :: (Int -> A.Instr -> a -> a) -> a -> [A.Instr] -> a
--- foldlInstStream f init instrs =let
---   fis _ accum [] ct = accum
---   fis f accum (i:is) ct = fis f (f ct i accum) is
---     (ct + case i of
---       A.IfGotoLabel {} -> 2
---       A.DefLabel _ -> 0
---       _ -> 1)
---   in fis f init instrs 0
-
-
--- In module 4 lab, define `fold`, `lift`, `labelEnv`, `labelElim`, and `translate`
-
-
 foldrInstrStream :: (Int -> A.Instr -> a -> a) -> a -> [A.Instr] -> a
 foldrInstrStream f e instrs = let
   fris _ accum [] ct = accum
