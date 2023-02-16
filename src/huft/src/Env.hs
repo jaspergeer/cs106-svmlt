@@ -8,8 +8,8 @@ type Env a = M.Map Name a
 -- might have a concise clausal definition
 find :: Name -> Env a -> E.Error a
 find n env = case M.lookup n env of
-    Just x -> E.ERROR $ Right x
-    Nothing -> E.ERROR $ Left ("Name '" ++ n ++ "' not bound")
+    Just x -> E.Error $ Right x
+    Nothing -> E.Error $ Left ("Name '" ++ n ++ "' not bound")
 
 bind :: Name -> a -> Env a -> Env a
 bind = M.insert

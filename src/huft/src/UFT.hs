@@ -7,9 +7,9 @@ import Text.Parsec (runParser, ParseError)
 import GHC.IO.Handle (hGetContents', hPutStr, Handle)
 import Text.Parsec.String (Parser)
 import System.IO (hPutStrLn)
-import Error ( Error )
 import Data.Functor ((<&>))
 
+import qualified Error as E
 import qualified Asm
 import qualified AsmParse
 import qualified AsmUnparse
@@ -18,18 +18,18 @@ import qualified ObjectUnparser
 import qualified Assembler
 
 type Emitter a = Handle -> a -> IO ()
-type Reader a = Handle -> IO (Error a)
+type Reader a = Handle -> IO (E.Error a)
 
 -- (<&>) = flip fmap
 -- Just 2 <&> (+1)
 -- fmap (+1) Just 2
-(==>) :: Reader a -> (a -> Error b) -> Reader b
+(==>) :: Reader a -> (a -> E.Error b) -> Reader b
 (r ==> f) h = r h <&> (f =<<)
 
-parseAndErr :: Parser a -> String -> Error a
+parseAndErr :: Parser a -> String -> E.Error a
 parseAndErr p input = case runParser p () "" input of
-  Left e -> Left (show e)
-  Right r -> Right r
+  Left e -> E.Error $ Left (show e)
+  Right r -> E.Error $ Right r
 
 -- support for materialization
 
@@ -50,7 +50,7 @@ vsOf VS = vsOfFile
 vsOf _ = throw (NoTranslationTo VS)
 
 voOf :: Language -> Reader [ObjectCode.Instr]
-voOf VO     =  \_ -> return (Left "There is no reader for .vo")
+voOf VO     =  \_ -> return (E.Error $ Left "There is no reader for .vo")
 voOf inLang =  vsOf inLang ==> Assembler.translate
 
 -- Emitter functions
@@ -70,7 +70,7 @@ data UFTException = NotForward Language Language
   deriving (Show)
 instance Exception UFTException
 
-translate :: Language -> Language -> Handle -> Handle -> IO (Error (IO ()))
+translate :: Language -> Language -> Handle -> Handle -> IO (E.Error (IO ()))
 translate inLang outLang infile outfile = catch
   (case outLang of
     VS -> vsOf inLang infile <&> (emitVS outfile <$>)
