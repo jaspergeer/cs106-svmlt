@@ -29,8 +29,8 @@ type Reader a = Handle -> IO (E.Error a)
 
 parseAndErr :: Parser a -> String -> E.Error a
 parseAndErr p input = case runParser p () "" input of
-  Left e -> ERROR $ E.Error $ Left (show e)
-  Right r -> ERROR $ E.Error $ Right r
+  Left e -> E.Error $ Left (show e)
+  Right r -> E.Error $ Right r
 
 -- support for materialization
 
@@ -51,7 +51,7 @@ vsOf VS = vsOfFile
 vsOf _ = throw (NoTranslationTo VS)
 
 voOf :: Language -> Reader [ObjectCode.Instr]
-voOf VO     =  \_ -> return (ERROR $ Left "There is no reader for .vo")
+voOf VO     =  \_ -> return (Error $ Left "There is no reader for .vo")
 voOf inLang =  vsOf inLang ==> Assembler.translate
 
 -- Emitter functions

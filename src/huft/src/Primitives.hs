@@ -19,7 +19,7 @@ data Primitive = SetsRegister Base
 --  *)
 
 arity :: Primitive -> Int
--- need to be implemented
+-- to be implemented
 arity _ = 1
 
 primitives = []
