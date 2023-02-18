@@ -36,7 +36,8 @@ executable huft
         ObjectUnparser,
         Languages,
         Error,
-        UFT
+        UFT,
+        VScheme
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:

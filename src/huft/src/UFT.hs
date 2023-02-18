@@ -7,6 +7,7 @@ import Text.Parsec (runParser, ParseError)
 import GHC.IO.Handle (hGetContents', hPutStr, Handle)
 import Text.Parsec.String (Parser)
 import System.IO (hPutStrLn)
+import Error
 import Data.Functor ((<&>))
 
 import qualified Error as E
@@ -50,7 +51,7 @@ vsOf VS = vsOfFile
 vsOf _ = throw (NoTranslationTo VS)
 
 voOf :: Language -> Reader [ObjectCode.Instr]
-voOf VO     =  \_ -> return (E.Error $ Left "There is no reader for .vo")
+voOf VO     =  \_ -> return (Error $ Left "There is no reader for .vo")
 voOf inLang =  vsOf inLang ==> Assembler.translate
 
 -- Emitter functions
