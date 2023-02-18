@@ -25,6 +25,14 @@ data Value = Sym Name
            | Real Double
            | BoolV Bool
            | EmptyList
+           
+instance Show Value where
+  show v = case v of
+    Sym n -> n
+    Int i -> show i
+    Real x -> show x
+    BoolV b -> show b
+    EmptyList -> "'()"
 
 data Def = Val Name Exp
          | Define Name [Name] Exp

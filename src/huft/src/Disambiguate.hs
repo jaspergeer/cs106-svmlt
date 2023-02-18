@@ -26,8 +26,6 @@ type Name = String
 --   is used outside of a function position, it must be eta-expanded. 
 --   For example, in
 
-
-
 type Environment = [Name]
 
 referent :: Name -> Environment -> Referent
