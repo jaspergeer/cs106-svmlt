@@ -37,7 +37,13 @@ executable huft
         Languages,
         Error,
         UFT,
-        VScheme
+        VScheme,
+        VSchemeParse,
+        VSchemeUnparse,
+        Primitives,
+        UnambiguousVScheme,
+        DisAmbiguate,
+        KNF
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
@@ -45,7 +51,8 @@ executable huft
         base,
         containers,
         parsec,
-        text
+        text,
+        prettyprinter
         
     hs-source-dirs:   app, src
     default-language: Haskell2010

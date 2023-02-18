@@ -15,11 +15,12 @@ module VSchemeParse where
 import qualified VScheme as S
 import Text.Parsec.String ( Parser )
 import Text.Parsec.Token ( symbol )
-import Text.Parsec ( between )
+import Text.Parsec ( between
+                   , char )
 
 -- can't unerstand def of bracket in vscheme-parse.sml
-bracket  = between (symbol "(") (symbol ")")
+-- bracket p = between (char '(') (char ')')
 
-
--- exp :: Parser S.Exp
--- exp = bracket "set" (S.Set )
+letstar :: [(S.Name, S.Exp)] -> S.Exp -> S.Exp
+letstar [] e = e
+letstar ((x, e') : bs) e = S.LetX S.Let [(x, e')] (letstar bs e)

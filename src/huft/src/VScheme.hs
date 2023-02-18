@@ -20,7 +20,6 @@ data Value = Sym   Name
            | BoolV Bool
            | Pair  Value Value
            | EmptyList
-           
 
 data DefLabel  = Val         Name Exp
                | Define      Name [Name] Exp
