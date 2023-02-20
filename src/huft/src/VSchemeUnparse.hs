@@ -42,9 +42,9 @@ exp (S.IfX e1 e2 e3) = P.nest 3 $ kw "if" [exp e1, exp e2, exp e3]
 exp (S.WhileX e1 e2) = P.nest 3 $ kw "while" [exp e1, exp e2]
 exp (S.Begin es) = P.nest 3 $ P.parens $ P.pretty"begin" <+> P.vsep (map exp es)
 exp (S.Apply e es) = P.nest 3 $ wrap (exp e : map exp es)
-exp (S.LetX S.Let bs e) = P.nest 3 $ letkw "let" (bindings ++ [exp e])
+exp (S.LetX S.Let bs e) = P.nest 3 $ pplet "let" bindings (exp e)
     where
-        letkw k docs = P.parens $ P.pretty k <+> P.align (P.vsep docs)
+        pplet k bs e = P.parens $ P.pretty k <+> (P.parens $ P.align (P.vsep bs)) <> P.line <> e
         bindings = [P.pretty "[" <> P.pretty x <+> exp e <> P.pretty "]" | (x, e) <- bs]
 -- ignore other letkinds because i dont quite get what wppscheme is trying to do
 exp (S.Lambda xs body) = P.nest 3 $ kw "lambda" [wrap (map P.pretty xs), exp body]
@@ -60,4 +60,7 @@ ppexp = exp
 
 -- need to strip final new line?
 
-expString = show . ppexp
+-- expString = P.show . ppexp
+
+--  test for let beding
+-- VU.exp (V.LetX V.Let [("x", (V.Literal (V.Int 1))), ("y", (V.Literal (V.Int 1))) ] (V.Literal (V.Int 1)))
