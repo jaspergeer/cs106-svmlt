@@ -11,18 +11,21 @@ data Exp = Literal Value
          | Apply   Exp [Exp]
          | LetX    LetKind [(Name, Exp)] Exp
          | Lambda  [Name] Exp
+         deriving Show
 
-data LetKind = Let | LetRec
+data LetKind = Let | LetRec deriving Show
 
 data Value = Sym   Name
            | Int   Int
            | Real  Double
-           | BoolV Bool
+           | Bool Bool
            | Pair  Value Value
            | EmptyList
+           deriving Show
 
 data Def = Val         Name Exp
           | Define      Name [Name] Exp
           | Exp         Exp
           | CheckExpect Exp Exp
           | CheckAssert Exp
+          deriving Show
