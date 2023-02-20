@@ -60,7 +60,9 @@ ppexp = exp
 
 -- need to strip final new line?
 
--- expString = P.show . ppexp
+expString = show . ppexp
+
+-- needa figure out where let* comes from
 
 --  test for let beding
 -- VU.exp (V.LetX V.Let [("x", (V.Literal (V.Int 1))), ("y", (V.Literal (V.Int 1))) ] (V.Literal (V.Int 1)))
