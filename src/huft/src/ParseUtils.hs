@@ -15,8 +15,8 @@ int = lexeme $ read <$> ((++) <$> option "" (string "-") <*> many1 digit)
 bool :: Parser Bool
 bool = char '#' *> (True <$ char 't' <|> False <$ char 'f')
 
-word :: String -> Parser String
-word w = lexeme $ string w
+token :: String -> Parser String
+token w = lexeme $ string w
 
 double :: Parser Double
 double = lexeme $ read <$> ((++) <$> whole <*> decimal)

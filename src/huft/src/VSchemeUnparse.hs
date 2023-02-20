@@ -13,8 +13,8 @@ letkeyword S.LetRec = P.pretty"letrec"
 
 value (S.Sym s) = P.pretty s
 value (S.Int i) = P.pretty i
-value (S.REAL n) = P.pretty n
-value (S.BoolV b) = P.pretty(if b then "#t" else "#f")
+value (S.Real n) = P.pretty n
+value (S.Bool b) = P.pretty(if b then "#t" else "#f")
 value S.EmptyList = P.pretty"()"
 -- not sure, nr defened group, and seq
 value (S.Pair car cdr) = 

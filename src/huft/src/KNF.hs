@@ -6,9 +6,8 @@ import qualified ObjectCode as O
 import qualified Primitives as P
 
 type Literal = O.Literal
-
 type VMOP = P.Primitive
-
+type Name = String
 -- type parameter 'a is a _name_, typically
 -- instantiated as `string` or `ObjectCode.reg`
 
@@ -22,3 +21,17 @@ data Exp a = Literal Literal
            | FunCode [a] (Exp a)
            | VMOP VMOP [a]
            | VMOPGLO VMOP [a] Literal
+
+--    create these @(x,...x, v) forms:
+--      setglobal(register, name-of-global)
+--      getglobal(name-of-global)
+
+--    you could consider adding similar functions for `check`, `expect`,
+--    and `check-assert`
+
+setglobal:: Name -> a -> Exp a
+setglobal x register = VMOPGLO P.setglobal [register] (O.String x)
+
+getglobal:: Name -> Exp a
+getglobal x = VMOPGLO P.getglobal [] (O.String x)
+

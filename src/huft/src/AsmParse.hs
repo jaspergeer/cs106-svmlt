@@ -34,7 +34,7 @@ import Text.Parsec.Char (noneOf)
 lexeme = ParseUtils.lexeme
 name = ParseUtils.name
 int = ParseUtils.int
-word = ParseUtils.word
+tok = ParseUtils.token
 double = ParseUtils.double
 manyTill' = ParseUtils.manyTill'
 bool = ParseUtils.bool
@@ -98,18 +98,18 @@ singleLineInstr =
   -- special cases
   <|> try (A.DefLabel <$> (string "def" *> name))
   <|> try (A.GotoLabel <$> (string "goto" *> name))
-  <|> try (A.IfGotoLabel <$> (string "if" *> reg) <*> (word "goto" *> name))
+  <|> try (A.IfGotoLabel <$> (string "if" *> reg) <*> (tok "goto" *> name))
 
   <|> try (eR2 "copy" <$> reg <* setTo <*> reg)
-  <|> try (eR1 "zero" <$> reg <* setTo <* word "0")
+  <|> try (eR1 "zero" <$> reg <* setTo <* tok "0")
 
-  <|> try (flip eR1LIT <$> reg <* setTo <*> word "popen" <*> literal)
+  <|> try (flip eR1LIT <$> reg <* setTo <*> tok "popen" <*> literal)
   <|> try (eR1LIT "loadliteral" <$> reg <* setTo <*> literal)
   <|> try (eR1LIT <$> oneOfStr ["check", "expect"] <*> reg <*> literal)
 
-  <|> try (eR1GLO "getglobal" <$> reg <* setTo <*> (word "G[" *> name <* word "]"))
-  <|> try (flip (eR1GLO "setglobal") <$> (word "G[" *> name <* string "]") <* setTo <*> reg)
-  where setTo = word ":="
+  <|> try (eR1GLO "getglobal" <$> reg <* setTo <*> (tok "G[" *> name <* tok "]"))
+  <|> try (flip (eR1GLO "setglobal") <$> (tok "G[" *> name <* string "]") <* setTo <*> reg)
+  where setTo = tok ":="
 
 comment :: Parser ()
 comment = () <$ spaces <* string ";;" <* manyTill anyChar endOfLine
@@ -117,8 +117,8 @@ comment = () <$ spaces <* string ";;" <* manyTill anyChar endOfLine
 instruction :: Parser A.Instr
 instruction = skippable *> 
               (try singleLineInstr
-           <|> try (A.LoadFunc <$> reg <* word ":=" <* word "fun" <*> int <*>
-                                  (word "{" *> manyTill instruction (word "}"))))
+           <|> try (A.LoadFunc <$> reg <* tok ":=" <* tok "fun" <*> int <*>
+                                  (tok "{" *> manyTill instruction (tok "}"))))
               <* skippable
             where 
               skippable = try (skipMany (lexeme comment)) <|> spaces

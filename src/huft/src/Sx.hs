@@ -5,6 +5,7 @@ data Sx = Int Int
         | Sym String
         | Real Double
         | List [Sx]
+        deriving Show
 
 whatis x = case x of
   Int _ -> "an integer"
