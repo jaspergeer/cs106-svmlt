@@ -4,6 +4,7 @@ import qualified Asm as A
 import qualified ObjectCode as O
 import qualified Data.Map as M
 import qualified Data.Set as S
+import qualified ParseUtils
 import Text.Parsec.String ( Parser )
 import Text.Parsec
     ( digit,
@@ -30,29 +31,13 @@ import Text.Parsec.Char (noneOf)
 
 -- parsing
 
-lexeme :: Parser a -> Parser a
-lexeme p = spaces *> p <* spaces
-
-word :: String -> Parser String
-word w = lexeme $ string w
-
-name :: Parser String
-name = lexeme $ (:) <$> oneOf (['a'..'z'] ++ ['A'..'Z']) <*> many alphaNum
-
-integer :: Parser Int
-integer = lexeme $ read <$> ((++) <$> option "" (string "-") <*> many1 digit)
-
-nat :: Parser Int
-nat = lexeme $ read <$> many1 digit
-
-double :: Parser Double
-double = lexeme $ read <$> ((++) <$> whole <*> decimal)
-      where whole = (++) <$> option "" (string "-") <*> many1 digit
-            decimal = (++) <$> string "." <*> many1 digit
-
--- same behavior as manyTill except first parser is tried before the second
-manyTill' :: Parser a -> Parser b -> Parser [a]
-manyTill' p1 p2 = try ((:) <$> p1 <*> manyTill' p1 p2) <|> ([] <$ p2)
+lexeme = ParseUtils.lexeme
+name = ParseUtils.name
+int = ParseUtils.int
+word = ParseUtils.word
+double = ParseUtils.double
+manyTill' = ParseUtils.manyTill'
+bool = ParseUtils.bool
 
 stringLit :: Parser String
 stringLit = lexeme $ char '"' *> manyTill' (try escape <|> noneOf "\n") (char '"')
@@ -71,9 +56,8 @@ stringLit = lexeme $ char '"' *> manyTill' (try escape <|> noneOf "\n") (char '"
 literal :: Parser O.Literal
 literal = lexeme $ try (O.String <$> stringLit)
         <|> try (O.Real <$> double)
-        <|> try (O.Int <$> integer)
-        <|> try (O.Bool True <$ string "#t")
-        <|> try (O.Bool False <$ string "#f")
+        <|> try (O.Int <$> int)
+        <|> try (O.Bool <$> bool)
         <|> try (O.EmptyList <$ string "'()'")
         <|> try (O.Nil <$ string "nil")
 
@@ -107,9 +91,9 @@ singleLineInstr =
   <|> try (eR1 <$> oneOfStr A.opcodesR1 <*> reg)
   <|> try (eR0 <$> oneOfStr A.opcodesR0)
 
-  <|> try (flip eR2U8 <$> reg <* setTo <*> oneOfStr A.opcodesR2U8 <*> reg <*> integer)
-  <|> try (flip eR1U16<$> reg <* setTo <*> oneOfStr A.opcodesR1U16 <*> integer)
-  <|> try (eR0I24 <$> oneOfStr A.opcodesR0I24 <*> integer)
+  <|> try (flip eR2U8 <$> reg <* setTo <*> oneOfStr A.opcodesR2U8 <*> reg <*> int)
+  <|> try (flip eR1U16<$> reg <* setTo <*> oneOfStr A.opcodesR1U16 <*> int)
+  <|> try (eR0I24 <$> oneOfStr A.opcodesR0I24 <*> int)
 
   -- special cases
   <|> try (A.DefLabel <$> (string "def" *> name))
@@ -133,11 +117,11 @@ comment = () <$ spaces <* string ";;" <* manyTill anyChar endOfLine
 instruction :: Parser A.Instr
 instruction = skippable *> 
               (try singleLineInstr
-           <|> try (A.LoadFunc <$> reg <* word ":=" <* word "fun" <*> integer <*>
+           <|> try (A.LoadFunc <$> reg <* word ":=" <* word "fun" <*> int <*>
                                   (word "{" *> manyTill instruction (word "}"))))
               <* skippable
             where 
               skippable = try (skipMany (lexeme comment)) <|> spaces
 
-asmParse :: Parser [A.Instr]
-asmParse = manyTill instruction eof
+parse :: Parser [A.Instr]
+parse = manyTill instruction eof

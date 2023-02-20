@@ -1,0 +1,28 @@
+module ParseUtils where
+
+import Text.Parsec
+import Text.Parsec.String
+
+lexeme :: Parser a -> Parser a
+lexeme p = p <* spaces
+
+name :: Parser String
+name = lexeme $ (:) <$> oneOf (['a'..'z'] ++ ['A'..'Z']) <*> many alphaNum
+
+int :: Parser Int
+int = lexeme $ read <$> ((++) <$> option "" (string "-") <*> many1 digit)
+
+bool :: Parser Bool
+bool = char '#' *> (True <$ char 't' <|> False <$ char 'f')
+
+word :: String -> Parser String
+word w = lexeme $ string w
+
+double :: Parser Double
+double = lexeme $ read <$> ((++) <$> whole <*> decimal)
+      where whole = (++) <$> option "" (string "-") <*> many1 digit
+            decimal = (++) <$> string "." <*> many1 digit
+
+-- same behavior as manyTill except first parser is tried before the second
+manyTill' :: Parser a -> Parser b -> Parser [a]
+manyTill' p1 p2 = try ((:) <$> p1 <*> manyTill' p1 p2) <|> ([] <$ p2)

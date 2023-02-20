@@ -42,7 +42,7 @@ instance Exception InternalException
 -- Reader functions
 
 vsOfFile :: Reader [Asm.Instr]
-vsOfFile infile = hGetContents' infile <&> parseAndErr AsmParse.asmParse 
+vsOfFile infile = hGetContents' infile <&> parseAndErr AsmParse.parse 
 
 -- Materializer functions
 

@@ -1,9 +1,18 @@
 module SxParse where
 
 import qualified Sx
-import Text.Parsec (spaces)
+import qualified ParseUtils
+import Text.Parsec ( spaces,
+                     ParseError,
+                     char )
 import Text.Parsec.String ( Parser )
 
-lexeme :: Parser a -> Parser a
-lexeme p = p <* spaces
+bool = ParseUtils.bool
+name = ParseUtils.name
+lexeme = ParseUtils.lexeme
+
+parse :: Parser [Sx.Sx]
+parse = error "implementme"
+
+quote = lexeme (char '"')
 
