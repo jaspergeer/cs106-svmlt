@@ -16,13 +16,13 @@ data LetKind = Let | LetRec
 
 data Value = Sym   Name
            | Int   Int
-           | REAL  Double
+           | Real  Double
            | BoolV Bool
            | Pair  Value Value
            | EmptyList
 
-data DefLabel  = Val         Name Exp
-               | Define      Name [Name] Exp
-               | Exp         Exp
-               | CheckExpect Exp Exp
-               | CheckAssert Exp
+data Def = Val         Name Exp
+          | Define      Name [Name] Exp
+          | Exp         Exp
+          | CheckExpect Exp Exp
+          | CheckAssert Exp

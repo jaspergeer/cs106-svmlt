@@ -13,14 +13,36 @@
 module VSchemeParse where
 
 import qualified VScheme as S
+import qualified ParseUtils
 import Text.Parsec.String ( Parser )
 import Text.Parsec.Token ( symbol )
-import Text.Parsec ( between
-                   , char )
+import Text.Parsec ( between,
+                     char,
+                     (<|>),
+                     try )
+
+word = ParseUtils.word
+int = ParseUtils.int
+double = ParseUtils.double
+bool = ParseUtils.bool
+
+-- s-exp parsing???
+
+sexp :: Parser S.Value
+sexp = S.EmptyList <$ word "'()"
+    <|> try (S.Int <$> int)
+    <|> try (S.Real <$> double)
 
 -- can't unerstand def of bracket in vscheme-parse.sml
--- bracket p = between (char '(') (char ')')
+parend :: Parser a -> Parser a
+parend = between (word "(") (word ")")
 
 letstar :: [(S.Name, S.Exp)] -> S.Exp -> S.Exp
 letstar [] e = e
 letstar ((x, e') : bs) e = S.LetX S.Let [(x, e')] (letstar bs e)
+
+exp :: Parser S.Exp
+exp = error ""
+
+defs :: Parser [S.Def]
+defs = error ""
