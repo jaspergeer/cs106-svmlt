@@ -42,7 +42,7 @@ executable huft
         VSchemeUnparse,
         Primitives,
         UnambiguousVScheme,
-        DisAmbiguate,
+        Disambiguate,
         KNF
 
     -- LANGUAGE extensions used by modules in this package.
