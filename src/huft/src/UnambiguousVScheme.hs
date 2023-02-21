@@ -39,3 +39,18 @@ data Def = Val Name Exp
          | Exp Exp
          | CheckExpect String Exp String Exp
          | CheckAssert String Exp
+
+whatIs :: Exp -> String
+whatIs (Literal v) = "literal " ++ show v
+whatIs (Local n) = "local " ++ n
+whatIs (Global n) = "global " ++ n
+whatIs (SetLocal n e) = "set local " ++ n ++ " to " ++ whatIs e
+whatIs (SetGlobal n e) = "set global " ++ n ++ " to " ++ whatIs e
+whatIs (IfX e1 e2 e3) = "if"
+whatIs (WhileX e1 e2) = "while"
+whatIs (Begin es) = "begin"
+whatIs (FunCall e es) = "fun call"
+whatIs (PrimCall p es) = "prim call " ++ P.name p
+whatIs (LetX Let bs e) = "let"
+whatIs (LetX LetRec bs e) = "letrec"
+whatIs (Lambda xs e) = "lambda"
