@@ -11,22 +11,25 @@ import Text.Parsec ( spaces,
                      many1,
                      many, satisfy )
 import Text.Parsec.String ( Parser )
-import Data.Char (isSpace)
+import Data.Char (isSpace, isDigit)
 
 bool = ParseUtils.bool
-reserved = "()[]#'\"`"
-name :: Parser String
-name = ParseUtils.lexeme $ many1 (satisfy (\x -> not (isSpace x || elem x reserved)))
 lexeme = ParseUtils.lexeme
 int = ParseUtils.int
 double = ParseUtils.double
 tok = ParseUtils.token
+reserved = "()[]#'\"`"
+name :: Parser String
+name = ParseUtils.lexeme $ (:) <$> satisfy (\x -> not (isSpace x || elem x reserved || isDigit x))
+  <*> many (satisfy (\x -> not (isSpace x || elem x reserved)))
 
 sx :: Parser Sx.Sx
-sx = Sx.List <$> (tok "'(" *> many sx' <* tok ")")
-    <|> sx' where
-      sx' = try (Sx.Int <$> int)
+sx = char '\'' *> (Sx.List <$> (tok "(" *> many sx' <* tok ")")
+              <|> Sx.Sym <$> name)
+    <|> nums where
+      nums = try (Sx.Int <$> int)
         <|> Sx.Real <$> double
-        <|> Sx.Sym <$> (char '\'' *> many1 alphaNum)
         <|> Sx.Bool <$> bool
-        <|> Sx.List <$> (tok "(" *> many sx' <* tok ")")
+      sx' = Sx.List <$> (tok "(" *> many sx' <* tok ")")
+        <|> Sx.Sym <$> name
+        <|> nums

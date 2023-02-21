@@ -21,6 +21,7 @@ data Exp a = Literal Literal
            | Assign a (Exp a)
            | While a (Exp a) (Exp a)
            | FunCode [a] (Exp a)
+           | FunCall a [a]
            | VMOP VMOP [a]
            | VMOPGLO VMOP [a] Literal
 

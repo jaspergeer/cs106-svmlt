@@ -40,6 +40,7 @@ data Def = Val Name Exp
          | Exp Exp
          | CheckExpect String Exp String Exp
          | CheckAssert String Exp
+         deriving Show
 
 whatIs :: Exp -> String
 whatIs (Literal v) = "literal " ++ show v

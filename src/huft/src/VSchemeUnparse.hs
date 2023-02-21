@@ -42,7 +42,9 @@ exp (S.IfX e1 e2 e3) = P.nest 3 $ kw "if" [exp e1, exp e2, exp e3]
 exp (S.WhileX e1 e2) = P.nest 3 $ kw "while" [exp e1, exp e2]
 exp (S.Begin es) = P.nest 3 $ P.parens $ P.pretty"begin" <+> P.vsep (map exp es)
 exp (S.Apply e es) = P.nest 3 $ wrap (exp e : map exp es)
-exp (S.LetX S.Let bs e) = P.nest 3 $ pplet "let" bindings (exp e)
+exp (S.LetX lk bs e) = case lk of
+    S.Let -> P.nest 3 $ pplet "let" bindings (exp e)
+    S.LetRec -> P.nest 3 $ pplet "letrec" bindings (exp e)
     where
         pplet k bs e = P.parens $ P.pretty k <+> (P.parens $ P.align (P.vsep bs)) <> P.line <> e
         bindings = [P.pretty "[" <> P.pretty x <+> exp e <> P.pretty "]" | (x, e) <- bs]

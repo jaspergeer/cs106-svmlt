@@ -47,21 +47,23 @@ value O.EmptyList = S.EmptyList
 
 def :: K.Exp S.Name -> S.Def
 def e = S.Exp (exp e)
-    where   exp (K.Literal l) = S.Literal (value l)
-            exp (K.Name x) = S.Var x
-            exp (K.If x e2 e3) = S.IfX (S.Var x) (exp e2) (exp e3)
-            exp (K.Let x e' e) = let' x (exp e') (exp e)
-            exp (K.Seq e1 e2) = S.Begin [exp e1, exp e2]
-            exp (K.Assign x e) = S.Set x (exp e)
-            exp (K.While x e1 e2) = S.WhileX (let' x (exp e1) (S.Var x)) (exp e2)
-            exp (K.FunCode xs e) = S.Lambda xs (exp e)
+    where   exp e = case e of
+                K.Literal l -> S.Literal (value l)
+                K.Name x -> S.Var x
+                K.If x e2 e3 -> S.IfX (S.Var x) (exp e2) (exp e3)
+                K.Let x e' e -> let' x (exp e') (exp e)
+                K.Seq e1 e2 -> S.Begin [exp e1, exp e2]
+                K.Assign x e -> S.Set x (exp e)
+                K.While x e1 e2 -> S.WhileX (let' x (exp e1) (S.Var x)) (exp e2)
+                K.FunCode xs e -> S.Lambda xs (exp e)
             -- not sure for VMOP, VMOPGLO
-            exp (K.VMOP op args) = S.Apply (S.Var (P.name op)) (map S.Var args)
+                K.VMOP op args -> S.Apply (S.Var (P.name op)) (map S.Var args)
             -- getglobal case
-            exp (K.VMOPGLO op [] v) = case (P.name op, v) of
-                ("getglobal", O.String v) -> 
+                K.VMOPGLO op [] v -> case (P.name op, v) of
+                    ("getglobal", O.String v) -> 
                         S.Apply (S.Var (P.name op)) [S.Literal (S.Sym v)]
-                _ -> S.Apply (S.Var (P.name op)) [S.Literal (value v)]
-            exp (K.VMOPGLO op (x:xs) v) = case P.name op of
-                "setglobal" -> S.Set x (S.Literal (value v))
-                _ -> S.Apply (S.Var (P.name op)) (map S.Var (x:xs))
+                    _ -> S.Apply (S.Var (P.name op)) [S.Literal (value v)]
+                K.VMOPGLO op (x:xs) v -> case P.name op of
+                    "setglobal" -> S.Set x (S.Literal (value v))
+                    _ -> S.Apply (S.Var $ P.name op) (map S.Var (x:xs))
+                K.FunCall f args -> S.Apply (S.Var f) (map S.Var args)
