@@ -22,7 +22,8 @@ import Text.Parsec.Token ( symbol )
 import Text.Parsec ( between,
                      char,
                      (<|>),
-                     try, many )
+                     try, many, manyTill, anyChar, spaces, endOfLine, sepBy, skipMany, eof, satisfy )
+import Data.Char (isSpace)
 
 valOfSx s = case s of
   Sx.Int i -> S.Int i
@@ -36,7 +37,7 @@ tok = ParseUtils.token
 int = ParseUtils.int
 double = ParseUtils.double
 bool = ParseUtils.bool
-name = ParseUtils.name
+name = SxParse.name
 
 parend :: Parser a -> Parser a
 parend p = tok "(" *> p <* tok ")"
@@ -136,16 +137,24 @@ desugarRecord recname fieldnames =
         varlist [] = S.Literal S.EmptyList
         varlist (x:xs) = cons (S.Var x) (varlist xs)
 
+single x = [x]
 
-
-def :: Parser S.Def
+def :: Parser [S.Def]
 def = let
   def' = S.Val <$> (tok "val" *> name) <*> expr
      <|> S.Define <$> (tok "define" *> name) <*> parend formals <*> expr
      <|> S.CheckExpect <$> (tok "check-expect" *> expr) <*> expr
      <|> S.CheckAssert <$> (tok "check-assert" *> expr)
-  in parend def'
- <|> S.Exp <$> expr
+  in try (parend (single <$> def'
+ <|> desugarRecord <$> (tok "record" *> name) <*> brackd (many name)))
+ <|> single . S.Exp <$> expr
 
-defs :: Parser [S.Def]
-defs = many def -- ????
+comment :: Parser ()
+comment = () <$ tok ";;" <* manyTill anyChar endOfLine <* spaces
+
+parse :: Parser [S.Def]
+parse = spaces *> skipMany comment *>
+  (concat <$> manyTill (def <* skipMany comment) eof)
+
+-- defs :: Parser [S.Def]
+-- defs = many def -- ????

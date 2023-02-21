@@ -17,6 +17,10 @@ import qualified AsmUnparse
 import qualified ObjectCode
 import qualified ObjectUnparser
 import qualified Assembler
+import qualified UnambiguousVScheme
+import qualified VScheme
+import qualified VSchemeParse
+import qualified Disambiguate
 
 type Emitter a = Handle -> a -> IO ()
 type Reader a = Handle -> IO (E.Error a)
@@ -41,10 +45,22 @@ instance Exception InternalException
 
 -- Reader functions
 
+schemeOfFile :: Reader [VScheme.Def]
+schemeOfFile infile = hGetContents' infile <&> parseAndErr VSchemeParse.parse
+
+schemexOfFile :: Reader [UnambiguousVScheme.Def]
+schemexOfFile = schemeOfFile ==> ((E.Error . Right) . map Disambiguate.disambiguate)
+
+
 vsOfFile :: Reader [Asm.Instr]
-vsOfFile infile = hGetContents' infile <&> parseAndErr AsmParse.parse 
+vsOfFile infile = hGetContents' infile <&> parseAndErr AsmParse.parse
 
 -- Materializer functions
+
+hoOf :: Language -> Reader [UnambiguousVScheme.Def]
+hoOf HO = schemexOfFile
+hoOf HOX = error "imperative features (HOX to HO)"
+hoOf _ = throw Backward
 
 vsOf :: Language -> Reader [Asm.Instr]
 vsOf VS = vsOfFile

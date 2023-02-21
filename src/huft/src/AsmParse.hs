@@ -26,13 +26,14 @@ import Text.Parsec
       try,
       anyChar,
       eof,
-      endOfLine, skipMany )
+      endOfLine, skipMany)
 import Text.Parsec.Char (noneOf)
 
 -- parsing
 
 lexeme = ParseUtils.lexeme
-name = ParseUtils.name
+name :: Parser String
+name = lexeme $ (:) <$> oneOf (['a'..'z'] ++ ['A'..'Z']) <*> many alphaNum
 int = ParseUtils.int
 tok = ParseUtils.token
 double = ParseUtils.double
@@ -78,7 +79,7 @@ eR2U8 op r1 r2 u8 = A.ObjectCode (O.RegsInt op [r1, r2] u8)
 eR0I24 op i24 = A.ObjectCode (O.RegsInt op [] i24)
 
 oneOfStr :: [String] -> Parser String
-oneOfStr strs = choice (map (try . string) strs)
+oneOfStr strs = lexeme $ choice (map (try . string) strs)
 
 singleLineInstr :: Parser A.Instr
 singleLineInstr =
@@ -96,9 +97,9 @@ singleLineInstr =
   <|> try (eR0I24 <$> oneOfStr A.opcodesR0I24 <*> int)
 
   -- special cases
-  <|> try (A.DefLabel <$> (string "def" *> name))
-  <|> try (A.GotoLabel <$> (string "goto" *> name))
-  <|> try (A.IfGotoLabel <$> (string "if" *> reg) <*> (tok "goto" *> name))
+  <|> try (A.DefLabel <$> (tok "def" *> name))
+  <|> try (A.GotoLabel <$> (tok "goto" *> name))
+  <|> try (A.IfGotoLabel <$> (tok "if" *> reg) <*> (tok "goto" *> name))
 
   <|> try (eR2 "copy" <$> reg <* setTo <*> reg)
   <|> try (eR1 "zero" <$> reg <* setTo <* tok "0")
@@ -108,20 +109,17 @@ singleLineInstr =
   <|> try (eR1LIT <$> oneOfStr ["check", "expect"] <*> reg <*> literal)
 
   <|> try (eR1GLO "getglobal" <$> reg <* setTo <*> (tok "G[" *> name <* tok "]"))
-  <|> try (flip (eR1GLO "setglobal") <$> (tok "G[" *> name <* string "]") <* setTo <*> reg)
+  <|> try (flip (eR1GLO "setglobal") <$> (tok "G[" *> name <* tok "]") <* setTo <*> reg)
   where setTo = tok ":="
 
 comment :: Parser ()
-comment = () <$ spaces <* string ";;" <* manyTill anyChar endOfLine
+comment = () <$ tok ";;" <* manyTill anyChar endOfLine <* spaces
 
 instruction :: Parser A.Instr
-instruction = skippable *> 
-              (try singleLineInstr
-           <|> try (A.LoadFunc <$> reg <* tok ":=" <* tok "fun" <*> int <*>
-                                  (tok "{" *> manyTill instruction (tok "}"))))
-              <* skippable
-            where 
-              skippable = try (skipMany (lexeme comment)) <|> spaces
+instruction =  try singleLineInstr
+           <|> (A.LoadFunc <$> reg <* tok ":=" <* tok "fun" <*> int <*>
+                                  (tok "{" *> manyTill instruction (tok "}")))
 
 parse :: Parser [A.Instr]
-parse = manyTill instruction eof
+parse = spaces *> skipMany comment *> 
+  manyTill (instruction <* skipMany comment) eof

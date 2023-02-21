@@ -9,11 +9,14 @@ import Text.Parsec ( spaces,
                      (<|>),
                      alphaNum,
                      many1,
-                     many )
+                     many, satisfy )
 import Text.Parsec.String ( Parser )
+import Data.Char (isSpace)
 
 bool = ParseUtils.bool
-name = ParseUtils.name
+reserved = "()#'\"`"
+name :: Parser String
+name = ParseUtils.lexeme $ many1 (satisfy (\x -> not (isSpace x || elem x reserved)))
 lexeme = ParseUtils.lexeme
 int = ParseUtils.int
 double = ParseUtils.double
