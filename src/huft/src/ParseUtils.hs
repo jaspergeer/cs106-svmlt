@@ -10,7 +10,7 @@ int :: Parser Int
 int = lexeme $ read <$> ((++) <$> option "" (string "-") <*> many1 digit)
 
 bool :: Parser Bool
-bool = char '#' *> (True <$ char 't' <|> False <$ char 'f')
+bool = lexeme $ char '#' *> (True <$ char 't' <|> False <$ char 'f')
 
 token :: String -> Parser String
 token w = lexeme $ string w

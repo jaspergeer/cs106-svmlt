@@ -55,12 +55,12 @@ def (S.CheckExpect e1 e2) = P.nest 3 $ kw "check-expect" [exp e1, exp e2]
 def (S.CheckAssert e) = P.nest 3 $ kw "check-assert" [exp e]
 def (S.Exp e) = exp e
 
-pp = def
+pp = show . def
 ppexp = exp
 
 -- need to strip final new line?
 
-expString = show . ppexp
+-- expString = show . ppexp
 
 -- needa figure out where let* comes from
 
