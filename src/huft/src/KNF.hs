@@ -11,6 +11,8 @@ type Name = String
 -- type parameter 'a is a _name_, typically
 -- instantiated as `string` or `ObjectCode.reg`
 
+-- missing apply? but not seen in handout
+
 data Exp a = Literal Literal
            | Name a
            | IF a (Exp a) (Exp a)
