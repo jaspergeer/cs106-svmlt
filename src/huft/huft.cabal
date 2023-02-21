@@ -44,7 +44,8 @@ executable huft
         UnambiguousVScheme,
         Disambiguate,
         KNF,
-        KnEmbed
+        KnEmbed,
+        KnProject
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
