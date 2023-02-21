@@ -59,11 +59,8 @@ def e = S.Exp (exp e)
             -- not sure for VMOP, VMOPGLO
                 K.VMOP op args -> S.Apply (S.Var (P.name op)) (map S.Var args)
             -- getglobal case
-                K.VMOPGLO op [] v -> case (P.name op, v) of
-                    ("getglobal", O.String v) -> 
-                        S.Apply (S.Var (P.name op)) [S.Literal (S.Sym v)]
-                    _ -> S.Apply (S.Var (P.name op)) [S.Literal (value v)]
-                K.VMOPGLO op (x:xs) v -> case P.name op of
-                    "setglobal" -> S.Set x (S.Literal (value v))
-                    _ -> S.Apply (S.Var $ P.name op) (map S.Var (x:xs))
+                K.VMOPGLO op xs v -> case (P.name op, xs, v) of
+                    ("getglobal", [], O.String v) -> S.Var v
+                    ("setglobal", [x], O.String v) -> S.Set x (S.Var v)
+                    _ -> S.Apply (S.Var (P.name op)) ((map S.Var xs) ++ [S.Literal (value v)])
                 K.FunCall f args -> S.Apply (S.Var f) (map S.Var args)

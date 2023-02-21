@@ -8,8 +8,8 @@ import qualified Prettyprinter as P
 (<+>) = (P.<+>)
 -- using `te = P.pretty` is not working
 
-letkeyword S.Let = P.pretty"let "
-letkeyword S.LetRec = P.pretty"letrec"
+letkeyword S.Let = P.pretty "let "
+letkeyword S.LetRec = P.pretty "letrec"
 
 value (S.Sym s) = P.pretty s
 value (S.Int i) = P.pretty i
