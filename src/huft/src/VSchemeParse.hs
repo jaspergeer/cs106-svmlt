@@ -23,7 +23,8 @@ import Text.Parsec ( between,
                      char,
                      (<|>),
                      try, many, manyTill, anyChar, spaces, endOfLine, sepBy, skipMany, eof, satisfy )
-import Data.Char (isSpace)
+import Data.Char (isSpace, isDigit)
+
 
 valOfSx s = case s of
   Sx.Int i -> S.Int i
@@ -46,26 +47,26 @@ brackd :: Parser a -> Parser a
 brackd p = tok "[" *> p <* tok "]"
 
 formals = many name
-
+bind = brackd ((,) <$> name <*> expr)
 expr :: Parser S.Exp
 expr = let
   letstar [] e = e
   letstar ((x, e') : bs) e = S.LetX S.Let [(x, e')] (letstar bs e)
-  letKind = S.Let <$ tok "let"
-        <|> S.LetRec <$ tok "letrec"
-  bind = brackd ((,) <$> name <*> expr)
+  letKind = try (S.LetRec <$ tok "letrec")
+        <|> S.Let <$ tok "let"
+  
   expr' = S.Set <$> (tok "set" *> name) <*> expr
       <|> S.IfX <$> (tok "if" *> expr) <*> expr <*> expr
       <|> S.WhileX <$> (tok "while" *> expr) <*> expr
       <|> S.Begin <$> (tok "begin" *> many expr)
-      <|> S.Lambda <$> (try (tok "lambda") *> brackd formals) <*> expr
-      <|> letstar <$> (try (tok "let*") *> many bind) <*> expr
+      <|> S.Lambda <$> (try (tok "lambda") *> parend formals) <*> expr
+      <|> letstar <$> (try (tok "let*") *> parend (many bind)) <*> expr
       <|> S.LetX <$> letKind <*> parend (many bind) <*> expr
       <|> S.Apply <$> expr <*> many expr
   in
     parend expr'
+    <|> try (S.Literal . valOfSx <$> SxParse.sx)
     <|> S.Var <$> name
-    <|> S.Literal . valOfSx <$> SxParse.sx
 
 -- record desugaring
 
@@ -150,7 +151,7 @@ def = let
  <|> single . S.Exp <$> expr
 
 comment :: Parser ()
-comment = () <$ tok ";;" <* manyTill anyChar endOfLine <* spaces
+comment = () <$ tok ";" <* manyTill anyChar endOfLine <* spaces
 
 parse :: Parser [S.Def]
 parse = spaces *> skipMany comment *>

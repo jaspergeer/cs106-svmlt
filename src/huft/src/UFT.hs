@@ -23,6 +23,9 @@ import qualified VSchemeParse
 import qualified VSchemeUnparse
 import qualified Disambiguate
 import qualified Ambiguate
+import qualified KNF
+import qualified KnEmbed
+import qualified KnProject
 
 type Emitter a = Handle -> a -> IO ()
 type Reader a = Handle -> IO (E.Error a)
@@ -45,7 +48,7 @@ data InternalException = Backward
                   deriving (Show)
 instance Exception InternalException
 
--- Reader functions
+-- Reader functions 
 
 schemeOfFile :: Reader [VScheme.Def]
 schemeOfFile infile = hGetContents' infile <&> parseAndErr VSchemeParse.parse
@@ -55,6 +58,9 @@ schemexOfFile = schemeOfFile ==> ((E.Error . Right) . map Disambiguate.disambigu
 
 vsOfFile :: Reader [Asm.Instr]
 vsOfFile infile = hGetContents' infile <&> parseAndErr AsmParse.parse
+
+knOfFile :: Reader [KNF.Exp KNF.Name]
+knOfFile = schemexOfFile ==> mapM KnProject.def  -- projection HO -> KN
 
 -- Materializer functions
 
@@ -70,6 +76,10 @@ vsOf _ = throw (NoTranslationTo VS)
 voOf :: Language -> Reader [ObjectCode.Instr]
 voOf VO     =  \_ -> return (Error $ Left "There is no reader for .vo")
 voOf inLang =  vsOf inLang ==> Assembler.translate
+
+knTextOf :: Language -> Reader [KNF.Exp KNF.Name]
+knTextOf KN = knOfFile
+knTextOf _ = error "bad :("
 
 -- Emitter functions
 
@@ -88,6 +98,9 @@ emitScheme = emitFrom (map VSchemeUnparse.pp)
 emitHO :: Emitter [UnambiguousVScheme.Def]
 emitHO outfile = emitScheme outfile . map Ambiguate.ambiguate
 
+emitKn :: Emitter [KNF.Exp KNF.Name]
+emitKn outfile = emitScheme outfile . map KnEmbed.def -- projection KN -> HOX
+
 -- Universal Forward Translator
 
 data UFTException = NotForward Language Language
@@ -99,7 +112,8 @@ translate inLang outLang infile outfile = catch
   (case outLang of
     VS -> vsOf inLang infile <&> (emitVS outfile <$>)
     VO -> voOf inLang infile <&> (emitVO outfile <$>)
-    HO -> hoOf inLang infile <&> (emitHO outfile <$>))
+    HO -> hoOf inLang infile <&> (emitHO outfile <$>)
+    KN -> knTextOf inLang infile <&> (emitKn outfile <$>))
   (\e -> case e of
     Backward -> throw (NotForward inLang outLang)
     NoTranslationTo l -> throw (NotForward inLang l))
