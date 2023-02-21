@@ -3,7 +3,7 @@ module UnambiguousVScheme where
 import qualified Primitives as P
 import qualified VScheme as S
 
-data LetKind = Let | LetRec
+data LetKind = Let | LetRec deriving Show
 
 type Name = String
 
@@ -19,11 +19,12 @@ data Exp = Literal Value
          | PrimCall P.Primitive [Exp]
          | LetX LetKind [(Name, Exp)] Exp
          | Lambda [Name] Exp
+         deriving Show
 
 data Value = Sym Name
            | Int Int
            | Real Double
-           | BoolV Bool
+           | Bool Bool
            | EmptyList
            
 instance Show Value where
@@ -31,7 +32,7 @@ instance Show Value where
     Sym n -> n
     Int i -> show i
     Real x -> show x
-    BoolV b -> show b
+    Bool b -> show b
     EmptyList -> "'()"
 
 data Def = Val Name Exp
@@ -39,3 +40,4 @@ data Def = Val Name Exp
          | Exp Exp
          | CheckExpect String Exp String Exp
          | CheckAssert String Exp
+         deriving Show

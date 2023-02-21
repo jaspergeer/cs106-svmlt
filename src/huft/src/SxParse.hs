@@ -14,7 +14,7 @@ import Text.Parsec.String ( Parser )
 import Data.Char (isSpace)
 
 bool = ParseUtils.bool
-reserved = "()#'\"`"
+reserved = "()[]#'\"`"
 name :: Parser String
 name = ParseUtils.lexeme $ many1 (satisfy (\x -> not (isSpace x || elem x reserved)))
 lexeme = ParseUtils.lexeme
