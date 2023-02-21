@@ -15,7 +15,7 @@ type Name = String
 
 data Exp a = Literal Literal
            | Name a
-           | IF a (Exp a) (Exp a)
+           | If a (Exp a) (Exp a)
            | Let a [(a, Exp a)] (Exp a)
            | Seq (Exp a) (Exp a)
            | Assign a (Exp a)

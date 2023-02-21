@@ -32,8 +32,8 @@ wrap = P.group . P.parens . P.vsep
 
 exp (S.Literal v) = case v of
         S.Int _ -> value v
-        S.REAL _ -> value v
-        S.BoolV _ -> value v 
+        S.Real _ -> value v
+        S.Bool _ -> value v 
         _ -> P.pretty "'" <> value v  
         -- why tik before these value, not shown in intepreter of vschme -vv
 exp (S.Var s) = P.pretty s
