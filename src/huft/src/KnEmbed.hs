@@ -26,7 +26,7 @@ value O.Nil = S.Bool False
 value (O.Int i) = S.Int i
 value (O.Real r) = S.Real r
 value (O.Bool b) = S.Bool b
-value (O.EmptyList) = S.EmptyList
+value O.EmptyList = S.EmptyList
 
 -- The definition embedding uses only one definition form, VScheme.EXP. 
 -- Internally, the main embedding should be
@@ -58,10 +58,10 @@ def e = S.Exp (exp e)
             -- not sure for VMOP, VMOPGLO
             exp (K.VMOP op args) = S.Apply (S.Var (P.name op)) (map S.Var args)
             -- getglobal case
-            exp (K.VMOPGLO op [] v) = case ((P.name op), v) of
-                ("getglobal", (O.String v)) -> 
+            exp (K.VMOPGLO op [] v) = case (P.name op, v) of
+                ("getglobal", O.String v) -> 
                         S.Apply (S.Var (P.name op)) [S.Literal (S.Sym v)]
-                _ -> S.Apply (S.Var (P.name op)) (S.Literal (value v):[])
-            exp (K.VMOPGLO op (x:xs) v) = case (P.name op) of
+                _ -> S.Apply (S.Var (P.name op)) [S.Literal (value v)]
+            exp (K.VMOPGLO op (x:xs) v) = case P.name op of
                 "setglobal" -> S.Set x (S.Literal (value v))
                 _ -> S.Apply (S.Var (P.name op)) (map S.Var (x:xs))
