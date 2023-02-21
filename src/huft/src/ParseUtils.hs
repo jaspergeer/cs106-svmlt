@@ -6,9 +6,6 @@ import Text.Parsec.String
 lexeme :: Parser a -> Parser a
 lexeme p = p <* spaces
 
-name :: Parser String
-name = lexeme $ (:) <$> oneOf (['a'..'z'] ++ ['A'..'Z']) <*> many alphaNum
-
 int :: Parser Int
 int = lexeme $ read <$> ((++) <$> option "" (string "-") <*> many1 digit)
 

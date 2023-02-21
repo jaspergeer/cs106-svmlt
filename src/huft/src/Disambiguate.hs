@@ -73,6 +73,18 @@ exp' e locals =
         S.Lambda xs e -> X.Lambda xs (exp' e (xs ++ locals))
   in exp e
 
+def :: S.Def -> X.Def
+def d = case d of
+  S.Define f xs e -> X.Define f xs (exp' e xs)
+  S.Val f (S.Lambda xs e) -> X.Define f xs (exp' e xs)
+  S.Val x e -> X.Val x (exp' e [])
+  S.Exp e -> X.Exp (exp' e [])
+  S.CheckExpect e e' -> X.CheckExpect "TODO" (exp' e []) "TODO2" (exp' e' [])
+  S.CheckAssert e -> X.CheckAssert "TODO" (exp' e [])
+
+disambiguate :: S.Def -> X.Def
+disambiguate = def
+
 -- If the function is a local variable, the application becomes a FUNCALL form,
 -- with a LOCAL form of exp in the function position.
 
