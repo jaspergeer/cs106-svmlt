@@ -39,7 +39,13 @@ etaExpand p = X.Lambda args (X.PrimCall p (map X.Local args))
       where args = map (\i -> "x" ++ show i) [1..P.arity p]-- translation of literals
 
 value :: S.Value -> X.Exp
-value = error "implementme"
+value v = case v of
+  S.Pair v1 v2 -> X.PrimCall P.cons [value v1, value v2]
+  S.Int n -> X.Literal (X.Int n)
+  S.Real n -> X.Literal (X.Real n)
+  S.Bool b -> X.Literal (X.Bool b)
+  S.EmptyList -> X.Literal X.EmptyList
+  S.Sym x -> X.Literal (X.Sym x)
 
 exp' :: S.Exp -> Environment -> X.Exp
 exp' e locals =
@@ -84,14 +90,3 @@ def d = case d of
 
 disambiguate :: S.Def -> X.Def
 disambiguate = def
-
--- If the function is a local variable, the application becomes a FUNCALL form,
--- with a LOCAL form of exp in the function position.
-
--- If the function is a variable that is nonlocal and that names a primitive, 
--- the application becomes a PRIMCALL form, to the named primitive.
-
--- If the function is any other form, including a global variable that is not a 
--- primitive, application becomes a FUNCALL form, with the original form of 
--- exp in the function position.
-

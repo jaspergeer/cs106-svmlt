@@ -46,9 +46,10 @@ executable huft
         KNF,
         KnEmbed,
         KnProject,
+        Ambiguate,
+        ParseUtils,
         Sx,
         SxParse,
-        ParseUtils,
         VSchemeUtils
 
     -- LANGUAGE extensions used by modules in this package.

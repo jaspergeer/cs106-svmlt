@@ -20,7 +20,9 @@ import qualified Assembler
 import qualified UnambiguousVScheme
 import qualified VScheme
 import qualified VSchemeParse
+import qualified VSchemeUnparse
 import qualified Disambiguate
+import qualified Ambiguate
 
 type Emitter a = Handle -> a -> IO ()
 type Reader a = Handle -> IO (E.Error a)
@@ -51,7 +53,6 @@ schemeOfFile infile = hGetContents' infile <&> parseAndErr VSchemeParse.parse
 schemexOfFile :: Reader [UnambiguousVScheme.Def]
 schemexOfFile = schemeOfFile ==> ((E.Error . Right) . map Disambiguate.disambiguate)
 
-
 vsOfFile :: Reader [Asm.Instr]
 vsOfFile infile = hGetContents' infile <&> parseAndErr AsmParse.parse
 
@@ -81,6 +82,12 @@ emitVO = emitFrom ObjectUnparser.unparseModule
 emitVS :: Emitter [Asm.Instr]
 emitVS = emitFrom AsmUnparse.unparse
 
+emitScheme :: Emitter [VScheme.Def]
+emitScheme = emitFrom (map VSchemeUnparse.pp)
+
+emitHO :: Emitter [UnambiguousVScheme.Def]
+emitHO outfile = emitScheme outfile . map Ambiguate.ambiguate
+
 -- Universal Forward Translator
 
 data UFTException = NotForward Language Language
@@ -91,7 +98,8 @@ translate :: Language -> Language -> Handle -> Handle -> IO (E.Error (IO ()))
 translate inLang outLang infile outfile = catch
   (case outLang of
     VS -> vsOf inLang infile <&> (emitVS outfile <$>)
-    VO -> voOf inLang infile <&> (emitVO outfile <$>))
+    VO -> voOf inLang infile <&> (emitVO outfile <$>)
+    HO -> hoOf inLang infile <&> (emitHO outfile <$>))
   (\e -> case e of
     Backward -> throw (NotForward inLang outLang)
     NoTranslationTo l -> throw (NotForward inLang l))

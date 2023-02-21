@@ -4,10 +4,11 @@ import qualified Data.Map as M
 
 type Name = String
 
-data Base = Base String Int
+data Base = Base String Int deriving Show
 
 data Primitive = SetsRegister Base
                | HasEffect Base
+               deriving Show
 
 binary = [ "+", "-", "*", "/", "<", ">", "cons", "=", "idiv", "Array.sub"
          , "sin", "cos", "tan", "asin", "acos", "atan", "Array.new"
@@ -20,7 +21,7 @@ unary = [ "boolean?", "null?", "number?", "pair?", "function?", "nil?"
         , "!", "ref"
         ]
 
-side_effecty   = [ "print", "printu", "println" ]
+sideEffecty   = [ "print", "printu", "println" ]
 errory         = [ "error" ]
 halty          = [ "halt" ]
 checky         = [ "check", "expect" ]
@@ -53,7 +54,7 @@ primitives :: [Primitive]
 primitives =
     ( add 2 SetsRegister binary
     . add 1 SetsRegister unary
-    . add 1 HasEffect side_effecty
+    . add 1 HasEffect sideEffecty
     . add 1 HasEffect errory
     . add 2 HasEffect checky
     . add 0 HasEffect halty
