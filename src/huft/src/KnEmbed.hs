@@ -61,7 +61,7 @@ def e = S.Exp (exp e)
             -- getglobal case
                 K.VMOPGLO op xs v -> case (P.name op, xs, v) of
                     ("getglobal", [], O.String v) -> S.Var v
-                    ("setglobal", [x], O.String v) -> S.Set x (S.Var v)
+                    ("setglobal", [x], O.String v) -> S.Set v (S.Var x)
                     -- match check and expect
                     _ -> S.Apply (S.Var (P.name op)) (map S.Var xs ++ [S.Literal (value v)])
                 K.FunCall f args -> S.Apply (S.Var f) (map S.Var args)

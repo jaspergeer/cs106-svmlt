@@ -24,7 +24,7 @@ data Exp a = Literal Literal
            | FunCode [a] (Exp a)
            | FunCall a [a]
            | VMOP VMOP [a]
-           | VMOPGLO VMOP [a] Literal
+           | VMOPGLO VMOP [a] Literal   
 
 --    create these @(x,...x, v) forms:
 --      setglobal(register, name-of-global)
