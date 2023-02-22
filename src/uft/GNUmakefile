@@ -36,3 +36,6 @@ $(BIN)/uft.opt: $(MLBS) $(SRCS)
 
 $(BIN)/uft: $(SRCS) $(CMS)
 	$(TOP)/bin/mosml-compile-cm -o $@ main.cm
+
+millet.cm: $(CMS)
+	expand-cm main.cm > $@
