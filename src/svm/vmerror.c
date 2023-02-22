@@ -14,7 +14,7 @@
 
 void runerror(VMState state, const char *format, ...) {
   (void)state;
-  fprintf(stderr, "Run-time error (no stack trace): ");
+  fprintf(stderr, "Run-time error:\n    ");
   va_list args;
   va_start(args, format);
   vfprintf(stderr, format, args);

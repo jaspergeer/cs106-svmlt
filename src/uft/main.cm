@@ -1,5 +1,89 @@
 group is
   $/basis.cm
-  all.cm
+
+  (***** basic infrastructure *****)
+
+  impossible.sml
+  escapes.sml     (* character escapes for string literals *)
+
+  env.sml         (* environment abstraction *)
+  ioutil.sml      (* convenience functions for I/O *)
+
+  (***** all the languages we'll eventually translate ****)
+
+  languages.sml   (* the languages, their names, mnemonic descriptions *)
+
+
+  (***** ASSEMBLY LANGUAGE and OBJECT CODE ********)
+
+  (* representations of assembly code and object code *)
+
+  object-code.sml  (* virtual object code: internal form and an unparser *)
+  asm.sml          (* SVM assembly language, internal form only *)
+
+
+  (* error monad *)
+
+  error-sig.sml
+  error-module.sml
+
+  (* "producer" interface [parsing combinators] *)
+
+  producer-sig.sml
+  producer-functor.sml
+
+
+  asmlex.sml     (* lexer for assembly code, provided with module 3 *)
+  indentlex.sml  (* lexer that handles significant indentation, python style *)
+  asmparse.sml   (* assembly parser, built in modules 3 & 4, template provided *)
+  assembler.sml  (* Assembler, built in module 4, not provided *)
+
+
+  (******* vScheme and its infrastructure ****)
+
+  primitives.sml   (* given to students; properties of primitives *)
+
+  vscheme.sml   (* vscheme and utilities; given to students *)
+
+
+
+  pp-sig.sml
+  pp.sml
+
+  ppnormal.sml
+  ppdyn-sig.sml
+  ppdyn.sml
+  prettyprinter-sig.sml
+
+  pptest.sml
+
+
+  pputil-sig.sml
+  pputil.sml
+
+  Wpp-sig.sml
+  Wpp.sml
+  ppwrapper.sml
+  wppscheme.sml
+
+  disambiguate.sml  (* vscheme disambiguation; completed by students *)
+
+  sxlex.sml          (* vscheme parser (and S-expressions); given to students *)
+  sx.sml
+  vscheme-parse.sml
+
+
+
+  (******* K-NORMAL FORM ********)
+
+
+  knf.sml       (* completed by students *)
+
+  knembed.sml       (* embedding and projection; completed by students *)
+  knproject.sml
+
+
+  (*********** UNIVERSAL FORWARD TRANSLATOR **********)
+  uft.sml
 
   main.sml
