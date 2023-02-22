@@ -33,8 +33,8 @@ exp e = case e of
   X.SetLocal x e -> K.Assign x <$> exp e
   X.SetGlobal x x' -> K.setglobal x <$>  asName x'
   X.IfX e1 e2 e3 -> K.If <$> asName e1 <*> exp e2 <*> exp e3
-  X.WhileX (X.LetX X.Let [(x , e1)] (X.Local x')) e2 -> if x /= x' then E.Error $ Left "names don't match"
-    else K.While x <$> exp e1 <*> exp e2
+  X.WhileX (X.LetX X.Let [(x , e1)] (X.Local x')) e2 | x == x' -> K.While x <$> exp e1 <*> exp e2
+  X.WhileX (X.LetX X.Let [(x , e1)] (X.Local x')) e2 -> E.Error $ Left "names don't match"
   X.Begin [e1, e2] -> K.Seq <$> exp e1 <*> exp e2
   X.LetX X.Let [(x, e)] e' -> K.Let x <$> exp e <*> exp e'
 -- Any lambda form except for the special case of a global function definition, which should be handled by the def function
@@ -47,10 +47,9 @@ exp e = case e of
 
 def :: X.Def -> E.Error (K.Exp String)
 def d = case d of
-  X.Exp (X.LetX X.Let [(t, X.Lambda xs e)] (X.SetGlobal t' f)) -> if t /= t' 
-      then E.Error $ Left "names don't match"
-      else K.Let t <$> (K.FunCode xs <$> exp e) <*> (K.setglobal t <$> asName f)
+  X.Exp (X.LetX X.Let [(t, X.Lambda xs e)] (X.SetGlobal t' f)) | t == t' -> K.Let t <$> (K.FunCode xs <$> exp e) <*> (K.setglobal t <$> asName f)
+  X.Exp (X.LetX X.Let [(t, X.Lambda xs e)] (X.SetGlobal t' f)) -> E.Error $ Left "Names don't match"
   X.Exp e -> exp e
-  X.Define f xs e -> K.Let t  <$> (K.FunCode xs <$> exp e) <*> return (K.setglobal t f)
+  X.Define f xs e -> K.Let t <$> (K.FunCode xs <$> exp e) <*> return (K.setglobal t f)
   _ -> E.Error $ Left "Cannot project to KNF"
   where t = "$nr"
