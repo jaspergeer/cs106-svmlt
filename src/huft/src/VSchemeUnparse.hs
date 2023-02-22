@@ -8,8 +8,8 @@ import qualified Prettyprinter as P
 (<+>) = (P.<+>)
 -- using `te = P.pretty` is not working
 
-letkeyword S.Let = P.pretty"let "
-letkeyword S.LetRec = P.pretty"letrec"
+letkeyword S.Let = P.pretty "let "
+letkeyword S.LetRec = P.pretty "letrec"
 
 value (S.Sym s) = P.pretty s
 value (S.Int i) = P.pretty i
@@ -40,7 +40,7 @@ exp (S.Var s) = P.pretty s
 exp (S.Set x e) = P.nest 3 $ kw "set" [P.pretty x, exp e]
 exp (S.IfX e1 e2 e3) = P.nest 3 $ kw "if" [exp e1, exp e2, exp e3]
 exp (S.WhileX e1 e2) = P.nest 3 $ kw "while" [exp e1, exp e2]
-exp (S.Begin es) = P.nest 3 $ P.parens $ P.pretty"begin" <+> P.vsep (map exp es)
+exp (S.Begin es) = P.group $ P.nest 3 $ P.parens $ P.pretty"begin" <+> P.vsep (map exp es)
 exp (S.Apply e es) = P.nest 3 $ wrap (exp e : map exp es)
 exp (S.LetX lk bs e) = case lk of
     S.Let -> P.nest 3 $ pplet "let" bindings (exp e)

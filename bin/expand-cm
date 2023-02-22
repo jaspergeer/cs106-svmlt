@@ -1,0 +1,55 @@
+#!/usr/bin/env lua5.1
+
+local ingroup = false
+
+io.write('group is\n  $/basis.cm\n')
+
+local function strip_comments(s)
+  local base, comment = s:match '^(.-)(%s+%(%*.*%*%))%s*$'
+  if base then
+    return base, comment
+  else
+    return s, ''
+  end
+end
+
+local function trim(s)
+  return (s:gsub('^%s+', ''):gsub('%s+$', ''))
+end
+
+local included = { }
+
+local function expand(path)
+  local f = path == '-' and io.stdin or io.open(path, 'r')
+  for xl in f:lines() do
+    local l, comment = strip_comments(xl)
+    if l:find '^is%s*$' then
+      ingroup = false
+    elseif ingroup then
+      -- do nothing
+    elseif l:find '^group%s*$' then
+      ingroup = true
+    elseif l:find '%$/basis.cm' then
+      -- do nothing
+    elseif l:find '%.cm%s*$' then
+      expand(trim(l))
+    elseif not l:find 'group is' then
+      local source = l:match '%S+'
+      if not source then
+        io.write(xl, '\n')
+      elseif not included[source] then
+        io.write(xl, '\n')
+        included[source] = true
+      end
+    end
+  end
+  if f ~= io.stdin then
+    io.close(f)
+  end
+end
+
+if arg[1] then
+  for _, path in ipairs(arg) do expand(path) end
+else
+  expand '-'
+end

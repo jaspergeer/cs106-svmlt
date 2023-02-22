@@ -1,7 +1,7 @@
 (* Operations for dealing with the Error monad *)
 
 (* You'll need to use this signature 
-  but don't need to know how things are implemented *)
+   but you don't need to know how things are implemented *)
 
 signature ERROR = sig
   datatype 'a error = OK of 'a | ERROR of string
@@ -22,4 +22,5 @@ signature ERROR = sig
   (* list functions *)
   val list : 'a error list -> 'a list error
   val mapList : ('a -> 'b error) -> ('a list -> 'b list error)
+    (* law: mapList f xs = list (List.map f xs) *)
 end

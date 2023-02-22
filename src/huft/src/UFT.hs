@@ -59,7 +59,7 @@ schemexOfFile = schemeOfFile ==> ((E.Error . Right) . map Disambiguate.disambigu
 vsOfFile :: Reader [Asm.Instr]
 vsOfFile infile = hGetContents' infile <&> parseAndErr AsmParse.parse
 
-knOfFile :: Reader [KNF.Exp KNF.Name]
+knOfFile :: Reader [KNF.Exp String]
 knOfFile = schemexOfFile ==> mapM KnProject.def  -- projection HO -> KN
 
 -- Materializer functions
@@ -77,7 +77,7 @@ voOf :: Language -> Reader [ObjectCode.Instr]
 voOf VO     =  \_ -> return (Error $ Left "There is no reader for .vo")
 voOf inLang =  vsOf inLang ==> Assembler.translate
 
-knTextOf :: Language -> Reader [KNF.Exp KNF.Name]
+knTextOf :: Language -> Reader [KNF.Exp String]
 knTextOf KN = knOfFile
 knTextOf _ = error "bad :("
 
@@ -97,8 +97,7 @@ emitScheme = emitFrom (map VSchemeUnparse.pp)
 
 emitHO :: Emitter [UnambiguousVScheme.Def]
 emitHO outfile = emitScheme outfile . map Ambiguate.ambiguate
-
-emitKn :: Emitter [KNF.Exp KNF.Name]
+emitKn :: Emitter [KNF.Exp String]
 emitKn outfile = emitScheme outfile . map KnEmbed.def -- projection KN -> HOX
 
 -- Universal Forward Translator

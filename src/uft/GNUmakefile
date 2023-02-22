@@ -3,8 +3,7 @@ TOP := ../..
 BUILD=$(TOP)/build
 BIN=$(TOP)/bin
 
-# BASES=pp all main wpp impossible
-BASES=all main impossible
+BASES=pp all main wpp impossible
 MLBS=$(BASES:%=%.mlb)
 CMS=$(BASES:%=%.cm)
 SRCS=$(shell echo *.sml)
@@ -37,3 +36,6 @@ $(BIN)/uft.opt: $(MLBS) $(SRCS)
 
 $(BIN)/uft: $(SRCS) $(CMS)
 	$(TOP)/bin/mosml-compile-cm -o $@ main.cm
+
+millet.cm: $(CMS)
+	expand-cm main.cm > $@
