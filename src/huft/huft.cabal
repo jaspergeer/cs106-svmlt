@@ -46,6 +46,7 @@ executable huft
         KNF,
         KnEmbed,
         KnProject,
+        KnRename,
         Ambiguate,
         ParseUtils,
         Sx,
