@@ -3,8 +3,7 @@ TOP := ../..
 BUILD=$(TOP)/build
 BIN=$(TOP)/bin
 
-# BASES=pp all main wpp impossible
-BASES=all main impossible
+BASES=pp all main wpp impossible
 MLBS=$(BASES:%=%.mlb)
 CMS=$(BASES:%=%.cm)
 SRCS=$(shell echo *.sml)
