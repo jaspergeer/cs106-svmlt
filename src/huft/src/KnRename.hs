@@ -2,7 +2,6 @@ module KnRename where
 
 import qualified AsmParse
 import qualified UFT
-import qualified KNF as K
 import qualified Error as E
 import qualified KNF as K
 
