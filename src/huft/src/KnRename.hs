@@ -1,11 +1,20 @@
 module KnRename where
 
+-- In K Normal Form, convert string names to register names
+
 import qualified AsmParse
-import qualified UFT
 import qualified Error as E
 import qualified KNF as K
+import qualified ParseUtils as P
 
-regOfName = UFT.parseAndErr AsmParse.reg
+regOfName :: String -> E.Error Int
+regOfName = P.parseAndErr AsmParse.reg
+
+-- The function requires the tedious copying of program 
+-- structure that you find in function Disambiguate.disambiguate.
+
+--  The function requires the management of projection failure 
+--  that you find in function ProjectKN.def.
 
 mapx :: (a -> E.Error b) -> (K.Exp a -> E.Error (K.Exp b))
 mapx f e =
@@ -21,4 +30,3 @@ mapx f e =
     K.FunCall n ns -> K.FunCall <$> f n <*> mapM f ns
     K.VMOP op ns -> K.VMOP op <$> mapM f ns
     K.VMOPGLO op ns lit -> K.VMOPGLO op <$> mapM f ns <*> pure lit
-    

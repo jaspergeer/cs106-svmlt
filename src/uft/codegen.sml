@@ -41,6 +41,8 @@ struct
         Impossible.exercise "toReg"
   and forEffect' (e: reg KNormalForm.exp) : instruction hughes_list  =
         Impossible.exercise "forEffect"
+  and toReturn' (e:  reg KNormalForm.exp) : instruction hughes_list  =
+        forEffect' e  (* this will change in module 8 *)
 
   val _ = forEffect' :        reg KNormalForm.exp -> instruction hughes_list
   val _ = toReg'     : reg -> reg KNormalForm.exp -> instruction hughes_list
