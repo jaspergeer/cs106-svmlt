@@ -2,6 +2,12 @@ module ParseUtils where
 
 import Text.Parsec
 import Text.Parsec.String
+import qualified Error as E
+
+parseAndErr :: Parser a -> String -> E.Error a
+parseAndErr p input = case runParser p () "" input of
+  Left e -> E.Error $ Left (show e)
+  Right r -> E.Error $ Right r
 
 lexeme :: Parser a -> Parser a
 lexeme p = p <* spaces
