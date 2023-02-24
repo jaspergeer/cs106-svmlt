@@ -8,7 +8,7 @@ import qualified KNF as K
 import qualified ParseUtils as P
 
 regOfName :: String -> E.Error Int
-regOfName = P.parseAndErr AsmParse.reg
+regOfName s = P.parseAndErr AsmParse.reg ('$':s)
 
 -- The function requires the tedious copying of program 
 -- structure that you find in function Disambiguate.disambiguate.
@@ -30,3 +30,4 @@ mapx f e =
     K.FunCall n ns -> K.FunCall <$> f n <*> mapM f ns
     K.VMOP op ns -> K.VMOP op <$> mapM f ns
     K.VMOPGLO op ns lit -> K.VMOPGLO op <$> mapM f ns <*> pure lit
+    K.Literal lit -> return (K.Literal lit)
