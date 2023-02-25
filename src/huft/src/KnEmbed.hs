@@ -63,5 +63,8 @@ def e = S.Exp (exp e)
                     ("getglobal", [], O.String v) -> S.Var v
                     ("setglobal", [x], O.String v) -> S.Set v (S.Var x)
                     -- match check and expect
+                    -- may cause undefined behavior
                     _ -> S.Apply (S.Var (P.name op)) (map S.Var xs ++ [S.Literal (value v)])
                 K.FunCall f args -> S.Apply (S.Var f) (map S.Var args)
+-- What will happen if the offset of the VMOPL is not a string in getglobal case:
+-- impossible, should have some error message for debugging,
