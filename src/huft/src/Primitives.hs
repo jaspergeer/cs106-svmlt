@@ -72,11 +72,12 @@ exposedNames = map name primitives
 find :: Name -> Maybe Primitive
 find x = M.lookup x primMap
 
+-- hese are the primitives that are used inside the compiler
 cons         = SetsRegister (Base "cons" 2)
 setglobal    = HasEffect (Base "setglobal" 2)
 getglobal    = SetsRegister (Base "getglobal" 1)
-check        = HasEffect (Base "check" 2)
-expect       = HasEffect (Base "expect" 2)
+check        = HasEffect (Base "check" 2) -- for converting check-expect to K-normal form
+expect       = HasEffect (Base "expect" 2) -- for converting check-expect to K-normal form
 checkAssert = HasEffect (Base "check-assert" 2)
 loadliteral  = SetsRegister (Base "loadliteral" 1)
 mkclosure    = SetsRegister (Base "mkclosure" 2)

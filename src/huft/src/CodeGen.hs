@@ -4,6 +4,8 @@ import qualified ObjectCode as O
 import qualified Asm as A
 import qualified KNF as K
 import qualified Primitives as P
+import qualified AsmUtils as U
+import Control.Monad.Trans.State (state, runState, evalState)
 
 
 type Reg = O.Reg
@@ -24,21 +26,24 @@ s e tail = e : tail
 l :: [a] -> HughesList a
 l es tail = es ++ tail
 
+-- I am very proud of this
+(<.>) :: (Applicative f) => f (b -> c) -> f (a -> b) -> f (a -> c)
+x <.> y = (.) <$> x <*> y
+
 ---- the code generator ----
 
-toReg' :: Reg -> K.Exp Reg -> HughesList Instruction
+toReg' :: Reg -> K.Exp Reg -> U.UniqueLabelState (HughesList Instruction)
 toReg' dest e = case e of
-  K.Literal lit -> s (A.ObjectCode (O.RegLit "loadliteral" dest lit))
-  _ -> error "implementme"
+    K.Literal lit -> return $ s (A.ObjectCode (O.RegLit "loadliteral" dest lit))
+    _ -> error (show e)
 
-forEffect' :: K.Exp Reg -> HughesList Instruction
+forEffect' :: K.Exp Reg -> U.UniqueLabelState (HughesList Instruction)
 forEffect' e = case e of
-  K.VMOP (P.HasEffect (P.Base op _)) args -> s (A.ObjectCode (O.Regs op args))
-  K.Let x e e' -> toReg' x e . forEffect' e'
+  K.VMOP (P.HasEffect (P.Base op _)) args -> return $ s (A.ObjectCode (O.Regs op args))
+  K.Let x e e' -> toReg' x e <.> forEffect' e'
 
-toReturn' :: K.Exp Reg -> HughesList Instruction
+toReturn' :: K.Exp Reg -> U.UniqueLabelState (HughesList Instruction)
 toReturn' e = undefined
 
--- forEffect cannot fail
 forEffect :: K.Exp Reg -> [Instruction]
-forEffect e = forEffect' e []
+forEffect e = evalState (forEffect' e) 0 []
