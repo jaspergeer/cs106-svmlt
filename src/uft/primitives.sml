@@ -43,38 +43,28 @@ structure Primitive :> sig
   val check        : primitive   (* for converting check-expect to K-normal form *)
   val expect       : primitive   (* for converting check-expect to K-normal form *)
   val check_assert : primitive
-  (*@ module >= 10 *)
-  val mkclosure    : primitive
-  val setclslot    : primitive
-  val getclslot    : primitive
-  (*@ true *)
 end
   =
 struct
 
   (* Pure, register-setting primitives grouped by arity.  You can extend these lists *)
 
-  val binary  = [ "+", "-", "*", "/", "<", ">", "cons", "=", "idiv", "Array.sub"
-                , "sin", "cos", "tan", "asin", "acos", "atan", "Array.new"
-                , "mkclosure"
+  val binary  = [ "+", "-", "*", "/", "<", ">", "cons", "=", "idiv"
                 ]
   val unary   = [ "boolean?", "null?", "number?", "pair?", "function?", "nil?"
                 , "symbol?", "car", "cdr"
-                , "Array.new'", "sqrt", "exp", "ln", "Array.length"
-                , "!", "ref"
                 ]
 
 
-  (* Three different groups of side-effecting primitives.  To the compiler,
+  (* Four different groups of side-effecting primitives.  To the compiler,
      `error` looks a lot like `print`, but only `error` throws an error,
      so I feel compelled to separate them. *)
 
-  val side_effecting = [ "print", "printu", "println" ]
-  val error          = [ "error" ]
-  val halt          = [ "halt" ]
-  val checky = [ "check", "expect" ]  (* arity 2 *)
-
-
+  val side_effecting = [ "print", "printu", "println" ]   (* arity 1 *)
+  val error          = [ "error" ]            (* arity 1; never returns *)
+  val halt           = [ "halt" ]
+  val checky         = [ "check", "expect" ]  (* arity 2; one is literal *)
+    (* check and expect can't really be used in source code... *)
 
   (* Representation of a primitive, with observers *)
 
@@ -100,11 +90,9 @@ struct
     o add 1 SETS_REGISTER unary
     o add 1 HAS_EFFECT side_effecting
     o add 1 HAS_EFFECT error
-    o add 2 HAS_EFFECT checky
     o add 0 HAS_EFFECT halt
-    ) [ HAS_EFFECT { name = "Array.update", arity = 3 }
-      , HAS_EFFECT { name = "set-car!", arity = 2 }
-      , HAS_EFFECT { name = ":=", arity = 2 }
+    o add 2 HAS_EFFECT checky
+    ) [ (* useful spot to add more effectful primitives *) 
       ]
 
   val exposedNames = map name primitives
