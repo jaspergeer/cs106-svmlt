@@ -23,7 +23,7 @@ type Label = String
 type VMOP = P.Primitive
 type Literal = O.Literal
 
-data InternalError = InternalError String deriving (Show)
+newtype InternalError = InternalError String deriving (Show)
 instance Exception InternalError
 
 asValue :: P.Primitive -> String
@@ -53,6 +53,7 @@ ifgoto reg l = A.IfGotoLabel reg l
 loadfunc r k body = A.LoadFunc r k body
 loadlit r v = setRegLit r P.loadliteral v
 
+getglobal :: O.Reg -> O.Literal -> A.Instr
 getglobal dest name = setRegLit dest P.getglobal name
 setglobal name reg = effectLit P.setglobal reg name
 
