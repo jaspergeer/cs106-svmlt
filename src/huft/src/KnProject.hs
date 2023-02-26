@@ -47,8 +47,9 @@ exp e = case e of
 
 def :: X.Def -> E.Error (K.Exp String)
 def d = case d of
-  X.Exp (X.LetX X.Let [(t, X.Lambda xs e)] (X.SetGlobal t' f)) | t == t' -> K.Let t <$> (K.FunCode xs <$> exp e) <*> (K.setglobal t <$> asName f)
-  X.Exp (X.LetX X.Let [(t, X.Lambda xs e)] (X.SetGlobal t' f)) -> E.Error $ Left "Names don't match"
+  -- commented out, since checking free variables is postpponed to module 9
+  -- X.Exp (X.LetX X.Let [(t, X.Lambda xs e)] (X.SetGlobal t' f)) | t == t' -> K.Let t <$> (K.FunCode xs <$> exp e) <*> (K.setglobal t <$> asName f)
+  -- X.Exp (X.LetX X.Let [(t, X.Lambda xs e)] (X.SetGlobal t' f)) -> E.Error $ Left "Names don't match"
   X.Exp e -> exp e
   X.Define f xs e -> K.Let t <$> (K.FunCode xs <$> exp e) <*> return (K.setglobal t f)
   _ -> E.Error $ Left "Cannot project to KNF"

@@ -1,0 +1,1 @@
+(let ([r100 'victory]) (println r100))
