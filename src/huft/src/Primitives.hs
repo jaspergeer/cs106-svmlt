@@ -10,21 +10,17 @@ data Primitive = SetsRegister Base
                | HasEffect Base
                deriving Show
 
-binary = [ "+", "-", "*", "/", "<", ">", "cons", "=", "idiv", "Array.sub"
-         , "sin", "cos", "tan", "asin", "acos", "atan", "Array.new"
-         , "mkclosure"
+binary = [ "+", "-", "*", "/", "<", ">", "cons", "=", "idiv"
          ]
 
 unary = [ "boolean?", "null?", "number?", "pair?", "function?", "nil?"
-        , "symbol?", "car", "cdr"
-        , "Array.new'", "sqrt", "exp", "ln", "Array.length"
-        , "!", "ref"
+        , "symbol?", "car", "cdr", "truth"
         ]
 
-sideEffecty   = [ "print", "printu", "println" ]
-errory         = [ "error" ]
+sideEffecty   = [ "print", "printu", "println" ] -- arity 1
+errory         = [ "error" ]  -- arity 1 never returns
 halty          = [ "halt" ]
-checky         = [ "check", "expect" ]
+checky         = [ "check", "expect" ] -- arity 2: one is literal
 
 base p = case p of
   SetsRegister b -> b
@@ -58,9 +54,8 @@ primitives =
     . add 1 HasEffect errory
     . add 2 HasEffect checky
     . add 0 HasEffect halty
-    ) [ HasEffect (Base "Array.update" 3)
-      , HasEffect (Base "set-car!" 2)
-      , HasEffect (Base ":=" 2)
+    ) [  -- useful spot to add more effectful primitives
+      HasEffect (Base ":=" 2)
       ]
 
 primMap :: M.Map Name Primitive

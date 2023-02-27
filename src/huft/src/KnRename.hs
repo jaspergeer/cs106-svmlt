@@ -8,6 +8,7 @@ import qualified KNF as K
 import qualified ParseUtils as P
 
 regOfName :: String -> E.Error Int
+regOfName ('$':s) = P.parseAndErr AsmParse.reg ('$':s)
 regOfName s = P.parseAndErr AsmParse.reg ('$':s)
 
 -- The function requires the tedious copying of program 

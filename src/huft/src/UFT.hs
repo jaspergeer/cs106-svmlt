@@ -44,13 +44,6 @@ type Reader a = Handle -> IO (E.Error a)
 -- (>=>)       :: Monad m => (a -> m b) -> (b -> m c) -> (a -> m c)
 -- f >=> g     = \x -> f x >>= g
 
--- moved to parser util
-
--- parseAndErr :: Parser a -> String -> E.Error a
--- parseAndErr p input = case runParser p () "" input of
---   Left e -> E.Error $ Left (show e)
---   Right r -> E.Error $ Right r
-
 -- support for materialization
 
 data InternalException = Backward
@@ -79,10 +72,6 @@ hoOf HO = schemexOfFile
 hoOf HOX = error "imperative features (HOX to HO)"
 hoOf _ = throw Backward
 
--- val VS_of_KN : ObjectCode.reg KNormalForm.exp list ->
---                AssemblyCode.instr list
---   = ... fill in with a composition of functions ...
-
 vsOfkn :: [KNF.Exp ObjectCode.Reg] -> [Asm.Instr]
 -- (CodeGen is a infallible projection), and we want to delay
 -- monadic action to the last stage (==>)
@@ -94,13 +83,6 @@ vsOf :: Language -> Reader [Asm.Instr]
 vsOf VS = vsOfFile
 vsOf KN = knOfFile ==> (knRegOfknString >=> return . vsOfkn)
 
---  \f g x -> x >>= f >>= g
--- RHS I want Reader [Asm.Intr]
--- I get this from 
--- knOfFile :: Reader [KNF.Exp String]
--- knRegOfknString :: [KNF.Exp String] -> E.Error [KNF.Exp ObjectCode.Reg]
--- vsOfkn :: [KNF.Exp ObjectCode.Reg] -> E.Error [Asm.Instr]
-
 vsOf _ = throw (NoTranslationTo VS)
 
 voOf :: Language -> Reader [ObjectCode.Instr]
@@ -111,22 +93,7 @@ knTextOf :: Language -> Reader [KNF.Exp String]
 knTextOf KN = knOfFile
 knTextOf _ = error "bad :("
 
--- KN_reg_of that materializes a program of type 
--- ObjectCode.reg KNormalForm.exp list
-
--- Because function KN_of_file produces a list of expressions, 
--- but KNRename.mapx KNRename.regOfName renames one expression, 
--- you will want to use Error.mapList. 
--- The easiest way to get this code right is to define a helper 
--- function that does the renaming. 
--- The benefit of defining a helper function is that you can 
--- give it an explicit type signature, 
--- which will help the compiler tell you what you need to do:
-
--- val KN_reg_of_KN_string :
---       string KNormalForm.exp list -> 
---       ObjectCode.reg KNormalForm.exp list error
---   =  ... fill in with a composition of functions ...
+-- KN_reg_of that materializes a program of type ObjectCode.reg KNormalForm.exp list
 
 knRegOfknString :: [KNF.Exp String] -> E.Error [KNF.Exp ObjectCode.Reg]
 knRegOfknString = mapM (KnRename.mapx KnRename.regOfName)

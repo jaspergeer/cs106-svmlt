@@ -1,0 +1,6 @@
+;; (let ([r100 'victory]) (println r100))
+;; (let* ([r100 2] [r101 (+ r100 r100)]) (println r101))
+(let* ([$r0 2] [$r1 2] [$r0 (+ $r0 $r1)])
+  (check $r0 'two-plus-two))
+(let* ([$r0 5])
+  (expect $r0 'five))
