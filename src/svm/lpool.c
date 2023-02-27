@@ -1,4 +1,6 @@
 #include "lpool.h"
+#include "vtable.h"
+#include "print.h"
 #include <stdlib.h>
 
 #define TINY_LPOOL
@@ -11,78 +13,59 @@
 #define HASHES_SIZE 1024
 #endif
 
-#define T LPool_T
+#define L LPool_T
 
-typedef struct link {
-    struct link *next;
-    uint32_t hash;
-    uint16_t key;
-} *Link;
-
-struct T {
-  uint16_t size;
-  uint16_t nlits;
-
+struct L {
+  VTable_T keys;
   Value *literals;
-
-  Link *hashes;
+  uint16_t nlits;
+  size_t litcap;
 };
 
-T LPool_new() {
-  T pool = malloc(sizeof(struct T));
-  pool->hashes = calloc(HASHES_SIZE, sizeof(Link));
+L LPool_new() {
+  L pool = malloc(sizeof(struct L));
+  pool->keys = VTable_new(42);
   pool->literals = calloc(INIT_LITERALS_SIZE, sizeof(Value));
-  pool->size = INIT_LITERALS_SIZE;
-  pool->nlits = 0;
+
+  pool->litcap = INIT_LITERALS_SIZE;
+
+  // nil value at position 0
+  pool->nlits = 1;
   return pool;
 }
 
-Value LPool_get(T pool, uint16_t key) {
+Value LPool_get(L pool, uint16_t key) {
+  if (key == 0)
+    return nilValue;
   return pool->literals[key];
 }
 
-uint16_t LPool_put(T pool, Value v) {
-  uint32_t vhash = hashvalue(v);
-
-  Link l = pool->hashes[vhash % HASHES_SIZE];
-
-  for (Link curr = l; curr != NULL; curr = curr->next) {
-    if (curr->hash == vhash)
-      return curr->key;
-    l = curr;
+uint16_t LPool_put(L pool, Value v) {
+  if (isNil(v))
+    return 0;
+  Value key = VTable_get(pool->keys, v);
+  if (!isNil(key)) {
+    return (uint16_t) key.n;
   }
-
-  Link new_link = malloc(sizeof(struct link));
-  new_link->hash = vhash;
-  new_link->next = 0;
-  new_link->key = pool->nlits;
-
-  if (pool->nlits == pool->size) {
-    pool->literals = realloc(pool->literals, pool->size * 2 + 1);
-    pool->size = (pool->size * 2 + 1) % UINT16_MAX;
+  VTable_put(pool->keys, v, mkNumberValue(pool->nlits));
+  if (pool->nlits == pool->litcap) {
+    if (pool->nlits == UINT16_MAX) {
+      print("literals capacity exceeded\n");
+      return 0;
+    }
+    pool->litcap = pool->litcap * 2 + 1 % UINT16_MAX;;
+    pool->literals = realloc(pool->literals, pool->litcap);
   }
-
   pool->literals[pool->nlits] = v;
-  l = new_link;
   return pool->nlits++;
 }
 
-void LPool_free(T *pool) {
-  for (int i = 0; i < HASHES_SIZE; ++i) {
-    Link curr = (*pool)->hashes[i];
-    if ((*pool)->hashes[i] != NULL) {
-      while (curr != NULL) {
-        Link last = curr;
-        curr = curr->next;
-        free(last);
-      }
-    }
-  }
+void LPool_free(L *pool) {
   free((*pool)->literals);
   free(*pool);
 }
 
-int LPool_nlits(T pool) {
+int LPool_nlits(L pool) {
   return pool->nlits;
 }
 
