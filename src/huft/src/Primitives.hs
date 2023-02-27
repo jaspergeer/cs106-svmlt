@@ -14,7 +14,7 @@ binary = [ "+", "-", "*", "/", "<", ">", "cons", "=", "idiv"
          ]
 
 unary = [ "boolean?", "null?", "number?", "pair?", "function?", "nil?"
-        , "symbol?", "car", "cdr"
+        , "symbol?", "car", "cdr", "truth"
         ]
 
 sideEffecty   = [ "print", "printu", "println" ] -- arity 1

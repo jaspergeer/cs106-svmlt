@@ -37,7 +37,7 @@ toReg' dest e = case e of
     -- forms with direct translation
     K.Literal lit -> return $ s (A.ObjectCode (O.RegLit "loadliteral" dest lit))
     K.Name a -> return $ s $ U.copyreg dest a
-    K.VMOP prim [r1, r2] -> return $ s $ U.setReg dest prim [r1, r2]
+    K.VMOP prim rs -> return $ s $ U.setReg dest prim rs
     K.VMOPGLO prim [r1] lit -> return $ s $ U.setRegLit dest prim lit -- the [r1] list disappears here, is that right?
     K.FunCall r args -> return $ s $ A.ObjectCode (O.Regs "call" (r:args)) -- provided x, x1, ... xn, are consecutive
     K.FunCode args body -> do
