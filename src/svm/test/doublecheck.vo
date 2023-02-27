@@ -1,0 +1,12 @@
+.load module 11
+loadliteral 0 2
+loadliteral 1 2
++ 0 0 1
+check 0 string 12 116 119 111 45 112 108 117 115 45 116 119 111
+loadliteral 0 4
+expect 0 string 4 102 111 117 114
+loadliteral 0 2
+copy 1 0
+check 1 string 3 116 119 111
+loadliteral 1 2
+expect 1 string 3 116 119 111
