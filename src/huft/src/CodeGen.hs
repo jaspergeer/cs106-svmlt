@@ -79,9 +79,17 @@ forEffect' e = case e of
       branch1 <- forEffect' e1
       return $ s (U.ifgoto x l) . branch2 . s (U.goto l') .
               s (U.deflabel l) . branch1 . s (U.deflabel l')
+  K.While x e e' -> do
+      l <- U.newLabel
+      l' <- U.newLabel
+      stmt <- forEffect' e'
+      body <- toReg' x e
+      return $ s (U.goto l) . s (U.deflabel l'). body .
+               s (U.deflabel l) . stmt . s (U.ifgoto x l')
   K.Let x e e' -> toReg' x e <.> forEffect' e'
   K.Seq e1 e2 -> forEffect' e1 <.> forEffect' e2
   K.Assign x e -> toReg' x e
+  -- now the last line is redundant
   _ -> error (show e) -- this must not fail in fact
 
 
