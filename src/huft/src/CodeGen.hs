@@ -69,6 +69,8 @@ forEffect' e = case e of
   K.VMOP _ _ -> return empty
   K.VMOPGLO (P.HasEffect (P.Base op _)) args v -> return $ s $
   {- assume args only have one argument -} A.ObjectCode (O.RegLit op (head args) v)
+  -- here we did not catch getglo because it is a SetRegister Primitive
+  -- the O.RegLit is also worrysome
   K.VMOPGLO {} -> return empty
   K.FunCall r args -> return $ s $ A.ObjectCode (O.Regs "call" (r:args))
   K.FunCode args body -> return empty
