@@ -38,7 +38,7 @@ toReg' dest e = case e of
     K.Literal lit -> return $ s (A.ObjectCode (O.RegLit "loadliteral" dest lit))
     K.Name a -> return $ s $ U.copyreg dest a
     K.VMOP prim rs -> return $ s $ U.setReg dest prim rs
-    K.VMOPGLO prim [r1] lit -> return $ s $ U.setRegLit dest prim lit -- the [r1] list disappears here, is that right?
+    K.VMOPGLO prim _ lit -> return $ s $ U.setRegLit dest prim lit -- the [r1] list disappears here, is that right?
     K.FunCall r args -> return $ s $ A.ObjectCode (O.Regs "call" (r:args)) -- provided x, x1, ... xn, are consecutive
     K.FunCode args body -> do
         b' <- toReturn' body
@@ -56,7 +56,6 @@ toReg' dest e = case e of
     K.Let x e1 e' -> toReg' x e1 <.> toReg' dest e'
     K.Seq e1 e2 -> forEffect' e1 <.> toReg' dest e2 -- not sure how does this works
     K.Assign x e -> toReg' x e <.> toReg' dest (K.Name x) -- I assume this is copy reg
-    _ -> error (show e) -- this must not fail in fact
 
 
 forEffect' :: K.Exp Reg -> U.UniqueLabelState (HughesList Instruction)
