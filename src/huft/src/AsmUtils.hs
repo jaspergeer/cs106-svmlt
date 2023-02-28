@@ -15,6 +15,7 @@ newLabel :: UniqueLabelState String
 newLabel = do
   l <- get
   put (l + 1)
+  l' <- get
   return ('L' : show l)
 
 type Reg = O.Reg

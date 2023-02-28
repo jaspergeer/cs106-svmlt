@@ -18,7 +18,6 @@
     (expect $r1 'two))
 
 ;; If expression
-
 ;; (let* ([$r0 1] [$r4 (truth $r0)] [$r1 2] [$r2 3] [$r0 (if $r4 $r1 $r2)])
 ;;     (check $r0 'two))
 ;; (let* ([$r3 2])
@@ -49,3 +48,25 @@
 
 ;; (let* ([$r0 0])
 ;;     (expect $r0 'zero))
+
+(let* ([$r0 1] [$r4 (truth $r0)] [$r1 2] [$r2 3] [$r0 (if $r4 $r1 $r2)])
+    (check $r0 'two))
+(let* ([$r3 2])
+    (expect $r3 'two))
+
+;; begin
+(let ([$r0 1])
+  (begin
+    (check $r0 'one)
+    (expect $r0 'one)))
+
+(let ([$r0 1])
+  (begin
+    (check $r0 'one)
+    (expect $r0 'one)))
+
+(let ([$r0 1])
+  (while (let ([$r1 #t]) $r1) $r0))
+
+(let ([$r0 1])
+  (while (let ([$r1 #t]) $r1) $r0))
