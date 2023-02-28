@@ -1,12 +1,12 @@
 module ObjectUnparser where
 import qualified ObjectCode as O
-import Data.Char (ord)
+import Data.Char (ord, toLower)
 
 unparseLiteral :: O.Literal -> [String]
 unparseLiteral lit = case lit of
   O.Int i -> [show i]
   O.Real x -> [show x]
-  O.Bool b -> [show b]
+  O.Bool b -> [map toLower (show b)]
   O.EmptyList -> ["emptylist"]
   O.Nil -> ["nil"]
   O.String s -> ["string", show (length s)] ++ map (show . ord) s
