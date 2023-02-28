@@ -72,6 +72,8 @@
 (let ([$r1 1])
     (begin (set hi $r1) 
       (let ([$r2 hi])
-        $r2)))
+        (begin
+          (check $r2 'one)
+          (expect $r2 'one)))))
 
 
