@@ -18,10 +18,15 @@
     (expect $r1 'two))
 
 ;; If expression
-;; (let* ([$r0 1] [$r4 (truth $r0)] [$r1 2] [$r2 3] [$r0 (if $r4 $r1 $r2)])
-;;     (check $r0 'two))
-;; (let* ([$r3 2])
-;;     (expect $r3 'two))
+(let* ([$r0 1] [$r4 #t] [$r1 2] [$r2 3] [$r0 (if $r4 $r1 $r2)])
+    (check $r0 'two))
+(let* ([$r3 2])
+    (expect $r3 'two))
+
+(let* ([$r0 1] [$r4 (truth $r0)] [$r1 2] [$r2 3] [$r0 (if $r4 $r1 $r2)])
+    (check $r0 'two))
+(let* ([$r3 2])
+    (expect $r3 'two))
 
 ;; let already appeared too many times
 
@@ -42,17 +47,14 @@
 (let* ([$r0 3]
        [$r3 1]
        [$r4 0])
-       (while (let ([$r2 ( > $r0 $r4)])
-                     $r2)
-               (set $r0 (- $r0 $r3))))
+      (while (let ([$r2 ( > $r0 $r4)])
+                    $r2)
+              (set $r0 (- $r0 $r3))))
+(let ([$r0 1])
+  (while (let ([$r1 #t]) $r1) $r0))
 
-;; (let* ([$r0 0])
-;;     (expect $r0 'zero))
-
-(let* ([$r0 1] [$r4 (truth $r0)] [$r1 2] [$r2 3] [$r0 (if $r4 $r1 $r2)])
-    (check $r0 'two))
-(let* ([$r3 2])
-    (expect $r3 'two))
+(let ([$r0 1])
+  (while (let ([$r1 #t]) $r1) $r0))
 
 ;; begin
 (let ([$r0 1])
@@ -65,8 +67,9 @@
     (check $r0 'one)
     (expect $r0 'one)))
 
-(let ([$r0 1])
-  (while (let ([$r1 #t]) $r1) $r0))
+;; VMOPGLO
 
-(let ([$r0 1])
-  (while (let ([$r1 #t]) $r1) $r0))
+(let ([$r1 1])
+    (begin (set hi $r1) hi))
+
+

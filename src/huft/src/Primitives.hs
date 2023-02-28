@@ -10,11 +10,11 @@ data Primitive = SetsRegister Base
                | HasEffect Base
                deriving Show
 
-binary = [ "+", "-", "*", "/", "<", ">", "cons", "=", "idiv"
+binary = [ "+", "-", "*", "/", "<", ">", ">=", "<=", "cons", "=", "idiv"
          ]
 
 unary = [ "boolean?", "null?", "number?", "pair?", "function?", "nil?"
-        , "symbol?", "car", "cdr", "truth"
+        , "symbol?", "car", "cdr", "truth", "not", "and", "or", "xor"
         ]
 
 sideEffecty   = [ "print", "printu", "println" ] -- arity 1
