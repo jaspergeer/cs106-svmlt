@@ -77,3 +77,4 @@
           (expect $r2 'one)))))
 
 
+(let* ([$r1 1] [$r2 (set $r5 $r1)]) $r1)
