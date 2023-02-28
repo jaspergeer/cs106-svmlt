@@ -10,11 +10,15 @@ data Primitive = SetsRegister Base
                | HasEffect Base
                deriving Show
 
+-- we add more binary airthmetic operators here
+
 binary = [ "+", "-", "*", "/", "<", ">", ">=", "<=", "cons", "=", "idiv"
+         , "mod", "and", "or", "xor", "hash"
          ]
 
 unary = [ "boolean?", "null?", "number?", "pair?", "function?", "nil?"
-        , "symbol?", "car", "cdr", "truth", "not", "and", "or", "xor"
+        , "symbol?", "car", "cdr", "truth", "not"
+
         ]
 
 sideEffecty   = [ "print", "printu", "println" ] -- arity 1

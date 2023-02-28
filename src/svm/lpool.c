@@ -3,13 +3,7 @@
 #include "print.h"
 #include <stdlib.h>
 
-#define TINY_LPOOL
-
-#ifdef TINY_LPOOL
-#define INIT_LITERALS_SIZE 1
-#else
-#define INIT_LITERALS_SIZE 128
-#endif
+#define INIT_LITERALS_SIZE 1024
 
 #define L LPool_T
 
@@ -66,5 +60,3 @@ void LPool_free(L *pool) {
 int LPool_nlits(L pool) {
   return pool->nlits;
 }
-
-
