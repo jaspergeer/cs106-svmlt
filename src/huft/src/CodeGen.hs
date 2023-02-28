@@ -5,7 +5,7 @@ import qualified Asm as A
 import qualified KNF as K
 import qualified Primitives as P
 import qualified AsmUtils as U
-import Control.Monad.Trans.State (state, runState, evalState)
+import Control.Monad.Trans.State (state, evalState)
 
 
 type Reg = O.Reg
@@ -57,7 +57,7 @@ toReg' dest e = case e of
     K.Seq e1 e2 -> forEffect' e1 <.> toReg' dest e2 -- not sure how does this works
     K.Assign x e -> toReg' x e <.> toReg' dest (K.Name x) -- I assume this is copy reg
     _ -> error (show e) -- this must not fail in fact
-    
+
 
 forEffect' :: K.Exp Reg -> U.UniqueLabelState (HughesList Instruction)
 forEffect' e = case e of
@@ -67,7 +67,7 @@ forEffect' e = case e of
   K.VMOP (P.HasEffect (P.Base op _)) args -> return $ s (A.ObjectCode (O.Regs op args))
   -- otherwise
   K.VMOP _ _ -> return empty
-  K.VMOPGLO (P.HasEffect (P.Base op _)) args v -> return $ s $ 
+  K.VMOPGLO (P.HasEffect (P.Base op _)) args v -> return $ s $
   {- assume args only have one argument -} A.ObjectCode (O.RegLit op (head args) v)
   K.VMOPGLO {} -> return empty
   K.FunCall r args -> return $ s $ A.ObjectCode (O.Regs "call" (r:args))
@@ -90,10 +90,9 @@ forEffect' e = case e of
   K.Seq e1 e2 -> forEffect' e1 <.> forEffect' e2
   K.Assign x e -> toReg' x e
 
-
 -- wont be implementing till module 8
 toReturn' :: K.Exp Reg -> U.UniqueLabelState (HughesList Instruction)
 toReturn' e = undefined
 
-forEffect :: K.Exp Reg -> [Instruction]
-forEffect e = evalState (forEffect' e) 0 []
+codeGen :: [K.Exp Reg] -> [Instruction]
+codeGen es = foldr (.) empty (evalState (mapM forEffect' es) 0) []

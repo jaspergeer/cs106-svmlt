@@ -11,15 +11,32 @@
 (let* ([$r0 4])
   (expect $r0 'four))
 
-;; variable, can pass but not together
+;; variable
 (let* ([$r0 2] [$r1 $r0])
     (check $r1 'two))
 (let* ([$r1 2])
     (expect $r1 'two))
 
-;; If expression, still wierd that I cannot make two tests
-;; run at the same time
+;; If expression
 (let* ([$r0 1] [$r4 (truth $r0)] [$r1 2] [$r2 3] [$r0 (if $r4 $r1 $r2)])
     (check $r0 'two))
 (let* ([$r3 2])
     (expect $r3 'two))
+
+;; begin
+(let ([$r0 1])
+  (begin
+    (check $r0 'one)
+    (expect $r0 'one)))
+
+(let ([$r0 1])
+  (begin
+    (check $r0 'one)
+    (expect $r0 'one)))
+
+(let ([$r0 1])
+  (while (let ([$r1 #t]) $r1) $r0))
+
+(let ([$r0 1])
+  (while (let ([$r1 #t]) $r1) $r0))
+

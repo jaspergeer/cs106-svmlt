@@ -1,4 +1,4 @@
-.load module 11
+.load module 26
 loadliteral 0 2
 loadliteral 1 2
 + 0 0 1
@@ -10,3 +10,18 @@ copy 1 0
 check 1 string 3 116 119 111
 loadliteral 1 2
 expect 1 string 3 116 119 111
+loadliteral 0 1
+truth 4 0
+loadliteral 1 2
+loadliteral 2 3
+cskip 4
+jump 3
+copy 0 2
+jump 1
+copy 0 1
+check 0 string 3 116 119 111
+loadliteral 3 2
+expect 3 string 3 116 119 111
+loadliteral 0 1
+check 0 string 3 111 110 101
+expect 0 string 3 111 110 101

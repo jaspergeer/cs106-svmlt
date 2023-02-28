@@ -75,7 +75,7 @@ hoOf _ = throw Backward
 vsOfkn :: [KNF.Exp ObjectCode.Reg] -> [Asm.Instr]
 -- (CodeGen is a infallible projection), and we want to delay
 -- monadic action to the last stage (==>)
-vsOfkn =  concatMap CodeGen.forEffect
+vsOfkn = CodeGen.codeGen
 -- flip composition (>>>) in Control.Arrow
 
 

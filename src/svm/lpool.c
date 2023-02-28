@@ -6,11 +6,9 @@
 #define TINY_LPOOL
 
 #ifdef TINY_LPOOL
-#define INIT_LITERALS_SIZE 8
-#define HASHES_SIZE 2
+#define INIT_LITERALS_SIZE 1
 #else
 #define INIT_LITERALS_SIZE 128
-#define HASHES_SIZE 1024
 #endif
 
 #define L LPool_T
