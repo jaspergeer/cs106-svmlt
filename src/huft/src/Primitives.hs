@@ -13,12 +13,11 @@ data Primitive = SetsRegister Base
 -- we add more binary airthmetic operators here
 
 binary = [ "+", "-", "*", "/", "<", ">", ">=", "<=", "cons", "=", "idiv"
-         , "mod", "and", "or", "xor", "hash"
+         , "mod", "and", "or", "xor"
          ]
 
 unary = [ "boolean?", "null?", "number?", "pair?", "function?", "nil?"
-        , "symbol?", "car", "cdr", "truth", "not"
-
+        , "symbol?", "car", "cdr", "truth", "not", "hash"
         ]
 
 sideEffecty   = [ "print", "printu", "println" ] -- arity 1
