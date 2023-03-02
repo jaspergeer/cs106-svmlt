@@ -23,8 +23,6 @@
 /src/svm/nmain
 /src/vscheme/vschemem
 /src/vscheme/vscheme
-/build/*.d
-/build/*
 /bin/svm
 /bin/svm-dis
 /bin/svm-opcodes
@@ -44,11 +42,7 @@
 /src/svm/*.vs
 /src/svm/*.vo
 /src/vscheme/pre.v[so]
-/bin/svm-test
 /bin/vscheme
-/bin/vschemem
-/bin/svm-debug-test
-/bin/svm-loader-instructions
 /bin/uft.opt
 /bin/uft
 /bin/huft
