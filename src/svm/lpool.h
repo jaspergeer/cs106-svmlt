@@ -8,7 +8,7 @@
 
 typedef struct L *L;
 
-L LPool_new();
+L LPool_new(void);
 Value LPool_get(L pool, uint16_t key);
 uint16_t LPool_put(L pool, Value v);
 void LPool_free(L *pool);

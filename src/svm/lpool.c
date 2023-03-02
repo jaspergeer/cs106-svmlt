@@ -14,7 +14,7 @@ struct L {
   size_t litcap;
 };
 
-L LPool_new() {
+L LPool_new(void) {
   L pool = malloc(sizeof(struct L));
   pool->keys = VTable_new(42);
   pool->literals = calloc(INIT_LITERALS_SIZE, sizeof(Value));
