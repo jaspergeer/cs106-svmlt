@@ -20,7 +20,8 @@
 #include "vmrun.h"
 
 #include "print.h"
-
+#include "disasm.h"
+#include "svmdebug.h"
 #include "vmerror.h"
 #include "vmheap.h"
 #include "vmstring.h"
@@ -34,15 +35,29 @@
 #define LIT LPool_get(literals, uYZ(curr_inst))
 #define GLO LPool_get(literals, uYZ(curr_inst))
 
+#define CANDUMP 1
+
 void vmrun(VMState vm, struct VMFunction* fun) {
   vm->pc = 0;
   uint32_t *stream_ptr = fun->instructions + vm->pc;
   Value *registers = vm->registers;
   LPool_T literals = vm->literals;
   Value *globals = vm->globals;
+
+  // for debugging
+  const char *dump_decode = svmdebug_value("decode");
+  const char *dump_call   = svmdebug_value("call");
+  (void) dump_call;
   
+  Value *reg0 = &vm->registers[0];
   for (;;) {
     uint32_t curr_inst = *stream_ptr;
+
+    if (CANDUMP && dump_decode) {
+      idump(stderr, vm, vm->pc, curr_inst, reg0 - &vm->registers[0],
+            reg0+uX(curr_inst), reg0+uY(curr_inst), reg0+uZ(curr_inst));
+    }
+
     switch (opcode(curr_inst)) {
     default:
       print("opcode %d not implemented\n", opcode(curr_inst));
@@ -105,6 +120,17 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       break;
     case Jump:
       *stream_ptr -= iXYZ(curr_inst);
+      break;
+    
+    // Function Calls
+    case Call:
+      assert(0);
+      break;
+    case Return:
+      assert(0);
+      break;
+    case TailCall:
+      assert(0);
       break;
 
     // Load/Store

@@ -31,6 +31,11 @@ instruction_info instructions[] = {
   { "cskip", CondSkip, parseR1, "if $rX goto 1" },
   { "jump", Jump, parseR0I24, "goto iXYZ" },
 
+  // Function Calls
+  { "call", Call, parseR3, "$rX := call $rY ($rY+1, ..., $rZ)" },
+  { "return", Return, parseR1, "return $rX" },
+  { "tailcall", TailCall, parseR2, "tailcall $rX ($rX+1, ..., $rY)" },
+
   // Load/Store
   { "loadliteral", LoadLiteral, parseR1LIT, "$rX := LIT" },
   { "getglobal", GetGlobal, parseR1GLO, "$rX := G[GLOBAL]" },

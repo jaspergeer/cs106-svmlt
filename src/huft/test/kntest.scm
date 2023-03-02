@@ -70,6 +70,11 @@
 ;; VMOPGLO
 
 (let ([$r1 1])
-    (begin (set hi $r1) hi))
+    (begin (set hi $r1) 
+      (let ([$r2 hi])
+        (begin
+          (check $r2 'one)
+          (expect $r2 'one)))))
 
 
+(let* ([$r1 1] [$r2 (set $r5 $r1)]) $r1)
