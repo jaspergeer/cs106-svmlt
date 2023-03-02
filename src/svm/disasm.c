@@ -139,6 +139,7 @@ static void fprintfunname(FILE *fp, VMState vm, Value v) {
 
 
 void idump(FILE *fp, VMState vm, int pc, Instruction I,
+           long int regbase,
            Value *RX, Value *RY, Value *RZ) {
     bool tty = isatty(fileno(fp));
     OperandSet used = operands(I);
@@ -153,7 +154,7 @@ void idump(FILE *fp, VMState vm, int pc, Instruction I,
                          fprintfunname(fp, vm, *RZ);
                        }
     if (tty) system("tput cr setaf 1");
-    fprintf(fp, "[%3d] ", pc);
+    fprintf(fp, "[%3d @ $r%-3ld] ", pc, regbase);
     if (tty) system("tput setaf 5");
     printasm(fp, vm, I);
     if (tty) system("tput op");

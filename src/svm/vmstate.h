@@ -11,6 +11,7 @@
 #include "stable.h"
 #include "name.h"
 #include "value.h"
+#include "vmstack.h"
 #include "vtable.h"
 
 #define TINY_VM

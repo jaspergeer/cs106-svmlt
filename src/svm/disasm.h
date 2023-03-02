@@ -26,6 +26,9 @@ void printasm(FILE *fp, VMState vm, Instruction i);
   //     GLOBAL       replaced with *name* of global in slot YZ
 
 void idump(FILE *fp, VMState vm, int pc, Instruction I, 
+           long int regbase, // A way to communicate where the current 
+                             // register window R is pointing.  The number
+                             // is printed, but `idump` doesn't compute with it
            Value *RX, Value *RY, Value *RZ);
 
 const char *lastglobalset(struct VMState *vm, uint8_t reg, struct VMFunction *f, Instruction *pc);

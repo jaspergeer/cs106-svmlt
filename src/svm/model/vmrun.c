@@ -38,6 +38,7 @@ void vmrun(VMState vm, struct VMFunction *fun) {
     Instruction instr = fun->instructions[vm->pc++];
     if (CANDUMP && debug) {
       idump(stderr, vm, vm->pc, instr,
+            0,
             reg0+uX(instr), reg0+uY(instr), reg0+uZ(instr));
     }
     switch (opcode(instr)) {
