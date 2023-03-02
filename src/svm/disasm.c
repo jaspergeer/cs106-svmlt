@@ -125,13 +125,12 @@ static void fprintfunname(FILE *fp, VMState vm, Value v) {
   switch (v.tag) {
     case VMFunction:
     case VMClosure:
-      (void) fp;
       (void) vm;
-      fprintf(fp, "unknown func");
       // You need here a loop through all your globals, searching
       // for an `i` such that `identical(global number i, v)` holds.
       // If you find one, print "(function $NAME)" where $NAME is
       // the name of global number `i`.
+      fprintf(fp, "Unknown function (see %s, line %d)", __FILE__, __LINE__);
     default:
       break;
   }
