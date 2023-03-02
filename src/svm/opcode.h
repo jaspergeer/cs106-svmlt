@@ -28,6 +28,11 @@ typedef enum opcode {
     CondSkip, // R3
     Jump, // R0I24
 
+    // Function Calls
+    Call,
+    Return,
+    TailCall,
+
     // Load/Store
     LoadLiteral, // R1U16
     GetGlobal, // R1U16
@@ -48,8 +53,8 @@ typedef enum opcode {
     // S-Expressions
     Cons, Car, Cdr,
     
-    // type predicates
-    IsFunc, IsPair, IsSym, IsNum, IsBool, IsNull, IsNil ,
+    // Type Predicates
+    IsFunc, IsPair, IsSym, IsNum, IsBool, IsNull, IsNil,
 
     Unimp, // stand-in for opcodes not yet implemented
     Unimp2, // stand-in for opcodes not yet implemented
