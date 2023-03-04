@@ -19,15 +19,17 @@
 #ifdef TINY_VM
 #define LITERALS_SIZE 16
 #define GLOBALS_SIZE 16
+#define CALL_STACK_SIZE 32
 #else
 #define LITERALS_SIZE 256
 #define GLOBALS_SIZE 256
+#define CALL_STACK_SIZE 5000
 #endif
 
 #include "value.h"
 #include "lpool.h"
 
-#define NUM_REGISTERS 256
+#define NUM_REGISTERS 1024
 
 typedef struct VMState* VMState;
 
@@ -46,6 +48,10 @@ struct VMState {
 
   // program counter
   uint32_t pc; // assumes that the first instruction is at address 0x0
+
+  // call stack
+  Activation call_stack[CALL_STACK_SIZE];
+  Activation *stack_ptr;
 };
 
 VMState newstate(void);       // allocate and initialize (to empty)

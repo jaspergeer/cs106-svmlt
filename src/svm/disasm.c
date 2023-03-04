@@ -127,7 +127,7 @@ static void fprintfunname(FILE *fp, VMState vm, Value v) {
     case VMClosure:
       (void) fp;
       (void) vm;
-      assert(0);
+      fprintf(fp, "unknown func");
       // You need here a loop through all your globals, searching
       // for an `i` such that `identical(global number i, v)` holds.
       // If you find one, print "(function $NAME)" where $NAME is
