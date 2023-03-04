@@ -125,6 +125,11 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         uint8_t destreg = uX(instr);
         uint8_t funreg = uY(instr);
 
+        if (isNil(RY)) {
+          runerror(vm, "Tried to call nil; maybe global '%s' is not defined?",
+                   lastglobalset(vm, funreg, fun, stream_ptr));
+        }
+
         Activation *top = ++vm->stack_ptr;
         top->stream_ptr = stream_ptr;
         top->reg0 = reg0;

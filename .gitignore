@@ -63,3 +63,4 @@ a.out
 dist-newstyle
 REFLECTION
 .gitignore
+bin/*

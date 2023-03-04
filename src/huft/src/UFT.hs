@@ -78,12 +78,9 @@ vsOfkn :: [KNF.Exp ObjectCode.Reg] -> [Asm.Instr]
 vsOfkn = CodeGen.codeGen
 -- flip composition (>>>) in Control.Arrow
 
-
 vsOf :: Language -> Reader [Asm.Instr]
 vsOf VS = vsOfFile
-vsOf KN = knOfFile ==> (knRegOfknString >=> return . vsOfkn)
-
-vsOf _ = throw (NoTranslationTo VS)
+vsOf inLang = knOfFile ==> (knRegOfknString >=> return . vsOfkn)
 
 voOf :: Language -> Reader [ObjectCode.Instr]
 voOf VO     =  \_ -> return (Error $ Left "There is no reader for .vo")
