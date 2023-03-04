@@ -112,7 +112,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
 
     // Branching
     case CondSkip:
-      if (AS_BOOLEAN(vm, RX))
+      if (!AS_BOOLEAN(vm, RX))
         ++stream_ptr;
       break;
     case Jump:
@@ -122,20 +122,26 @@ void vmrun(VMState vm, struct VMFunction* fun) {
     // Function Calls
     case Call:
       {
-      uint8_t destreg = uX(instr);
-      uint8_t funreg = uY(instr);
+        uint8_t destreg = uX(instr);
+        uint8_t funreg = uY(instr);
 
-      vm->stack_ptr++;
-      vm->stack_ptr->stream_ptr = stream_ptr;
-      vm->stack_ptr->reg0 = reg0;
-      vm->stack_ptr->dest_reg = reg0 + destreg;
+        Activation *top = ++vm->stack_ptr;
+        top->stream_ptr = stream_ptr;
+        top->reg0 = reg0;
+        top->dest_reg = reg0 + destreg;
 
-      stream_ptr = AS_VMFUNCTION(vm, RY)->instructions - 1;
-      reg0 += funreg;
+        stream_ptr = AS_VMFUNCTION(vm, RY)->instructions - 1;
+        reg0 += funreg;
       }
       break;
     case Return:
-      assert(0);
+      {
+        Activation *top = vm->stack_ptr--;
+
+        *(top->dest_reg) = RX;
+        stream_ptr = top->stream_ptr;
+        reg0 = top->reg0;
+      }
       break;
     case TailCall:
       assert(0);
