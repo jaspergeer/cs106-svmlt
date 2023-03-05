@@ -33,7 +33,7 @@ import Text.Parsec.Char (noneOf)
 
 lexeme = ParseUtils.lexeme
 name :: Parser String
-name = lexeme $ (:) <$> oneOf (['a'..'z'] ++ ['A'..'Z']) <*> many alphaNum
+name = lexeme $ (:) <$> oneOf (['a'..'z'] ++ ['A'..'Z']) <*> many (alphaNum <|> char '-')
 int = ParseUtils.int
 tok = ParseUtils.token
 double = ParseUtils.double
@@ -88,7 +88,8 @@ singleLineInstr =
   
   -- standard cases
   <|> try (flip eR3 <$> reg <* setTo <*> oneOfStr A.opcodesR3 <*> reg <*> reg)
-  <|> try (flip eR2 <$> reg <* setTo <*> oneOfStr A.opcodesR2 <*> reg)
+  <|> try (flip eR2 <$> reg <* setTo <*> oneOfStr A.unops <*> reg)
+  <|> try (eR2 <$> oneOfStr A.opcodesR2 <*> reg <*> reg)
   <|> try (eR1 <$> oneOfStr A.opcodesR1 <*> reg)
   <|> try (eR0 <$> oneOfStr A.opcodesR0)
 
@@ -100,6 +101,8 @@ singleLineInstr =
   <|> try (A.DefLabel <$> (tok "def" *> name))
   <|> try (A.GotoLabel <$> (tok "goto" *> name))
   <|> try (A.IfGotoLabel <$> (tok "if" *> reg) <*> (tok "goto" *> name))
+
+  <|> try (eR2 "tailcall" <$> (tok "tailcall" *> reg) <*> reg)
 
   <|> try (eR2 "copy" <$> reg <* setTo <*> reg)
   <|> try (eR1 "zero" <$> reg <* setTo <* tok "0")
@@ -113,12 +116,14 @@ singleLineInstr =
   where setTo = tok ":="
 
 comment :: Parser ()
-comment = () <$ tok ";;" <* manyTill anyChar endOfLine <* spaces
+comment = lexeme $ () <$ tok ";;" <* manyTill anyChar endOfLine
 
 instruction :: Parser A.Instr
 instruction =  try singleLineInstr
            <|> (A.LoadFunc <$> reg <* tok ":=" <* tok "fun" <*> int <*>
-                                  (tok "{" *> manyTill instruction (tok "}")))
+                  (tok "{" *> skipMany comment *>
+                    manyTill (instruction <* skipMany comment)
+                  (tok "}")))
 
 parse :: Parser [A.Instr]
 parse = spaces *> skipMany comment *> 
