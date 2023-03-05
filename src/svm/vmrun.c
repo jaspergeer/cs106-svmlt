@@ -149,7 +149,14 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       }
       break;
     case TailCall:
-      assert(0);
+      {
+        uint8_t funreg = uX(instr);
+        uint8_t lastarg = uY(instr);
+
+        memmove(reg0, reg0 + funreg, lastarg - funreg + 1);
+        stream_ptr = AS_VMFUNCTION(vm, RX)->instructions - 1;
+      }
+
       break;
 
     // Load/Store

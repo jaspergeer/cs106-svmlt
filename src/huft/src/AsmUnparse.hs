@@ -29,27 +29,24 @@ unparseLit lit = case lit of
   O.EmptyList -> "'()"
   O.Nil -> "nil"
 
-binopSet :: S.Set String
-binopSet = S.fromList A.binops
-
 unparseObj1 :: O.Instr -> String
-unparseObj1 (O.Regs "zero" [r1]) = unwords [reg r1, ":=", "0"]
-unparseObj1 (O.Regs op regs) = case regs of
-  [] -> op
-  [r1] -> unwords [op, reg r1]
-  (r1:regs) -> if S.member op binopSet
-    then case regs of
-      [r2, r3] -> unwords [reg r1, ":=", reg r2, op, reg r3]
-      _ -> error "IMPOSSIBLE: malformed binop instruction"
-    else unwords ([reg r1, ":=", op] ++ map reg regs)
-unparseObj1 (O.RegLit "loadliteral" r1 lit) = unwords [reg r1, ":=", unparseLit lit]
-unparseObj1 (O.RegLit "popen" r1 lit) = unwords [reg r1, ":= popen", unparseLit lit]
-unparseObj1 (O.RegLit op r1 lit) = unwords [op, reg r1, unparseLit lit]
-unparseObj1 (O.RegGlo "getglobal" r1 name) = unwords [reg r1, ":= G[" ++ name ++ "]"]
-unparseObj1 (O.RegGlo "setglobal" r1 name) = unwords ["G[" ++ name ++ "] :=", reg r1]
-unparseObj1 (O.RegsInt op [] i24) = unwords [op, show i24]
-unparseObj1 (O.RegsInt op [r1] u16) = unwords [reg r1, ":=", op, show u16]
-unparseObj1 (O.RegsInt op [r1, r2] u8) = unwords [reg r1, ":=", op, reg r2, show u8]
+unparseObj1 i = case i of
+  (O.Regs "zero" [r1]) -> unwords [reg r1, ":=", "0"]
+  (O.Regs op regs) -> case regs of
+    [] -> op
+    [r1] -> unwords [op, reg r1]
+    [r1, r2] | op `elem` A.unops -> unwords [reg r1, ":=", op, reg r2]
+    [r1, r2] -> unwords [op, reg r1, reg r2]
+    [r1, r2, r3] | op `elem` A.binops -> unwords [reg r1, ":=", reg r2, op, reg r3]
+    [r1, r2, r3] -> unwords [reg r1, ":=", op, reg r2, reg r3]
+  (O.RegLit "loadliteral" r1 lit) -> unwords [reg r1, ":=", unparseLit lit]
+  (O.RegLit "popen" r1 lit) -> unwords [reg r1, ":= popen", unparseLit lit]
+  (O.RegLit op r1 lit) -> unwords [op, reg r1, unparseLit lit]
+  (O.RegGlo "getglobal" r1 name) -> unwords [reg r1, ":= G[" ++ name ++ "]"]
+  (O.RegGlo "setglobal" r1 name) -> unwords ["G[" ++ name ++ "] :=", reg r1]
+  (O.RegsInt op [] i24) -> unwords [op, show i24]
+  (O.RegsInt op [r1] u16) -> unwords [reg r1, ":=", op, show u16]
+  (O.RegsInt op [r1, r2] u8) -> unwords [reg r1, ":=", op, reg r2, show u8]
 
 unparse1 :: A.Instr -> String
 unparse1 (A.ObjectCode instr) = unparseObj1 instr

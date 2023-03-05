@@ -30,11 +30,7 @@ binops =
   , ">="
   , "<=" ]
 
-opcodesR3 =
-  [ "cons",
-    "call" ]
-
-opcodesR2 =
+unops =
   [ "truth"
   , "number?"
   , "not"
@@ -46,8 +42,14 @@ opcodesR2 =
   , "boolean?"
   , "null?"
   , "nil?"
-  , "hash"
-  , "copy"
+  , "hash" ]
+
+opcodesR3 =
+  [ "cons",
+    "call" ]
+
+opcodesR2 =
+  [ "copy"
   , "tailcall" ]
 
 opcodesR1 =
