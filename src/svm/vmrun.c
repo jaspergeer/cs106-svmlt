@@ -28,19 +28,17 @@
 #include "string.h"
 #include "loader.h"
 
-#define RX registers[uX(curr_inst)]
-#define RY registers[uY(curr_inst)]
-#define RZ registers[uZ(curr_inst)]
+#define RX reg0[uX(instr)]
+#define RY reg0[uY(instr)]
+#define RZ reg0[uZ(instr)]
 
-#define LIT LPool_get(literals, uYZ(curr_inst))
-#define GLO LPool_get(literals, uYZ(curr_inst))
+#define LIT LPool_get(literals, uYZ(instr))
+#define GLO LPool_get(literals, uYZ(instr))
 
 #define CANDUMP 1
 
 void vmrun(VMState vm, struct VMFunction* fun) {
-  vm->pc = 0;
-  uint32_t *stream_ptr = fun->instructions + vm->pc;
-  Value *registers = vm->registers;
+  Instruction *stream_ptr = fun->instructions;
   LPool_T literals = vm->literals;
   Value *globals = vm->globals;
 
@@ -49,21 +47,20 @@ void vmrun(VMState vm, struct VMFunction* fun) {
   const char *dump_call   = svmdebug_value("call");
   (void) dump_call;
   
-  Value *reg0 = &vm->registers[0];
+  Value *reg0 = vm->registers;
   for (;;) {
-    uint32_t curr_inst = *stream_ptr;
+    uint32_t instr = *stream_ptr;
 
     if (CANDUMP && dump_decode) {
-      idump(stderr, vm, vm->pc, curr_inst, reg0 - &vm->registers[0],
-            reg0+uX(curr_inst), reg0+uY(curr_inst), reg0+uZ(curr_inst));
+      idump(stderr, vm, vm->pc, instr, reg0 - &vm->registers[0],
+            reg0+uX(instr), reg0+uY(instr), reg0+uZ(instr));
     }
 
-    switch (opcode(curr_inst)) {
+    switch (opcode(instr)) {
     default:
-      print("opcode %d not implemented\n", opcode(curr_inst));
+      print("opcode %d not implemented\n", opcode(instr));
       break;
     case Halt:
-      vm->pc = stream_ptr - fun->instructions;
       return;
     case Hash:
       RX = mkNumberValue(hashvalue(RY));
@@ -94,40 +91,62 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       }
       break;
     case DynLoad: // load a list of modules from file
-      {
-        FILE *input = fdopen(AS_NUMBER(vm, RX), "r");
-        // stash registers
-        Value reg_stash[NUM_REGISTERS];
-        memcpy(reg_stash, registers, NUM_REGISTERS * sizeof(registers[0]));
+      // {
+      //   FILE *input = fdopen(AS_NUMBER(vm, RX), "r");
+      //   // stash registers
+      //   Value reg_stash[NUM_REGISTERS];
+      //   memcpy(reg_stash, registers, NUM_REGISTERS * sizeof(registers[0]));
 
-        for ( struct VMFunction *module = loadmodule(vm, input)
-            ; module
-            ; module = loadmodule(vm, input)
-            ) {
-          vmrun(vm, module);
-        }
-        fclose(input);
+      //   for ( struct VMFunction *module = loadmodule(vm, input)
+      //       ; module
+      //       ; module = loadmodule(vm, input)
+      //       ) {
+      //     vmrun(vm, module);
+      //   }
+      //   fclose(input);
 
-        // restore registers
-        memcpy(registers, reg_stash, NUM_REGISTERS * sizeof(registers[0]));
-      }
+      //   // restore registers
+      //   memcpy(registers, reg_stash, NUM_REGISTERS * sizeof(registers[0]));
+      // }
       break;
 
     // Branching
     case CondSkip:
-      if (AS_BOOLEAN(vm, RX))
+      if (!AS_BOOLEAN(vm, RX))
         ++stream_ptr;
       break;
     case Jump:
-      *stream_ptr -= iXYZ(curr_inst);
+      stream_ptr += iXYZ(instr);
       break;
     
     // Function Calls
     case Call:
-      assert(0);
+      {
+        uint8_t destreg = uX(instr);
+        uint8_t funreg = uY(instr);
+
+        if (isNil(RY)) {
+          runerror(vm, "Tried to call nil; maybe global '%s' is not defined?",
+                   lastglobalset(vm, funreg, fun, stream_ptr));
+        }
+
+        Activation *top = ++vm->stack_ptr;
+        top->stream_ptr = stream_ptr;
+        top->reg0 = reg0;
+        top->dest_reg = reg0 + destreg;
+
+        stream_ptr = AS_VMFUNCTION(vm, RY)->instructions - 1;
+        reg0 += funreg;
+      }
       break;
     case Return:
-      assert(0);
+      {
+        Activation *top = vm->stack_ptr--;
+
+        *(top->dest_reg) = RX;
+        stream_ptr = top->stream_ptr;
+        reg0 = top->reg0;
+      }
       break;
     case TailCall:
       assert(0);
@@ -135,13 +154,13 @@ void vmrun(VMState vm, struct VMFunction* fun) {
 
     // Load/Store
     case LoadLiteral:
-      RX = LPool_get(literals, uYZ(curr_inst));
+      RX = LPool_get(literals, uYZ(instr));
       break;
     case GetGlobal:
-      RX = globals[uYZ(curr_inst)];
+      RX = globals[uYZ(instr)];
       break;
     case SetGlobal:
-      globals[uYZ(curr_inst)] = RX;
+      globals[uYZ(instr)] = RX;
       break;
 
     // Check-Expect

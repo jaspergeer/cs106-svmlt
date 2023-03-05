@@ -25,6 +25,8 @@
 /src/vscheme/vscheme
 /bin/svm
 /bin/svm-dis
+/bin/svm-test
+/bin/svm-loader-instructions
 /bin/svm-opcodes
 /src/uft/*.vo
 /www/index.html
@@ -61,3 +63,4 @@ a.out
 dist-newstyle
 REFLECTION
 .gitignore
+bin/*

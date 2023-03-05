@@ -24,15 +24,15 @@ binops =
   , "and"
   , "or"
   , "xor"
-  , "n="
-  , "s="
+  , "="
   , ">"
   , "<"
   , ">="
   , "<=" ]
 
 opcodesR3 =
-  [ "cons" ]
+  [ "cons",
+    "call" ]
 
 opcodesR2 =
   [ "truth"
@@ -47,7 +47,8 @@ opcodesR2 =
   , "null?"
   , "nil?"
   , "hash"
-  , "copy" ]
+  , "copy"
+  , "tailcall" ]
 
 opcodesR1 =
   [ "print"
@@ -55,7 +56,8 @@ opcodesR1 =
   , "printu"
   , "dload"
   , "cskip"
-  , "err" ]
+  , "err"
+  , "return" ]
 
 opcodesR1LIT =
   [ "popen"
