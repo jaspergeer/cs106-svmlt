@@ -1,0 +1,21 @@
+    .load module 9
+    .load 0 function 3 11
+    loadliteral 4 0
+    = 4 1 4
+    if 4
+    goto 7
+    move 4 0
+    loadliteral 5 1
+    - 5 1 5
+    move 6 2
+    + 7 2 3
+    tailcall 4 7
+    return 3
+    setglobal 0 string 10 116 105 109 101 115 45 112 108 117 115
+    loadliteral 1 1200000
+    loadliteral 2 12
+    loadliteral 3 99
+    call 0 0 3
+    check 0 string 26 40 116 105 109 101 115 45 112 108 117 115 32 49 50 48 48 48 48 48 32 49 50 32 57 57 41
+    loadliteral 0 14400099
+    expect 0 string 8 49 52 52 48 48 48 57 57

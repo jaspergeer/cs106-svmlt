@@ -1,0 +1,8 @@
+    .load module 3
+    .load 200 function 1 4
+    check 1 string 8 97 114 103 117 109 101 110 116
+    loadliteral 100 string 14 112 97 114 97 109 101 116 101 114 32 116 101 115 116
+    expect 100 string 16 105 110 116 101 114 110 97 108 32 108 105 116 101 114 97 108
+    halt
+    loadliteral 201 string 14 112 97 114 97 109 101 116 101 114 32 116 101 115 116
+    call 0 200 201

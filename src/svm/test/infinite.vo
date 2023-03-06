@@ -1,0 +1,6 @@
+.load module 5
+loadliteral 0 1
+jump -1
+loadliteral 1 true
+cskip 1
+jump -3

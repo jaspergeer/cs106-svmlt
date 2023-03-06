@@ -65,3 +65,4 @@ REFLECTION
 .gitignore
 bin/*
 /.migrated
+/build

@@ -1,0 +1,8 @@
+    r200 := function (0 arguments) {
+      r100 := "If you see this message, the test fails"
+      println r100
+      halt
+    }
+    r201 := "This test should cause a checked run-time error"
+    println r201
+    r0 := call r200 (r201)
