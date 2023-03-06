@@ -64,3 +64,4 @@ dist-newstyle
 REFLECTION
 .gitignore
 bin/*
+/.migrated
