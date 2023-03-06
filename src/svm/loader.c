@@ -35,8 +35,6 @@
 
 #include "disasm.h"
 
-#define IBUF_INIT 32
-
 //// Variables and utility functions local to this module
 
 static bool saw_a_bad_opcode = false;  
@@ -80,34 +78,36 @@ static Instruction get_instruction(VMState vm, FILE *vofile, unsigned *maxregp) 
   Name dotloadname = strtoname(".load");
   Name fnname = strtoname("function");
 
-  char *ibuf = malloc(IBUF_INIT);
-  size_t ibuf_size = IBUF_INIT;
-
   // get line and tokenize
-  getline(&ibuf, &ibuf_size, vofile);
-  Tokens itoks = tokens(ibuf);
+  getline(&buffer, &bufsize, vofile);
+  Tokens itoks = tokens(buffer);
+  Tokens tokens_left = itoks;
 
   // when do we read ".load instruction?"
-  Name opcode = tokens_get_name(&itoks, ibuf);
+  Name opcode = tokens_get_name(&tokens_left, buffer);
 
   Instruction i;
+  
   if (opcode == dotloadname) {
-    uint8_t regX = tokens_get_byte(&itoks, ibuf);
-    assert(tokens_get_name(&itoks, ibuf) == fnname);
-    int arity = tokens_get_int(&itoks, ibuf);
-    int length = tokens_get_int(&itoks, ibuf);
+    uint8_t regX = tokens_get_byte(&tokens_left, buffer);
+    assert(tokens_get_name(&tokens_left, buffer) == fnname);
+    int arity = tokens_get_int(&tokens_left, buffer);
+    int length = tokens_get_int(&tokens_left, buffer);
+    
     struct VMFunction *fun = loadfun(vm, arity, length, vofile);
     Value funv = mkVMFunctionValue(fun);
     i = eR1U16(LoadLiteral, regX, literal_slot(vm, funv));
   } else {
-    i = parse_instruction(vm, opcode, itoks, maxregp);
+    i = parse_instruction(vm, opcode, tokens_left, maxregp);
   }
 
   free_tokens(&itoks);
-  free(ibuf);
-
+  if (buffer) {
+    free(buffer);
+    buffer = NULL;
+  }
   // printasm(stderr, vm, i);
-  // fprintf(stderr, "\n");
+  // fprintf(stderr, "\n");fr
 
   return i;
 }
@@ -118,7 +118,7 @@ static struct VMFunction *loadfun(VMState vm, int arity, int count, FILE *vofile
   // use sizeof(*funp) is a better paradigm, because even if struct func change,
   // it doesn't matter
   // VMNEW(struct VMFunction *, funp, sizeof(*funp) + (count + 1) * sizeof(instruction));
-  struct VMFunction *fun = vmalloc_raw(3 * sizeof(int) + (count + 1) * sizeof(Instruction));
+  VMNEW(struct VMFunction *, fun, vmsize_fun(count+1));
   fun->arity = arity;
   fun->size = count + 1;
   fun->instructions[count] = eR0(Halt); // sentinel
@@ -163,6 +163,7 @@ struct VMFunction *loadmodule(VMState vm, FILE *vofile) {
     // end of file, spec calls for NULL to be returned
     assert(false);
   }
+
   Tokens alltokens = tokens(buffer);
   Tokens tokens_left = alltokens;
 
