@@ -152,8 +152,18 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       {
         uint8_t funreg = uX(instr);
         uint8_t lastarg = uY(instr);
+        int funsize = lastarg - funreg + 1;
+        Value *tmp = malloc(funsize * sizeof(Value));
 
-        memmove(reg0, reg0 + funreg, lastarg - funreg + 1);
+        // can't seem to get memove to work
+        for (int i = 0; i < funsize; ++i) {
+          tmp[i] = reg0[i + funreg];
+        }
+        for (int i = 0; i < funsize; ++i) {
+          reg0[i] = tmp[i];
+        }
+        free(tmp);
+
         stream_ptr = AS_VMFUNCTION(vm, RX)->instructions - 1;
       }
 
