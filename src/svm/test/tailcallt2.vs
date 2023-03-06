@@ -12,7 +12,7 @@ $r0 := fun 3 {
     return $r3
 }
 G[times-plus] := $r0
-$r1 := 120
+$r1 := 1200000
 $r2 := 12
 $r3 := 99
 $r0 := call $r0 $r3

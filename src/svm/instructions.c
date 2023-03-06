@@ -61,7 +61,7 @@ instruction_info instructions[] = {
   { "xor", Xor, parseR3, "$rX := $rY xor $rZ" },
 
   // Comparison
-  { "=", Cmp, parseR3, "$rX := $rY n= $rZ"},
+  { "=", Cmp, parseR3, "$rX := $rY = $rZ"},
   { ">", Gt, parseR3, "$rX := $rY > $rZ" },
   { "<", Lt, parseR3, "$rX := $rY < $rZ" },
   { ">=", Ge, parseR3, "$rX := $rY >= $rZ" },
