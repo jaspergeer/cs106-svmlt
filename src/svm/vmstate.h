@@ -23,7 +23,7 @@
 #else
 #define LITERALS_SIZE 256
 #define GLOBALS_SIZE 256
-#define CALL_STACK_SIZE 2500
+#define CALL_STACK_SIZE 5000
 #endif
 
 #include "value.h"

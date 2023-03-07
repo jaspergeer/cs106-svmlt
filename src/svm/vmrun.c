@@ -124,6 +124,11 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       {
         uint8_t destreg = uX(instr);
         uint8_t funreg = uY(instr);
+        uint8_t lastarg = uZ(instr);
+
+        if (reg0 + lastarg >= vm->registers + (NUM_REGISTERS - 1)) {
+          runerror(vm, "Register file overflow");
+        }
 
         if (isNil(RY)) {
           runerror(vm, "Tried to call nil; maybe global '%s' is not defined?",
@@ -156,10 +161,15 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       break;
     case TailCall:
       {
-        // printf("tail call\n");
+
+        // fprintf(stderr, "window shift: %ld" , reg0 - vm->registers);
       
         uint8_t funreg = uX(instr);
         uint8_t lastarg = uY(instr);
+
+        if (reg0 + lastarg >= vm->registers + (NUM_REGISTERS - 1)) {
+          runerror(vm, "Register file overflow");
+        }
 
         // reg file overflow
         if (reg0 + funreg > vm->registers + 255) {
