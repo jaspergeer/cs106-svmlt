@@ -1,7 +1,0 @@
-.load module 6
-loadliteral 1 string 5 100 111 110 101 33
-popen 41 string 13 99 97 116 32 108 111 97 100 109 101 46 118 111
-dload 2 41
-call 3 2 3
-println 1
-halt

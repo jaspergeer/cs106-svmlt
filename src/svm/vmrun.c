@@ -83,20 +83,15 @@ void vmrun(VMState vm, struct VMFunction* fun) {
     
     // Dynamic Loading
     case PipeOpen: // open pipe, store file descriptor
-      {
-        FILE *f = popen(AS_CSTRING(vm, LIT), "r");
-        if (f) {
-          RX = mkNumberValue(fileno(f));
-        } else {
-          RX = mkNumberValue(-1);
-        }
-        
-      }
+      RX = mkNumberValue(fileno(popen(AS_CSTRING(vm, LIT), "r")));
       break;
     case DynLoad: // load module at fd stored in RY into RX
       {
         FILE *input = fdopen(AS_NUMBER(vm, RY), "r");
-        RX = mkVMFunctionValue(loadmodule(vm, input)); 
+        struct VMFunction *module = loadmodule(vm, fdopen(AS_NUMBER(vm, RY), "r")); 
+        if (!module)
+          runerror(vm, "Missing or malformed module");
+        RX = mkVMFunctionValue(module);
         fclose(input);
       }
       break;
@@ -142,7 +137,6 @@ void vmrun(VMState vm, struct VMFunction* fun) {
 
       {
         Activation *top = vm->stack_ptr--;
-
         if (!top->dest_reg)
           runerror(vm, "Tried to return from loading activation");
 

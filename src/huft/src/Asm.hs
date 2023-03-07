@@ -43,7 +43,8 @@ unops =
   , "null?"
   , "nil?"
   , "hash"
-  , "dload" ]
+  , "dload" 
+  , "popen" ]
 
 opcodesR3 =
   [ "cons",
@@ -54,16 +55,15 @@ opcodesR2 =
   , "tailcall" ]
 
 opcodesR1 =
-  [ "print"
-  , "println"
+  [ "println"
   , "printu"
+  , "print"
   , "cskip"
   , "err"
   , "return" ]
 
 opcodesR1LIT =
-  [ "popen"
-  , "loadliteral"
+  [ "loadliteral"
   , "check"
   , "expect" ]
 

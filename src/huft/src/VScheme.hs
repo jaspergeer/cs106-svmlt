@@ -24,8 +24,9 @@ data Value = Sym   Name
            deriving Show
 
 data Def = Val         Name Exp
-          | Define      Name [Name] Exp
-          | Exp         Exp
-          | CheckExpect Exp Exp
-          | CheckAssert Exp
-          deriving Show
+         | Define      Name [Name] Exp
+         | Exp         Exp
+         | Use         Name
+         | CheckExpect Exp Exp
+         | CheckAssert Exp
+         deriving Show

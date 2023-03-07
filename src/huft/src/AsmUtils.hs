@@ -41,6 +41,8 @@ i = A.ObjectCode
 
 regs opr rs = i $ O.Regs opr rs
 
+reglit opr reg lit = i $ O.RegLit opr reg lit
+
 -- Our RegLit cnstructor only takes in one register
 -- so we don't need to make it a list
 setReg dest operator args = i $ O.Regs (asValue operator) (dest : args)
