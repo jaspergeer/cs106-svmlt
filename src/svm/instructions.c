@@ -12,7 +12,6 @@
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 
 instruction_info instructions[] = {
-  { "halt", Halt, parseR0, "halt" },
   { "zero", Zero, parseR1, "$rX := 0" },
   { "hash", Hash, parseR2, "$rX := hash $rY"},
   { "copy", Copy, parseR2, "$rX := $rY"},
@@ -25,7 +24,7 @@ instruction_info instructions[] = {
 
   // Dynamic Loading
   { "popen", PipeOpen, parseR1LIT, "popen $rX LIT" },
-  { "dload", DynLoad, parseR1, "dload $rX" },
+  { "dload", DynLoad, parseR2, "$rX := dload $rY" },
 
   // Branching
   { "cskip", CondSkip, parseR1, "if $rX goto 1" },
@@ -79,7 +78,9 @@ instruction_info instructions[] = {
   { "number?", IsNum, parseR2, "$rX := number? $rY" },
   { "boolean?", IsBool, parseR2, "$rX := boolean? $rY" },
   { "null?", IsNull, parseR2, "$rX := null? $rY" },
-  { "nil?", IsNil, parseR2, "$rX := nil? $rY" }
+  { "nil?", IsNil, parseR2, "$rX := nil? $rY" },
+
+  { "halt", Return, parseR0, "halt" }
   };
 
 int number_of_instructions = sizeof(instructions) / sizeof(instructions[0]);

@@ -19,7 +19,7 @@ static struct VMFunction *newfunction(int instruction_count) {
   VMNEW(struct VMFunction *, fun, vmsize_fun(instruction_count + 1));
   fun->arity = 0;
   fun->size  = instruction_count + 1;
-  fun->instructions[instruction_count] = eR0(Halt);
+  fun->instructions[instruction_count] = eR0(Return);
   return fun;
 }
 

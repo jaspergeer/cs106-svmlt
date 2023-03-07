@@ -42,7 +42,8 @@ unops =
   , "boolean?"
   , "null?"
   , "nil?"
-  , "hash" ]
+  , "hash"
+  , "dload" ]
 
 opcodesR3 =
   [ "cons",
@@ -56,7 +57,6 @@ opcodesR1 =
   [ "print"
   , "println"
   , "printu"
-  , "dload"
   , "cskip"
   , "err"
   , "return" ]
@@ -81,7 +81,7 @@ opcodesR2U8 =
   []
 
 opcodesR0 =
-  [ "halt"]
+  [ "halt" ]
 
 opcodes = concat
   [ opcodesR3

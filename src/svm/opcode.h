@@ -9,7 +9,6 @@
 #define OPCODE_INCLUDED
 
 typedef enum opcode {
-    Halt, // R0
     Zero, // R1
     Hash, // R2
     Copy, // R2
