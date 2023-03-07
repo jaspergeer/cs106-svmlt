@@ -1,4 +1,0 @@
-.load module 3
-loadliteral 40 string 20 108 111 97 100 101 100 32 115 117 99 99 101 115 115 102 117 108 108 121 33
-println 40
-halt

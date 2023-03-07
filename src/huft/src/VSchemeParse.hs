@@ -146,6 +146,7 @@ def = let
      <|> S.Define <$> (tok "define" *> name) <*> parend formals <*> expr
      <|> S.CheckExpect <$> (tok "check-expect" *> expr) <*> expr
      <|> S.CheckAssert <$> (tok "check-assert" *> expr)
+     <|> S.Use <$> (tok "use" *> name)
   in try (parend (single <$> def'
  <|> desugarRecord <$> (tok "record" *> name) <*> brackd (many name)))
  <|> single . S.Exp <$> expr
