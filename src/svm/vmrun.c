@@ -60,8 +60,6 @@ void vmrun(VMState vm, struct VMFunction* fun) {
     default:
       print("opcode %d not implemented\n", opcode(instr));
       break;
-    case Halt:
-      return;
     case Hash:
       RX = mkNumberValue(hashvalue(RY));
       break;
@@ -87,27 +85,20 @@ void vmrun(VMState vm, struct VMFunction* fun) {
     case PipeOpen: // open pipe, store file descriptor
       {
         FILE *f = popen(AS_CSTRING(vm, LIT), "r");
-        RX = mkNumberValue(fileno(f));
+        if (f) {
+          RX = mkNumberValue(fileno(f));
+        } else {
+          RX = mkNumberValue(-1);
+        }
+        
       }
       break;
-    case DynLoad: // load a list of modules from file
-      // {
-      //   FILE *input = fdopen(AS_NUMBER(vm, RX), "r");
-      //   // stash registers
-      //   Value reg_stash[NUM_REGISTERS];
-      //   memcpy(reg_stash, registers, NUM_REGISTERS * sizeof(registers[0]));
-
-      //   for ( struct VMFunction *module = loadmodule(vm, input)
-      //       ; module
-      //       ; module = loadmodule(vm, input)
-      //       ) {
-      //     vmrun(vm, module);
-      //   }
-      //   fclose(input);
-
-      //   // restore registers
-      //   memcpy(registers, reg_stash, NUM_REGISTERS * sizeof(registers[0]));
-      // }
+    case DynLoad: // load module at fd stored in RY into RX
+      {
+        FILE *input = fdopen(AS_NUMBER(vm, RY), "r");
+        RX = mkVMFunctionValue(loadmodule(vm, input)); 
+        fclose(input);
+      }
       break;
 
     // Branching
@@ -146,8 +137,14 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       }
       break;
     case Return:
+      if (vm->stack_ptr < vm->call_stack)
+        return;
+
       {
         Activation *top = vm->stack_ptr--;
+
+        if (!top->dest_reg)
+          runerror(vm, "Tried to return from loading activation");
 
         *(top->dest_reg) = RX;
         stream_ptr = top->stream_ptr;

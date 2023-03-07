@@ -121,7 +121,7 @@ static struct VMFunction *loadfun(VMState vm, int arity, int count, FILE *vofile
   VMNEW(struct VMFunction *, fun, vmsize_fun(count+1));
   fun->arity = arity;
   fun->size = count + 1;
-  fun->instructions[count] = eR0(Halt); // sentinel
+  fun->instructions[count] = eR0(Return); // sentinel
 
   unsigned maxregs = 0;
   for (int i = 0; i < count; ++i)
