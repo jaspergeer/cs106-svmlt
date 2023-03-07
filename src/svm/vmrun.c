@@ -41,6 +41,8 @@ void vmrun(VMState vm, struct VMFunction* fun) {
   Instruction *stream_ptr = fun->instructions;
   LPool_T literals = vm->literals;
   Value *globals = vm->globals;
+  Activation *stack_ptr = vm->stack_ptr;
+  struct VMFunction *running = fun;
 
   // for debugging
   const char *dump_decode = svmdebug_value("decode");
@@ -111,47 +113,53 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         uint8_t destreg = uX(instr);
         uint8_t funreg = uY(instr);
         uint8_t lastarg = uZ(instr);
+        uint8_t arity = lastarg - funreg;
 
-        const char *funname = lastglobalset(vm, funreg, fun, stream_ptr);
+        struct VMFunction *caller = running;
+
+        const char *funname = lastglobalset(vm, funreg, caller, stream_ptr);
         if (!isFunction(RY)) {
           if (funname)
             runerror(vm, "Tried to call %v; maybe global '%s' is not defined?", RY, funname);
           runerror(vm, "Tried to call %v", RY);
         }
-        struct VMFunction *fun = AS_VMFUNCTION(vm, RY);
+        struct VMFunction *callee = AS_VMFUNCTION(vm, RY);
         
         // arity check
-        if (lastarg - funreg != fun->arity)
-          runerror(vm, "Called function %s with %d arguments but it requires %d!",
+        if (arity != callee->arity)
+          runerror(vm, "Called function %s with %d arguments but it requires %d.",
             funname, lastarg - funreg, fun->arity);
 
         // register overflow check
-        if (reg0 + fun->nregs >= vm->registers + (NUM_REGISTERS - 1))
-          runerror(vm, "Register file overflow");
+        if (reg0 + callee->nregs >= vm->registers + (NUM_REGISTERS - 1))
+          runerror(vm, "Register file overflow.");
 
         // stack overflow check
-        if (vm->stack_ptr == vm->call_stack + (CALL_STACK_SIZE - 1))
-          runerror(vm, "Stack overflow");
+        if (stack_ptr == vm->call_stack + (CALL_STACK_SIZE - 1))
+          runerror(vm, "Stack overflow.");
 
-        Activation *top = ++vm->stack_ptr;
+        Activation *top = ++stack_ptr;
         top->stream_ptr = stream_ptr;
         top->reg0 = reg0;
         top->dest_reg = reg0 + destreg;
+        top->fun = caller;
 
-        stream_ptr = fun->instructions - 1;
+        running = caller;
+        stream_ptr = callee->instructions - 1;
         reg0 += funreg;
       }
       break;
     case Return:
-      if (vm->stack_ptr < vm->call_stack)
+      if (stack_ptr < vm->call_stack)
         return;
 
       {
-        Activation *top = vm->stack_ptr--;
+        Activation *top = stack_ptr--;
         if (!top->dest_reg)
           runerror(vm, "Tried to return from loading activation");
 
         *(top->dest_reg) = RX;
+        running = top->fun;
         stream_ptr = top->stream_ptr;
         reg0 = top->reg0;
       }
