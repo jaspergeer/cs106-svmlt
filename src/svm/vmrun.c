@@ -62,6 +62,24 @@ void vmrun(VMState vm, struct VMFunction* fun) {
     default:
       print("opcode %d not implemented\n", opcode(instr));
       break;
+
+    // return is opcode 0
+    case Return:
+      if (stack_ptr < vm->call_stack)
+        return;
+
+      {
+        Activation *top = stack_ptr--;
+        if (!top->dest_reg)
+          runerror(vm, "Tried to return from loading activation");
+
+        *(top->dest_reg) = RX;
+        running = top->fun;
+        stream_ptr = top->stream_ptr;
+        reg0 = top->reg0;
+      }
+      break;
+
     case Hash:
       RX = mkNumberValue(hashvalue(RY));
       break;
@@ -149,24 +167,8 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         reg0 += funreg;
       }
       break;
-    case Return:
-      if (stack_ptr < vm->call_stack)
-        return;
-
-      {
-        Activation *top = stack_ptr--;
-        if (!top->dest_reg)
-          runerror(vm, "Tried to return from loading activation");
-
-        *(top->dest_reg) = RX;
-        running = top->fun;
-        stream_ptr = top->stream_ptr;
-        reg0 = top->reg0;
-      }
-      break;
     case TailCall:
       {
-
         // fprintf(stderr, "window shift: %ld" , reg0 - vm->registers);
       
         uint8_t funreg = uX(instr);
