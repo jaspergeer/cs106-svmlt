@@ -158,6 +158,11 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         uint8_t funreg = uX(instr);
         uint8_t lastarg = uY(instr);
 
+        if (isNil(RX)) {
+          runerror(vm, "Tried to call nil; maybe global '%s' is not defined?",
+                   lastglobalset(vm, funreg, fun, stream_ptr));
+        }
+
         if (reg0 + lastarg >= vm->registers + (NUM_REGISTERS - 1)) {
           runerror(vm, "Register file overflow");
         }
