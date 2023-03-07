@@ -130,6 +130,12 @@ void vmrun(VMState vm, struct VMFunction* fun) {
                    lastglobalset(vm, funreg, fun, stream_ptr));
         }
 
+        // stack is full
+        if (vm->stack_ptr == vm->call_stack + (CALL_STACK_SIZE - 1)) {
+          runerror(vm, "Stack overflow");
+        }
+        // fprintf(stderr, "stack is called\n");
+
         Activation *top = ++vm->stack_ptr;
         top->stream_ptr = stream_ptr;
         top->reg0 = reg0;
@@ -150,8 +156,16 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       break;
     case TailCall:
       {
+        // printf("tail call\n");
+      
         uint8_t funreg = uX(instr);
         uint8_t lastarg = uY(instr);
+
+        // reg file overflow
+        if (reg0 + funreg > vm->registers + 255) {
+          runerror(vm, "Register file overflow");
+        }
+
         memmove(reg0, reg0 + funreg, (lastarg - funreg + 1) * sizeof(Value));
         stream_ptr = AS_VMFUNCTION(vm, RX)->instructions - 1;
       }

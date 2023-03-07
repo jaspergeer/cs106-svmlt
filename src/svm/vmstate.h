@@ -14,7 +14,7 @@
 #include "vmstack.h"
 #include "vtable.h"
 
-#define TINY_VM
+// #define TINY_VM
 
 #ifdef TINY_VM
 #define LITERALS_SIZE 16
@@ -23,7 +23,7 @@
 #else
 #define LITERALS_SIZE 256
 #define GLOBALS_SIZE 256
-#define CALL_STACK_SIZE 5000
+#define CALL_STACK_SIZE 2500
 #endif
 
 #include "value.h"

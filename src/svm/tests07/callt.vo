@@ -1,0 +1,7 @@
+    .load module 2
+    .load 0 function 0 4
+    loadliteral 1 string 7 97 114 114 105 118 101 100
+    check 1 string 7 97 114 114 105 118 101 100
+    expect 1 string 7 97 114 114 105 118 101 100
+    halt
+    call 0 0 0
