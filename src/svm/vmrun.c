@@ -112,27 +112,33 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         uint8_t funreg = uY(instr);
         uint8_t lastarg = uZ(instr);
 
-        if (reg0 + lastarg >= vm->registers + (NUM_REGISTERS - 1)) {
+        const char *funname = lastglobalset(vm, funreg, fun, stream_ptr);
+        if (!isFunction(RY)) {
+          if (funname)
+            runerror(vm, "Tried to call %v; maybe global '%s' is not defined?", RY, funname);
+          runerror(vm, "Tried to call %v", RY);
+        }
+        struct VMFunction *fun = AS_VMFUNCTION(vm, RY);
+        
+        // arity check
+        if (lastarg - funreg != fun->arity)
+          runerror(vm, "Called function %s with %d arguments but it requires %d!",
+            funname, lastarg - funreg, fun->arity);
+
+        // register overflow check
+        if (reg0 + fun->nregs >= vm->registers + (NUM_REGISTERS - 1))
           runerror(vm, "Register file overflow");
-        }
 
-        if (isNil(RY)) {
-          runerror(vm, "Tried to call nil; maybe global '%s' is not defined?",
-                   lastglobalset(vm, funreg, fun, stream_ptr));
-        }
-
-        // stack is full
-        if (vm->stack_ptr == vm->call_stack + (CALL_STACK_SIZE - 1)) {
+        // stack overflow check
+        if (vm->stack_ptr == vm->call_stack + (CALL_STACK_SIZE - 1))
           runerror(vm, "Stack overflow");
-        }
-        // fprintf(stderr, "stack is called\n");
 
         Activation *top = ++vm->stack_ptr;
         top->stream_ptr = stream_ptr;
         top->reg0 = reg0;
         top->dest_reg = reg0 + destreg;
 
-        stream_ptr = AS_VMFUNCTION(vm, RY)->instructions - 1;
+        stream_ptr = fun->instructions - 1;
         reg0 += funreg;
       }
       break;
