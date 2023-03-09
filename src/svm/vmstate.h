@@ -51,7 +51,7 @@ struct VMState {
 
   // call stack
   Activation call_stack[CALL_STACK_SIZE];
-  Activation *stack_ptr;
+  Activation *stack_ptr; // points to youngest activation
 };
 
 VMState newstate(void);       // allocate and initialize (to empty)

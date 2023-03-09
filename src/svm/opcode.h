@@ -9,6 +9,8 @@
 #define OPCODE_INCLUDED
 
 typedef enum opcode {
+    Return,
+
     Zero, // R1
     Hash, // R2
     Copy, // R2
@@ -29,7 +31,6 @@ typedef enum opcode {
 
     // Function Calls
     Call,
-    Return,
     TailCall,
 
     // Load/Store
