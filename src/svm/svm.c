@@ -6,6 +6,11 @@
 //   2. Process either `stdin` or every file named on the command line.
 //   3. Finalize modules that need finalization.
 //     
+// If any argument is "--", then the rest of the arguments are placed
+// into global variable `argv` as a list.  This placement occurs before
+// any code is run.  Eventually each argument will be parsed as an
+// S-expression, but for now it's just a string.
+//
 // If I've done my job, you don't need to edit this.  Or even look at it.
 
 #include <assert.h>
@@ -14,6 +19,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "argparse.h"
 #include "check-expect.h"
 #include "loader.h"
 #include "itable.h"
@@ -41,10 +47,18 @@ int main(int argc, char **argv) {
     heap_init();
     VMState vm = newstate();
 
-    if (argc == 1) {
+    int input_file_limit; // one beyond last input file
+    for (input_file_limit = 1; input_file_limit < argc; input_file_limit++)
+      if (!strcmp(argv[input_file_limit], "--"))
+        break;
+    
+    initialize_global(vm, mkStringValue(Vmstring_newc("argv")),
+                      arglist(argc - input_file_limit - 1, argv+input_file_limit + 1));
+
+    if (input_file_limit == 1) {
       dofile(vm, stdin);
     } else {
-      for (int i = 1; i < argc; i++) {
+      for (int i = 1; i < input_file_limit; i++) {
         FILE *exe = strcmp(argv[i], "-") == 0 ? stdin : fopen(argv[i], "r");
         assert(exe);
         dofile(vm, exe);

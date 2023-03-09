@@ -22,7 +22,7 @@ extern void heap_shutdown(void);
   // returns all memory to the OS (to make valgrind happy)
 
 
-//// allocators, which never return NULL
+//// Allocators, which never return NULL.
 
 extern void *vmalloc_raw(size_t);
 extern void *vmcalloc_raw(size_t, size_t);

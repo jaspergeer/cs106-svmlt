@@ -50,6 +50,16 @@ void fprint(FILE *output, const char *fmt, ...) {
     fflush(output);
     freebuf(&buf);
 }
+
+void vfprint(FILE *output, const char *fmt, va_list_box *box) {
+    Printbuf buf = printbuf();
+    vbprint(buf, fmt, box);
+    fwritebuf(buf, output);
+    fflush(output);
+    freebuf(&buf);
+}
+
+
 static Printer *printertab[256];
 
 void vbprint(Printbuf output, const char *fmt, va_list_box *box) {

@@ -65,6 +65,9 @@ int global_slot(VMState state, Value name);
   // The `name` parameter must be a VM string or the result is
   // a checked run-time error.
 
+void initialize_global(VMState state, Value name, Value initial_value);
+  // Equivalent to a `val` declaration; used for setting `argv`
+
 
 // The last three functions are used only for disassembly.
 

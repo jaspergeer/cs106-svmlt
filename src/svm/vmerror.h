@@ -20,5 +20,7 @@ extern _Noreturn void typeerror(VMState state, const char *expected, Value got,
                                 const char *file, int line);
 extern _Noreturn void runerror(VMState state, const char *format, ...);
   // takes arguments as for `printf`, not `print`
+extern _Noreturn void runerror_p(VMState state, const char *format, ...);
+  // takes arguments as for `print`, not `printf`
 
 #endif

@@ -35,6 +35,7 @@ Printer printpar, bprintvalue, bprintquotedvalue;
 
 void print (const char *fmt, ...);                /* print to standard output */
 void fprint(FILE *output, const char *fmt, ...);     /* print to given file */
+void vfprint(FILE *output, const char *fmt, va_list_box *box);  /* print to given file */
   // N.B. these functions allocate and deallocate a Printbuf at each call.  
 
 //// print to a buffer

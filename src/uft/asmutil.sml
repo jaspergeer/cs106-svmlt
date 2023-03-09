@@ -44,6 +44,15 @@ structure AsmGen :> sig
   val getglobal : reg -> literal -> instruction   (* rX := global LIT *)
   val setglobal : literal -> reg -> instruction   (* global LIT := rX *)
 
+  (* call instruction assumes fun and argument in consecutive registers *)
+  val call : reg -> reg -> reg -> instruction
+                     (* dest, fun, last *)
+  val areConsecutive : reg list -> bool
+  val return : reg -> instruction
+  val tailcall :  reg -> reg -> instruction
+                     (* fun, last *)
+
+
 end
   =
 struct
@@ -107,5 +116,14 @@ struct
   fun setglobal name  reg   = effectLit      P.setglobal [reg] name
   
   fun copyreg dest src = Impossible.exercise "register-register move"
+
+  fun call dest function lastarg = regs "call" [dest, function, lastarg]
+  fun tailcall  function lastarg = regs "tailcall" [function, lastarg]
+  fun return r   = i O.REGS ("return", [r])
+
+  val rec areConsecutive : ObjectCode.reg list -> bool
+    = fn []  => true
+       | [n] => true
+       | n :: m :: ms => m = n + 1 andalso areConsecutive (m :: ms)
 
 end

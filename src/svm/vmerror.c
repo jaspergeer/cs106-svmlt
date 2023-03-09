@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "print.h"
 #include "value.h"
 #include "vmerror.h"
 
@@ -19,6 +20,18 @@ void runerror(VMState state, const char *format, ...) {
   va_start(args, format);
   vfprintf(stderr, format, args);
   va_end(args);
+  fprintf(stderr, "\n");
+  abort();
+}
+
+void runerror_p(VMState state, const char *format, ...) {
+  (void) state;
+  fprintf(stderr, "Run-time error:\n    ");
+  assert(format);
+  va_list_box box;
+  va_start(box.ap, format);
+  vfprint(stderr, format, &box);
+  va_end(box.ap);
   fprintf(stderr, "\n");
   abort();
 }

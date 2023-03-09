@@ -62,8 +62,15 @@ int global_slot(VMState state, Value global) {
     state->global_names[slot] = name;
     return slot;
 }
+<<<<<<< HEAD
 
 const char* global_name(VMState state, unsigned index) {
   return nametostr(state->global_names[index]);
 }
 
+=======
+void initialize_global(VMState vm, Value name, Value v) {
+  (void) vm; (void) name; (void) v; // replace with real code
+  assert(0);
+}
+>>>>>>> refs/remotes/origin/main

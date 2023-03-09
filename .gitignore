@@ -66,3 +66,4 @@ REFLECTION
 bin/*
 /.migrated
 /build
+/.migrated

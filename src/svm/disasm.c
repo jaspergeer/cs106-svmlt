@@ -118,7 +118,7 @@ static OperandSet operands(Instruction i) {
 
 static void fprintfunname(FILE *fp, VMState vm, Value v);
   // if v is a function or closure, and if v is identical to the value
-  // of a global variable, write "(function $NAME)" to file descriptor fp, 
+  // of a global variable, write " ($NAME)" to file descriptor fp, 
   // where $NAME is replaced with the name of the global variable
 
 static void fprintfunname(FILE *fp, VMState vm, Value v) {
@@ -128,9 +128,13 @@ static void fprintfunname(FILE *fp, VMState vm, Value v) {
       (void) vm;
       // You need here a loop through all your globals, searching
       // for an `i` such that `identical(global number i, v)` holds.
-      // If you find one, print "(function $NAME)" where $NAME is
+      // If you find one, print " ($NAME)" where $NAME is
       // the name of global number `i`.
+<<<<<<< HEAD
       fprintf(fp, "Unknown function (see %s, line %d)", __FILE__, __LINE__);
+=======
+      fprintf(fp, " (disassembler incomplete: see %s, line %d)", __FILE__, __LINE__);
+>>>>>>> refs/remotes/origin/main
     default:
       break;
   }
