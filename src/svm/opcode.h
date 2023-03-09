@@ -8,7 +8,8 @@
 #ifndef OPCODE_INCLUDED
 #define OPCODE_INCLUDED
 
-<<<<<<< HEAD
+#include "stdbool.h"
+
 typedef enum opcode {
     Return,
 
@@ -59,18 +60,7 @@ typedef enum opcode {
 
     Unimp, // stand-in for opcodes not yet implemented
     Unimp2, // stand-in for opcodes not yet implemented
-=======
-#include <stdbool.h>
-
-typedef enum opcode { 
-                      Halt, // R0
-                      Print, // R1
-                      Println, // R1
-                      LoadLiteral, // R1LIT
-                      Check, Expect, // R1LIT
-                      Unimp, // stand-in for opcodes not yet implemented
-                      Unimp2, // stand-in for opcodes not yet implemented
->>>>>>> refs/remotes/origin/main
+    Halt // so model compiles
 } Opcode;
 
 bool isgetglobal(Opcode code); // update this for your SVM, in instructions.c
