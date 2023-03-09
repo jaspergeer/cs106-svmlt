@@ -130,11 +130,7 @@ static void fprintfunname(FILE *fp, VMState vm, Value v) {
       // for an `i` such that `identical(global number i, v)` holds.
       // If you find one, print " ($NAME)" where $NAME is
       // the name of global number `i`.
-<<<<<<< HEAD
-      fprintf(fp, "Unknown function (see %s, line %d)", __FILE__, __LINE__);
-=======
       fprintf(fp, " (disassembler incomplete: see %s, line %d)", __FILE__, __LINE__);
->>>>>>> refs/remotes/origin/main
     default:
       break;
   }

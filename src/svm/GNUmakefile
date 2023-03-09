@@ -4,11 +4,7 @@ BUILD = $(TOP)/build
 BIN = $(TOP)/bin
 
 UNITS = testfuns vmheap vmrun vmstate vmrun vmstring value iformat \
-<<<<<<< HEAD
-        printbuf print check-expect testfuns vmerror lpool
-=======
-        printbuf print check-expect testfuns vmerror argparse
->>>>>>> refs/remotes/origin/main
+        printbuf print check-expect testfuns vmerror argparse lpool
 MAINS = svm-test
 
 
