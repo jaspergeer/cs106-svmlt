@@ -52,8 +52,8 @@ int main(int argc, char **argv) {
       if (!strcmp(argv[input_file_limit], "--"))
         break;
     
-    initialize_global(vm, mkStringValue(Vmstring_newc("argv")),
-                      arglist(argc - input_file_limit - 1, argv+input_file_limit + 1));
+    // initialize_global(vm, mkStringValue(Vmstring_newc("argv")),
+    //                   arglist(argc - input_file_limit - 1, argv+input_file_limit + 1));
 
     if (input_file_limit == 1) {
       dofile(vm, stdin);

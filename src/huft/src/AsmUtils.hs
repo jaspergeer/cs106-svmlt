@@ -37,6 +37,20 @@ asEffect p = case p of
   P.SetsRegister _ -> throw (InternalError ("primtive " ++ P.name p ++ " used for effect"))
   P.HasEffect  _ -> P.name p
 
+-- call instruction assumes fun and argument in consecutive registers
+call :: Reg -> Reg -> [Reg] -> Instruction
+call dest funreg args = if areConsecutive args then error "AAAAAA"
+  else regs "call" [dest, funreg, last args]
+
+tailcall :: Reg -> Reg -> [Reg] -> Instruction
+tailcall dest funreg args = if areConsecutive args then error "AAAAAA"
+  else regs "tailcall" [dest, funreg, last args]
+
+areConsecutive :: [Reg] -> Bool
+areConsecutive [] = False -- is this okay :o
+areConsecutive [x] = True
+areConsecutive (x:y:ys) = (x + 1 == y) && areConsecutive (y:ys)
+
 i = A.ObjectCode
 
 regs opr rs = i $ O.Regs opr rs

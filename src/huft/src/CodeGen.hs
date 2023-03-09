@@ -32,6 +32,14 @@ x <.> y = (.) <$> x <*> y
 
 ---- the code generator ----
 
+makeIf toX x e1 e2 = do
+      l <- U.newLabel
+      l' <- U.newLabel
+      branch2 <- toX e2
+      branch1 <- toX e1
+      return $ s (U.ifgoto x l) . branch2 . s (U.goto l') .
+               s (U.deflabel l) . branch1 . s (U.deflabel l')
+
 toReg' :: Reg -> K.Exp Reg -> U.UniqueLabelState (HughesList Instruction)
 toReg' dest e = case e of
     -- forms with direct translation
@@ -41,18 +49,12 @@ toReg' dest e = case e of
     K.VMOP {} -> forEffect' e
     K.VMOPGLO prim@(P.SetsRegister _) _ lit -> return $ s $ U.setRegLit dest prim lit -- the [r1] list disappears here, is that right?
     K.VMOPGLO {} -> forEffect' e
-    K.FunCall r args -> return $ s $ A.ObjectCode (O.Regs "call" (r:args)) -- provided x, x1, ... xn, are consecutive
+    K.FunCall funreg args -> return $ s $ U.call dest funreg args -- provided x, x1, ... xn, are consecutive
     K.FunCode args body -> do
         b' <- toReturn' body
         return $ s $ A.LoadFunc dest (length args) (b' [])
     -- control flow forms
-    K.If x e1 e2 -> do
-      l <- U.newLabel
-      l' <- U.newLabel
-      branch2 <- toReg' dest e2
-      branch1 <- toReg' dest e1
-      return $ s (U.ifgoto x l) . branch2 . s (U.goto l') .
-               s (U.deflabel l) . branch1 . s (U.deflabel l')
+    K.If x e1 e2 -> makeIf (toReg' dest) x e1 e2
     K.While x e1 e2 -> forEffect' (K.While x e1 e2) <.> toReg' dest (K.Literal $ O.Bool False)
     -- floatable forms
     K.Let x e1 e' -> toReg' x e1 <.> toReg' dest e'
@@ -69,19 +71,14 @@ forEffect' e = case e of
   -- otherwise
   K.VMOP _ _ -> return empty
   K.VMOPGLO (P.HasEffect (P.Base op _)) args v -> return $ s $
+  {- assume args only have one argument -}
   {- assume args only have one argument -} A.ObjectCode (O.RegLit op (head args) v)
   -- here we did not catch getglo because it is a SetRegister Primitive
   -- the O.RegLit is also worrysome
   K.VMOPGLO {} -> return empty
-  K.FunCall r args -> return $ s $ A.ObjectCode (O.Regs "call" (r:args))
+  K.FunCall funreg _ -> toReg' funreg e -- what register is killed by the call
   K.FunCode args body -> return empty
-  K.If x e1 e2 -> do
-      l <- U.newLabel
-      l' <- U.newLabel
-      branch2 <- forEffect' e2
-      branch1 <- forEffect' e1
-      return $ s (U.ifgoto x l) . branch2 . s (U.goto l') .
-              s (U.deflabel l) . branch1 . s (U.deflabel l')
+  K.If x e1 e2 -> makeIf forEffect' x e1 e2
   K.While x e e' -> do
     l <- U.newLabel
     l' <- U.newLabel
@@ -95,7 +92,25 @@ forEffect' e = case e of
 
 -- wont be implementing till module 8
 toReturn' :: K.Exp Reg -> U.UniqueLabelState (HughesList Instruction)
-toReturn' e = undefined
+toReturn' e = case e of
+  K.Literal lit -> toReg' 0 e <.> return (s $ U.regs "return" [0])
+  K.Name a -> return $ s $ U.regs "return" [a]
+  K.VMOP prim args -> toReg' 0 e <.> return (s $ U.regs "return" [0])
+  K.VMOPGLO prim args v -> toReg' 0 e <.> return (s $ U.regs "return" [0])
+  K.FunCall funreg args -> return $ s $ U.regs "tailcall" [funreg, last args]
+  K.FunCode args body -> toReg' 0 e <.> return (s $ U.regs "return" [0])
+  -- control flow
+  K.If x e1 e2 -> do
+      l <- U.newLabel
+      branch2 <- toReturn' e2
+      branch1 <- toReturn' e1
+      return $ s (U.ifgoto x l) . branch2 .
+               s (U.deflabel l) . branch1
+  K.While x e e' -> toReg' 0 e <.> return (s $ U.regs "return" [0])
+  -- floatable
+  K.Seq e1 e2 -> forEffect' e1 <.> toReturn' e2
+  K.Let x e e' -> toReg' x e <.> toReturn' e'
+  K.Assign _ e -> toReturn' e
 
 codeGen :: [K.Exp Reg] -> [Instruction]
 codeGen es = foldr (.) empty (evalState (mapM forEffect' es) 0) []

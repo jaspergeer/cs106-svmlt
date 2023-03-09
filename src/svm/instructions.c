@@ -89,9 +89,6 @@ instruction_info instructions[] = {
 int number_of_instructions = sizeof(instructions) / sizeof(instructions[0]);
 
 bool isgetglobal(Opcode code) {
-  fprintf(stderr,
-          "%s, line %d: function `isgetglobal` is not implemented", __FILE__, __LINE__);
-  (void) code;
-  return false; // change this for your SVM
+  return code == GetGlobal;
 }
 
