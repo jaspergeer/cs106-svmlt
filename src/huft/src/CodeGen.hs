@@ -43,10 +43,10 @@ makeIf toX x e1 e2 = do
 toReg' :: Reg -> K.Exp Reg -> U.UniqueLabelState (HughesList Instruction)
 toReg' dest e = case e of
     -- forms with direct translation
-    K.Literal lit -> return $ s (A.ObjectCode (O.RegLit "loadliteral" dest lit))
+    K.Literal lit -> return $ s $ U.reglit "loadliteral" dest lit
     K.Name a -> return $ s $ U.copyreg dest a
     K.VMOP prim@(P.SetsRegister _) rs -> return $ s $ U.setReg dest prim rs
-    K.VMOP {} -> forEffect' e
+    K.VMOP {} -> forEffect' e <.> return (s $ U.reglit "loadliteral" dest O.Nil) -- "undefined behavior"
     K.VMOPGLO prim@(P.SetsRegister _) _ lit -> return $ s $ U.setRegLit dest prim lit -- the [r1] list disappears here, is that right?
     K.VMOPGLO {} -> forEffect' e
     K.FunCall funreg args -> return $ s $ U.call dest funreg args -- provided x, x1, ... xn, are consecutive

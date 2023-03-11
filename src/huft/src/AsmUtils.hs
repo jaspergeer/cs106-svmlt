@@ -39,12 +39,14 @@ asEffect p = case p of
 
 -- call instruction assumes fun and argument in consecutive registers
 call :: Reg -> Reg -> [Reg] -> Instruction
-call dest funreg args = if areConsecutive args then error "AAAAAA"
-  else regs "call" [dest, funreg, last args]
+call dest funreg args = if areConsecutive args
+  then regs "call" [dest, funreg, last args]
+  else error "IMPOSSIBLE: arguments to function non-consecutive"
 
 tailcall :: Reg -> Reg -> [Reg] -> Instruction
-tailcall dest funreg args = if areConsecutive args then error "AAAAAA"
-  else regs "tailcall" [dest, funreg, last args]
+tailcall dest funreg args = if areConsecutive args
+  then regs "tailcall" [dest, funreg, last args]
+  else error "IMPOSSIBLE: arguments to function non-consecutive"
 
 areConsecutive :: [Reg] -> Bool
 areConsecutive [] = False -- is this okay :o

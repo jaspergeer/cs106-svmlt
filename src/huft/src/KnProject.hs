@@ -43,7 +43,8 @@ exp e = case e of
     ("expect", [e, X.Literal v]) -> K.VMOPGLO p <$> mapM asName [e] <*> return (value v)
     (_ , es)       -> K.VMOP p <$> mapM asName es
   X.FunCall e es -> K.FunCall <$> asName e <*> mapM asName es
-  _ -> E.Error $ Left "Cannot project to KNF"
+  X.Lambda args e -> K.FunCode args <$> exp e
+  e -> E.Error $ Left $ "Cannot project " ++ show e ++ "to KNF"
 
 def :: X.Def -> E.Error (K.Exp String)
 def d = case d of
@@ -52,5 +53,5 @@ def d = case d of
   -- X.Exp (X.LetX X.Let [(t, X.Lambda xs e)] (X.SetGlobal t' f)) -> E.Error $ Left "Names don't match"
   X.Exp e -> exp e
   X.Define f xs e -> K.Let t <$> (K.FunCode xs <$> exp e) <*> return (K.setglobal t f)
-  _ -> E.Error $ Left "Cannot project to KNF"
+  e -> E.Error $ Left $ "Cannot project " ++ show e ++ "to KNF"
   where t = "$nr"
