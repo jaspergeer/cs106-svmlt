@@ -49,7 +49,8 @@ toReg' dest e = case e of
     K.VMOP {} -> forEffect' e <.> return (s $ U.reglit "loadliteral" dest O.Nil) -- "undefined behavior"
     K.VMOPGLO prim@(P.SetsRegister _) _ lit -> return $ s $ U.setRegLit dest prim lit -- the [r1] list disappears here, is that right?
     K.VMOPGLO {} -> forEffect' e
-    K.FunCall funreg args -> return $ s $ U.call dest funreg args -- provided x, x1, ... xn, are consecutive
+    K.FunCall funreg [] -> return $ s $ U.regs "call" [dest, funreg, funreg]
+    K.FunCall funreg args -> return $ s $ U.regs "call" [dest, funreg, last args] -- provided x, x1, ... xn, are consecutive
     K.FunCode args body -> do
         b' <- toReturn' body
         return $ s $ A.LoadFunc dest (length args) (b' [])
@@ -97,6 +98,7 @@ toReturn' e = case e of
   K.Name a -> return $ s $ U.regs "return" [a]
   K.VMOP prim args -> toReg' 0 e <.> return (s $ U.regs "return" [0])
   K.VMOPGLO prim args v -> toReg' 0 e <.> return (s $ U.regs "return" [0])
+  K.FunCall funreg [] -> return $ s $ U.regs "tailcall" [funreg, funreg]
   K.FunCall funreg args -> return $ s $ U.regs "tailcall" [funreg, last args]
   K.FunCode args body -> toReg' 0 e <.> return (s $ U.regs "return" [0])
   -- control flow

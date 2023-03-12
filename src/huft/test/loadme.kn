@@ -1,0 +1,2 @@
+(let ([$r1 'load-success])
+  (set message $r1))
