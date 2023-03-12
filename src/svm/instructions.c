@@ -26,7 +26,7 @@ instruction_info instructions[] = {
   { "printu", Printu, parseR1, "printu $rX" },
 
   // Dynamic Loading
-  { "popen", PipeOpen, parseR1LIT, "$rX := popen LIT" },
+  { "popen", PipeOpen, parseR2, "$rX := popen $rY" },
   { "dload", DynLoad, parseR2, "$rX := dload $rY" },
 
   // Branching

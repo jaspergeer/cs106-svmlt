@@ -103,7 +103,18 @@ void vmrun(VMState vm, struct VMFunction* fun) {
     
     // Dynamic Loading
     case PipeOpen: // open pipe, store file descriptor
-      RX = mkNumberValue(fileno(popen(AS_CSTRING(vm, LIT), "r")));
+      {
+      char command[256] = "";
+      for (Value curr = RY
+          ; !isNull(curr)
+          ; curr = AS_CONS_CELL(vm, curr)->slots[1]){
+        strcat(command, " ");
+        struct VMBlock *currcell = AS_CONS_CELL(vm, curr);
+        strcat(command, AS_CSTRING(vm, currcell->slots[0]));
+      }
+
+      RX = mkNumberValue(fileno(popen(command, "r")));
+      }
       break;
     case DynLoad: // load module at fd stored in RY into RX
       {
@@ -146,7 +157,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         // arity check
         if (arity != callee->arity)
           runerror(vm, "Called function %s with %d arguments but it requires %d.",
-            funname, lastarg - funreg, fun->arity);
+            funname, arity, callee->arity);
 
         // register overflow check
         if (reg0 + callee->nregs >= vm->registers + (NUM_REGISTERS - 1))

@@ -58,7 +58,9 @@ primitives =
     . add 2 HasEffect checky
     . add 0 HasEffect halty
     ) [  -- useful spot to add more effectful primitives
-      HasEffect (Base ":=" 2)
+      HasEffect (Base ":=" 2),
+      SetsRegister (Base "popen" 1),
+      SetsRegister (Base "dload" 1)
       ]
 
 primMap :: M.Map Name Primitive
