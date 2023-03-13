@@ -1,0 +1,3 @@
+(let* ([$r1 'msg]
+       [$r2 (println $r1)])
+        1)
