@@ -1,0 +1,26 @@
+;; called `tailcallt2.vs` in svm
+(let ([$r0 (lambda ($r1 $r2 $r3)
+                    (let* ([$r4 0]
+                            [$r4 (= $r1 $r4)])
+                            (if $r4
+                                $r3
+                                (let* ([$r4 time-plus]
+                                       [$r5 1]
+                                       [$r5 (- $r1 $r5)]
+                                       [$r6 $r2]
+                                       [$r7 (+ $r2 $r3)])
+                                      ($r4 $r5 $r6 $r7))
+                            ))
+            )])
+     (set time-plus $r0))
+
+(begin 
+    (let* ([$r0 time-plus]
+           [$r1 1200000]
+           [$r2 12]
+           [$r3 99]
+           [$r0 ($r0 $r1 $r3 $r2)])
+           (check $r0 'time-plus-1200000-12-99)
+    )
+    (let* ([$r100 14400099])
+           (expect $r100 '14400099)))

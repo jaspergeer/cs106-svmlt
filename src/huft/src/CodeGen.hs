@@ -7,7 +7,7 @@ import qualified Primitives as P
 import qualified AsmUtils as U
 import Control.Monad.Trans.State (state, evalState)
 
-
+ 
 type Reg = O.Reg
 type Instruction = A.Instr
 
@@ -50,7 +50,9 @@ toReg' dest e = case e of
     K.VMOPGLO prim@(P.SetsRegister _) _ lit -> return $ s $ U.setRegLit dest prim lit -- the [r1] list disappears here, is that right?
     K.VMOPGLO {} -> forEffect' e
     K.FunCall funreg [] -> return $ s $ U.regs "call" [dest, funreg, funreg]
-    K.FunCall funreg args -> return $ s $ U.regs "call" [dest, funreg, last args] -- provided x, x1, ... xn, are consecutive
+    K.FunCall funreg args -> if U.areConsecutive $ funreg:args
+                             then return $ s $ U.regs "call" [dest, funreg, last args] -- provided x, x1, ... xn, are consecutive
+                              else error "not consecutive registers for call"
     K.FunCode args body -> do
         b' <- toReturn' body
         return $ s $ A.LoadFunc dest (length args) (b' [])
@@ -99,7 +101,9 @@ toReturn' e = case e of
   K.VMOP prim args -> toReg' 0 e <.> return (s $ U.regs "return" [0])
   K.VMOPGLO prim args v -> toReg' 0 e <.> return (s $ U.regs "return" [0])
   K.FunCall funreg [] -> return $ s $ U.regs "tailcall" [funreg, funreg]
-  K.FunCall funreg args -> return $ s $ U.regs "tailcall" [funreg, last args]
+  K.FunCall funreg args -> if U.areConsecutive $ funreg:args
+                           then return $ s $ U.regs "tailcall" [funreg, last args]
+                           else error "not consecutive registers for call"
   K.FunCode args body -> toReg' 0 e <.> return (s $ U.regs "return" [0])
   -- control flow
   K.If x e1 e2 -> do

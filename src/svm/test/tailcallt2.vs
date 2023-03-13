@@ -1,4 +1,5 @@
 $r0 := fun 3 {
+  ;; function times-plus: $r1 = n, $r2 = m, $r3 = product
   $r4 := 0
   $r4 := $r1 = $r4
   if $r4 goto L1
@@ -12,6 +13,7 @@ $r0 := fun 3 {
     return $r3
 }
 G[times-plus] := $r0
+
 $r1 := 1200000
 $r2 := 12
 $r3 := 99

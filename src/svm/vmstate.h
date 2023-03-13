@@ -29,7 +29,8 @@
 #include "value.h"
 #include "lpool.h"
 
-#define NUM_REGISTERS 1024
+// recommended we can have 5000 recursions, each will take around 20 registers
+#define NUM_REGISTERS 100000
 
 typedef struct VMState* VMState;
 
