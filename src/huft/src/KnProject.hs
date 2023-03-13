@@ -12,7 +12,7 @@ import qualified ObjectCode as O
 
 asName :: X.Exp -> E.Error X.Name
 asName (X.Local x) = return x
-asName e           = E.Error $ Left ("expected a local variable but instead got" ++ X.whatIs e)
+asName e           = E.Error $ Left ("expected a local variable but instead got " ++ X.whatIs e)
 
 -- val value : UnambiguousVScheme.value -> KNormalForm.literal
 -- val def   : UnambiguousVScheme.def -> string KNormalForm.exp Error.error

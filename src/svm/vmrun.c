@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <inttypes.h>
+#include <unistd.h>
 
 #include "check-expect.h"
 #include "iformat.h"
@@ -113,13 +114,15 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         strcat(command, AS_CSTRING(vm, currcell->slots[0]));
       }
 
-      RX = mkNumberValue(fileno(popen(command, "r")));
+      FILE *input = popen(command, "r");
+      RX = mkNumberValue(dup(fileno(input)));
+      pclose(input);
       }
       break;
     case DynLoad: // load module at fd stored in RY into RX
       {
         FILE *input = fdopen(AS_NUMBER(vm, RY), "r");
-        struct VMFunction *module = loadmodule(vm, fdopen(AS_NUMBER(vm, RY), "r")); 
+        struct VMFunction *module = loadmodule(vm, input); 
         if (!module)
           runerror(vm, "Missing or malformed module");
         RX = mkVMFunctionValue(module);
