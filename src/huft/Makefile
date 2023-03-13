@@ -4,8 +4,8 @@ BUILD=$(TOP)/build
 BIN=$(TOP)/bin
 
 huft:
-	cabal install exe:huft --installdir=$(BIN) --overwrite-policy=always
+	cabal build huft && ln -sf `cabal list-bin huft` ../../bin/uft
 
 clean:
+	rm -f $(BIN)/uft
 	cabal clean
-	rm -f $(BIN)/huft
