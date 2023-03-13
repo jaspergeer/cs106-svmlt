@@ -1,12 +1,6 @@
 *~
 *.o
 .cm
-/src/svm/vmtest
-/src/test
-/src/modules/run
-/doc/04KNORMAL.pdf
-/src/modules/test
-/src/modules/runm
 *.ui
 *.uo
 /src/svm/opcodes

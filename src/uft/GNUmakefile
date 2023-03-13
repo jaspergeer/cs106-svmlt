@@ -6,9 +6,10 @@ BIN=$(TOP)/bin
 BASES=pp all main wpp impossible
 MLBS=$(BASES:%=%.mlb)
 CMS=$(BASES:%=%.cm)
-SRCS=$(shell echo *.sml)
+SRCS=$(shell find ../huft/src -name '*.hs')
+HUFT=$(TOP)/huft
 
-MAINS=uft.opt uft
+MAINS=uft
 
 .PHONY: mosml
 
@@ -22,20 +23,21 @@ clean:
 
 .PHONY: all
 
-all: $(MAINS:%=$(BIN)/%)
+all: $(BIN)/huft
 
-.PHONY: mlton
+msg='$1'
 
-mlton: $(BIN)/uft.opt
-
-$(BIN)/uft.opt: $(MLBS) $(SRCS)
-	mlton -output $@ -verbose 1 main.mlb
-
-%.mlb: %.cm
-	cm2mlb $^ > $@ || rm -f $@
-
-$(BIN)/uft: $(SRCS) $(CMS)
-	$(TOP)/bin/mosml-compile-cm -o $@ main.cm
+$(BIN)/uft: $(SRCS)
+	cd ../huft && cabal build huft
+	echo "#!/bin/sh" > $@
+	echo -e -n 'lang=\044' >> $@
+	echo -e -n '1\n' >> $@
+	echo -e -n 'file=\044' >> $@
+	echo -e -n '2\n' >> $@
+	(cd ../huft && cabal list-bin huft) > temp
+	echo -e -n $(shell cat temp) '\044lang \044file' >> $@
+	(chmod u+x $@)
+	rm temp
 
 millet.cm: $(CMS)
 	expand-cm main.cm > $@
