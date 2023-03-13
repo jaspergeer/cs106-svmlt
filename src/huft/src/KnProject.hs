@@ -31,7 +31,7 @@ exp e = case e of
   X.Local x -> return $ K.Name x
   X.Global x -> return $ K.getglobal x
   X.SetLocal x e -> K.Assign x <$> exp e
-  X.SetGlobal x x' -> K.setglobal x <$> asName x'
+  X.SetGlobal x x' -> K.Seq <$> (K.setglobal x <$> asName x') <*> exp x'
   X.IfX e1 e2 e3 -> K.If <$> asName e1 <*> exp e2 <*> exp e3
   X.WhileX (X.LetX X.Let [(x , e1)] (X.Local x')) e2 | x == x' -> K.While x <$> exp e1 <*> exp e2
   X.WhileX (X.LetX X.Let [(x , e1)] (X.Local x')) e2 -> E.Error $ Left "names don't match"
