@@ -128,10 +128,11 @@ fun predefinedFunctionError s = eprintln ("while reading predefined functions, "
 fun intString n =
   String.map (fn #"~" => #"-" | c => c) (Int.toString n)
 fun realString x =
-  if Real.== (x, real (Real.floor x)) then
+ (if Real.== (x, real (Real.floor x)) then
     intString (Real.floor x)
   else
     String.map (fn #"~" => #"-" | c => c) (Real.fmt (StringCvt.FIX (SOME 2)) x)
+ ) handle Overflow => Real.toString x
 
 (* utility functions for string manipulation and printing S70g *)
 fun plural what [x] = what
@@ -2429,6 +2430,21 @@ fun runPathAs interactivity "-" = runAs interactivity
 (* type declarations for consistency checking *)
 val _ = op runAs : interactivity -> unit
 
+val asSexp : string -> value = fn s =>
+  let val results = finiteStreamOfLine (fn () => NONE) (schemeToken, sexp) s
+  in  case listOfStream results
+       of [] => SYM ""
+        | [v] => v
+        | vs => (eprintln ("Values parsed = " ^ String.concatWith ", " (map valueString vs));  embedList vs)
+  end
+
+fun setArgv strings =
+  currentBasis :=
+    processDef ( VAL ("argv", LITERAL (embedList (map asSexp strings)))
+               , !currentBasis
+               , noninteractive
+               )
+
 
 (*****************************************************************)
 (*                                                               *)
@@ -2440,7 +2456,7 @@ val _ = op runAs : interactivity -> unit
 
 fun strip_option [] = (NONE, [])
   | strip_option (arg :: args) =
-      if String.isPrefix "-" arg then
+      if arg <> "-" andalso String.isPrefix "-" arg then
           (SOME arg, args)
       else
           (NONE, arg :: args)
@@ -2465,8 +2481,16 @@ fun action option =
     of SOME (_, action) => action ()
      | NONE => usage()
 
+val (myargs, argv) =
+  let fun split (mine', []) = (rev mine', [])
+        | split (mine', "--" :: argv) = (rev mine', argv)
+        | split (mine', s :: ss) = split (s :: mine', ss)
+  in  split ([], CommandLine.arguments ())
+  end
+      
+val _ = setArgv argv
 
-val _ = case strip_option (CommandLine.arguments ())
+val _ = case strip_option myargs
           of (opt, []) => action (getOpt (opt, ""))
            | (NONE, files) => app (runPathAs (NOT_PROMPTING, NOT_PRINTING)) files
            | _      =>   usage ()

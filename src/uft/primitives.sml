@@ -40,6 +40,7 @@ structure Primitive :> sig
   val loadliteral  : primitive
   val setglobal    : primitive
   val getglobal    : primitive
+  val error        : primitive   (* used when finding a fault in user code *)
   val check        : primitive   (* for converting check-expect to K-normal form *)
   val expect       : primitive   (* for converting check-expect to K-normal form *)
   val check_assert : primitive
@@ -105,6 +106,7 @@ struct
   val cons         = SETS_REGISTER { name = "cons",         arity = 2 }
   val setglobal    = HAS_EFFECT    { name = "setglobal",    arity = 2 }
   val getglobal    = SETS_REGISTER { name = "getglobal",    arity = 1 }
+  val error        = HAS_EFFECT    { name = "error",        arity = 1 }
   val check        = HAS_EFFECT    { name = "check",        arity = 2 }
   val expect       = HAS_EFFECT    { name = "expect",       arity = 2 }
   val check_assert = HAS_EFFECT    { name = "check-assert", arity = 2 }
