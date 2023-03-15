@@ -52,6 +52,8 @@ def e = S.Exp (exp e)
                 K.Name x -> S.Var x
                 K.If x e2 e3 -> S.IfX (S.Var x) (exp e2) (exp e3)
                 K.Let x e' e -> let' x (exp e') (exp e)
+                K.Seq (K.VMOPGLO op [x] (O.String v)) e2 -> case P.name op of
+                    "setglobal" -> S.Set v (S.Var x)
                 K.Seq e1 e2 -> S.Begin [exp e1, exp e2]
                 K.Assign x e -> S.Set x (exp e)
                 K.While x e1 e2 -> S.WhileX (let' x (exp e1) (S.Var x)) (exp e2)
