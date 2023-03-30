@@ -31,6 +31,9 @@ import qualified KnProject
 import qualified KnRename
 import qualified CodeGen
 import qualified ParseUtils
+import qualified FOScheme
+import qualified FOUtil
+import qualified KNormalize
 
 type Emitter a = Handle -> a -> IO ()
 type Reader a = Handle -> IO (E.Error a)
@@ -65,6 +68,10 @@ vsOfFile infile = hGetContents' infile <&> ParseUtils.parseAndErr AsmParse.parse
 knOfFile :: Reader [KNF.Exp String]
 knOfFile = schemexOfFile ==> mapM KnProject.def  -- projection HO -> KN
 
+-- val FO_of_file : instream -> FirstOrderScheme.def list error
+foOfFile :: Reader [FOScheme.Def]
+foOfFile = schemexOfFile ==> mapM FOUtil.def
+
 -- Materializer functions
 
 hoOf :: Language -> Reader [UnambiguousVScheme.Def]
@@ -90,6 +97,12 @@ knTextOf :: Language -> Reader [KNF.Exp String]
 knTextOf KN = knOfFile
 knTextOf _ = error "bad :("
 
+-- nothing else translates into FO
+
+foOf :: Language -> Reader [FOScheme.Def]
+foOf FO = foOfFile
+foOf _ = throw Backward
+
 -- KN_reg_of that materializes a program of type ObjectCode.reg KNormalForm.exp list
 
 knRegOfknString :: [KNF.Exp String] -> E.Error [KNF.Exp ObjectCode.Reg]
@@ -97,6 +110,7 @@ knRegOfknString = mapM (KnRename.mapx KnRename.regOfName)
 
 knRegOf :: Language -> Reader [KNF.Exp ObjectCode.Reg]
 knRegOf KN = knOfFile ==> knRegOfknString
+knRegOf _ = foOfFile  ==> (return . map KNormalize.def)
 
 -- Emitter functions
 
@@ -114,8 +128,13 @@ emitScheme = emitFrom (map VSchemeUnparse.pp)
 
 emitHO :: Emitter [UnambiguousVScheme.Def]
 emitHO outfile = emitScheme outfile . map Ambiguate.ambiguate
+
 emitKn :: Emitter [KNF.Exp String]
 emitKn outfile = emitScheme outfile . map KnEmbed.def -- projection KN -> HOX
+
+-- Define emitter function emitFO by composing emitScheme with embedding function FOUtil.embed. Function emitFO should look a lot like function emitKN.
+emitFO :: Emitter [FOScheme.Def]
+emitFO outfile = emitScheme outfile . map FOUtil.embed
 
 -- Universal Forward Translator
 
@@ -129,7 +148,8 @@ translate inLang outLang infile outfile = catch
     VS -> vsOf inLang infile <&> (emitVS outfile <$>)
     VO -> voOf inLang infile <&> (emitVO outfile <$>)
     HO -> hoOf inLang infile <&> (emitHO outfile <$>)
-    KN -> knTextOf inLang infile <&> (emitKn outfile <$>))
+    KN -> knTextOf inLang infile <&> (emitKn outfile <$>)
+    FO -> foOf inLang infile <&> (emitFO outfile <$>))
   (\e -> case e of
     Backward -> throw (NotForward inLang outLang)
     NoTranslationTo l -> throw (NotForward inLang l))

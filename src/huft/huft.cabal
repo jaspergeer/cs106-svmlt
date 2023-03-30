@@ -53,7 +53,10 @@ executable huft
         SxParse,
         VSchemeUtils,
         CodeGen,
-        AsmUtils
+        AsmUtils,
+        FOScheme,
+        FOUtil,
+        KNormalize
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
