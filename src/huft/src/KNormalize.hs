@@ -3,6 +3,8 @@
 
 module KNormalize where
 
+import Prelude hiding ( exp )
+
 import qualified KNF as K
 import qualified FOScheme as F
 import qualified Env as E
@@ -15,6 +17,12 @@ regname r = "$r" ++ show r
 
 newtype RegSet = RS Int
 
+smallest :: RegSet -> Reg
+smallest (RS i) = i
+
+(\\) :: RegSet -> Reg -> RegSet
+(RS i) \\ x = RS $ max i x
+
 -- K normalization
 
 type Exp = K.Exp Reg
@@ -26,8 +34,25 @@ type Normalizer a = RegSet -> a -> Exp
 -- what is this A for?
 nbRegsWith normalize bind a xs k = undefined
 
-exp :: E.Env Reg -> RegSet -> F.Exp -> K.Exp Reg
-exp rho a e = undefined
+helper = undefined
 
-def :: F.Def -> K.Exp Reg
-def e = undefined
+-- use the continuation to decrease a
+exp :: E.Env Reg -> RegSet -> F.Exp -> Exp
+exp rho a e = case e of
+  (F.PrimCall p [e]) -> bindAnyReg a (exp rho a e) (\t -> K.VMOP p [t])
+  (F.PrimCall p [e1, e2]) -> bindAnyReg a (exp rho a e1) (\t1 -> 
+                             bindAnyReg (a \\ t1) (exp rho (a \\ t1) e2) (\t2 -> 
+                             K.VMOP p [t1, t2]))
+  _ -> undefined
+
+def :: F.Def -> Exp
+def e = case e of
+    (F.Exp e) -> exp E.empty (RS 0) e
+
+bindAnyReg :: RegSet -> Exp -> (Reg -> Exp) -> Exp
+bindAnyReg a e k = case e of
+  (K.Name n) -> k n
+  _ ->
+    let t = smallest a
+    in K.Let t e (k t)
+
