@@ -41,6 +41,7 @@
 /bin/vscheme
 /bin/uft.opt
 /bin/uft
+/src/uft/*.mlb
 /bin/huft
 *.mlb
 /clones/
