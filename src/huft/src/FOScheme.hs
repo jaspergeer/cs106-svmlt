@@ -18,9 +18,11 @@ data Exp = Literal Literal
          | FunCall Exp [Exp]
          | PrimCall P.Primitive [Exp]
          | Let [(Name, Exp)] Exp
+         deriving Show
 
 data Def = Val Name Exp
          | Define Name [Name] Exp
          | Exp Exp
          | CheckExpect String Exp String Exp
          | CheckAssert String Exp
+         deriving Show
