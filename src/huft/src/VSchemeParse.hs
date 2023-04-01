@@ -55,12 +55,12 @@ expr = let
   letKind = try (S.LetRec <$ tok "letrec")
         <|> S.Let <$ tok "let"
   
-  expr' = S.Set <$> (tok "set" *> name) <*> expr
-      <|> S.IfX <$> (tok "if" *> expr) <*> expr <*> expr
-      <|> S.WhileX <$> (tok "while" *> expr) <*> expr
-      <|> S.Begin <$> (tok "begin" *> many expr)
-      <|> S.Lambda <$> (try (tok "lambda") *> parend formals) <*> expr
-      <|> letstar <$> (try (tok "let*") *> parend (many bind)) <*> expr
+  expr' = S.Set <$> try (tok "set" *> name) <*> expr
+      <|> S.IfX <$> try (tok "if" *> expr) <*> expr <*> expr
+      <|> S.WhileX <$> try (tok "while" *> expr) <*> expr
+      <|> S.Begin <$> try (tok "begin" *> many expr)
+      <|> S.Lambda <$> try (try (tok "lambda") *> parend formals) <*> expr
+      <|> letstar <$> try (try (tok "let*") *> parend (many bind)) <*> expr
       <|> S.LetX <$> letKind <*> parend (many bind) <*> expr
       <|> S.Apply <$> expr <*> many expr
   in
