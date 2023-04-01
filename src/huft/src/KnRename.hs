@@ -11,6 +11,9 @@ regOfName :: String -> E.Error Int
 regOfName ('$':s) = P.parseAndErr AsmParse.reg ('$':s)
 regOfName s = P.parseAndErr AsmParse.reg ('$':s)
 
+nameOfReg :: Int -> String
+nameOfReg i = "$r" ++ show i
+
 -- The function requires the tedious copying of program 
 -- structure that you find in function Disambiguate.disambiguate.
 

@@ -43,6 +43,8 @@ typedef enum opcode {
     // Check-Expect
     Check, Expect, // R1LIT
 
+    CheckAssert,
+
     // Arithmetic
     Add, Sub, Mul, Div, Mod, Idiv, // R3
 

@@ -226,6 +226,10 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       expect(vm, AS_CSTRING(vm, LIT), RX);
       break;
     
+    case CheckAssert:
+      check_assert("TODO", RX);
+      break;
+    
     // Arithmetic
     case Zero:
       RX = mkNumberValue(0);
