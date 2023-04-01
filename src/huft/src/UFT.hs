@@ -96,7 +96,7 @@ voOf inLang =  vsOf inLang ==> Assembler.translate
 
 knTextOf :: Language -> Reader [KNF.Exp String]
 knTextOf KN = knOfFile
-knTextOf _ = error "bad :("
+knTextOf inLang = knRegOf inLang ==> knStringofknReg
 
 -- nothing else translates into FO
 
@@ -108,6 +108,9 @@ foOf _ = throw Backward
 
 knRegOfknString :: [KNF.Exp String] -> E.Error [KNF.Exp ObjectCode.Reg]
 knRegOfknString = mapM (KnRename.mapx KnRename.regOfName)
+
+knStringofknReg :: [KNF.Exp ObjectCode.Reg] -> E.Error [KNF.Exp String]
+knStringofknReg = mapM (KnRename.mapx (return .KnRename.nameOfReg))
 
 knRegOf :: Language -> Reader [KNF.Exp ObjectCode.Reg]
 knRegOf KN = knOfFile ==> knRegOfknString

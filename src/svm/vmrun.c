@@ -227,7 +227,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       break;
     
     case CheckAssert:
-      // TODO
+      check_assert("TODO", RX);
       break;
     
     // Arithmetic

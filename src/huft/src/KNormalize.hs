@@ -56,12 +56,14 @@ strlit = K.Literal . O.String
 def :: F.Def -> Exp
 def e = case e of
     (F.Exp e) -> exp E.empty (RS 0) e
-    (F.CheckExpect s1 e1 s2 e2) -> K.Seq (bindAnyReg (RS 0) (exp E.empty (RS 0) e1)
-                                          (\t -> K.VMOPGLO P.check [t] (O.String s1)))
-                                         (bindAnyReg (RS 0) (exp E.empty (RS 0) e2)
-                                          (\t -> K.VMOPGLO P.expect [t] (O.String s2)))
-    (F.CheckAssert s e) -> (bindAnyReg (RS 0) (exp E.empty (RS 0) e)
-                                          (\t -> K.VMOPGLO P.checkAssert [t] (O.String s)))
+    (F.CheckExpect s1 e1 s2 e2) -> K.Seq
+      (bindAnyReg (RS 0) (exp E.empty (RS 0) e1)
+        (\t -> K.VMOPGLO P.check [t] (O.String s1)))
+      (bindAnyReg (RS 0) (exp E.empty (RS 0) e2)
+        (\t -> K.VMOPGLO P.expect [t] (O.String s2)))
+    (F.CheckAssert s e) ->
+      (bindAnyReg (RS 0) (exp E.empty (RS 0) e)
+        (\t -> K.VMOPGLO P.checkAssert [t] (O.String s)))
 
 bindAnyReg :: RegSet -> Exp -> (Reg -> Exp) -> Exp
 bindAnyReg a e k = case e of
