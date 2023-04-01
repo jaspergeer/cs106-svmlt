@@ -48,15 +48,20 @@ exp rho a e = case e of
   (F.Literal x) -> K.Literal x
   _ -> error $ show e
 
-primcall :: P.Primitive -> [F.Exp] -> Exp
-primcall p es = exp E.empty (RS 0) (F.PrimCall p es)
+-- primcall :: P.Primitive -> [F.Exp] -> Exp
+-- primcall p es = exp E.empty (RS 0) (F.PrimCall p es)
+
+strlit = K.Literal . O.String
 
 def :: F.Def -> Exp
 def e = case e of
     (F.Exp e) -> exp E.empty (RS 0) e
-    (F.CheckExpect s1 e1 s2 e2) -> K.Seq (primcall P.check [e1, F.Literal $ O.String s1])
-                                         (primcall P.check [e2, F.Literal $ O.String s2])
-    (F.CheckAssert s e) -> primcall P.checkAssert [e, F.Literal $ O.String s]
+    (F.CheckExpect s1 e1 s2 e2) -> K.Seq (bindAnyReg (RS 0) (exp E.empty (RS 0) e1)
+                                          (\t -> K.VMOPGLO P.check [t] (O.String s1)))
+                                         (bindAnyReg (RS 0) (exp E.empty (RS 0) e2)
+                                          (\t -> K.VMOPGLO P.expect [t] (O.String s2)))
+    (F.CheckAssert s e) -> (bindAnyReg (RS 0) (exp E.empty (RS 0) e)
+                                          (\t -> K.VMOPGLO P.checkAssert [t] (O.String s)))
 
 bindAnyReg :: RegSet -> Exp -> (Reg -> Exp) -> Exp
 bindAnyReg a e k = case e of

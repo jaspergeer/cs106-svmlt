@@ -60,7 +60,8 @@ primitives =
     ) [  -- useful spot to add more effectful primitives
       HasEffect (Base ":=" 2),
       SetsRegister (Base "popen" 1),
-      SetsRegister (Base "dload" 1)
+      SetsRegister (Base "dload" 1),
+      checkAssert
       ]
 
 primMap :: M.Map Name Primitive
@@ -78,7 +79,7 @@ setglobal    = HasEffect (Base "setglobal" 2)
 getglobal    = SetsRegister (Base "getglobal" 1)
 check        = HasEffect (Base "check" 2) -- for converting check-expect to K-normal form
 expect       = HasEffect (Base "expect" 2) -- for converting check-expect to K-normal form
-checkAssert = HasEffect (Base "check-assert" 2)
+checkAssert = HasEffect (Base "check-assert" 1)
 loadliteral  = SetsRegister (Base "loadliteral" 1)
 mkclosure    = SetsRegister (Base "mkclosure" 2)
 setclslot    = HasEffect (Base "setclslot" 3)

@@ -60,7 +60,8 @@ opcodesR1 =
   , "print"
   , "cskip"
   , "err"
-  , "return" ]
+  , "return"
+  , "check-assert" ]
 
 opcodesR1LIT =
   [ "loadliteral"
