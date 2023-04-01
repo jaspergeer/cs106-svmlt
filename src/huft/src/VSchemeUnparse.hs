@@ -58,7 +58,7 @@ def (S.CheckAssert e) = P.nest 3 $ kw "check-assert" [exp e]
 def (S.Exp e) = exp e
 
 pp = show . def
-ppexp = exp
+ppexp = show . exp
 
 -- need to strip final new line?
 

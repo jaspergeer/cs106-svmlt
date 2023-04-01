@@ -18,3 +18,15 @@
   (set z (number? z))
   (set z (boolean? z)))
   #t)
+
+;; while
+(val m 1)
+(check-expect
+  (while
+    (number? m)
+    (begin
+      (set m 'done)
+      (println m)))
+    #f)
+(println m)
+(check-expect m 'done)
