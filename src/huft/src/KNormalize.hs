@@ -41,11 +41,12 @@ helper = undefined
 exp :: E.Env Reg -> RegSet -> F.Exp -> Exp
 exp rho a e = case e of
   (F.PrimCall p [e]) -> bindAnyReg a (exp rho a e) (\t -> K.VMOP p [t])
+  -- (F.PrimCall p (e:es)) -> undefined
   -- (F.PrimCall p [e1, e2]) -> bindAnyReg a (exp rho a e1) (\t1 -> 
   --                            bindAnyReg (a \\ t1) (exp rho (a \\ t1) e2) (\t2 -> 
   --                            K.VMOP p [t1, t2]))
   (F.Literal x) -> K.Literal x
-  _ -> undefined
+  _ -> error $ show e
 
 primcall :: P.Primitive -> [F.Exp] -> Exp
 primcall p es = exp E.empty (RS 0) (F.PrimCall p es)
