@@ -8,6 +8,7 @@ import Prelude hiding ( exp )
 import qualified KNF as K
 import qualified FOScheme as F
 import qualified Env as E
+import qualified Error
 import qualified Primitives as P
 import qualified ObjectCode as O
 
@@ -46,12 +47,31 @@ exp rho a e = case e of
   --                            bindAnyReg (a \\ t1) (exp rho (a \\ t1) e2) (\t2 -> 
   --                            K.VMOP p [t1, t2]))
   (F.Literal x) -> K.Literal x
+  (F.Local n) -> case E.find n rho of
+    Error.Error (Left s) -> error s
+    Error.Error (Right t) -> K.Name t
+  (F.SetLocal n e) -> undefined -- we don't have a knf set form
+
+  (F.Global n) -> let t = smallest a -- this ones iffy
+   in K.Seq (K.VMOPGLO P.getglobal [t] (O.String n)) (K.Name t)
+  (F.SetGlobal n e) -> bindAnyReg a (exp rho a e)
+    (\t -> K.Seq
+      (K.VMOPGLO P.setglobal [t] (O.String n))
+      (K.Literal $ O.String n))
+  (F.Begin []) -> K.Literal $ O.Bool False
+  (F.Begin es) -> 
+    let mkSequence [e] = exp rho a e
+        mkSequence (e:es) = K.Seq (exp rho a e) (mkSequence es)
+    in mkSequence es
+  (F.IfX e1 e2 e3) -> bindAnyReg a (exp rho a e1)
+    (\t ->  K.If t (exp rho a e2) (exp rho a e3))
+  (F.WhileX e1 e2) ->
+    let t = smallest a
+    in K.While t (exp rho a e1) (exp rho a e2)
   _ -> error $ show e
 
 -- primcall :: P.Primitive -> [F.Exp] -> Exp
 -- primcall p es = exp E.empty (RS 0) (F.PrimCall p es)
-
-strlit = K.Literal . O.String
 
 def :: F.Def -> Exp
 def e = case e of
@@ -62,8 +82,8 @@ def e = case e of
       (bindAnyReg (RS 0) (exp E.empty (RS 0) e2)
         (\t -> K.VMOPGLO P.expect [t] (O.String s2)))
     (F.CheckAssert s e) ->
-      (bindAnyReg (RS 0) (exp E.empty (RS 0) e)
-        (\t -> K.VMOPGLO P.checkAssert [t] (O.String s)))
+      bindAnyReg (RS 0) (exp E.empty (RS 0) e)
+        (\t -> K.VMOPGLO P.checkAssert [t] (O.String s))
 
 bindAnyReg :: RegSet -> Exp -> (Reg -> Exp) -> Exp
 bindAnyReg a e k = case e of
