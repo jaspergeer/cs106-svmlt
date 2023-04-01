@@ -48,7 +48,7 @@ exp rho a e = case e of
   _ -> undefined
 
 primcall :: P.Primitive -> [F.Exp] -> Exp
-primcall p es = (exp E.empty (RS 0) (F.PrimCall p es))
+primcall p es = exp E.empty (RS 0) (F.PrimCall p es)
 
 def :: F.Def -> Exp
 def e = case e of

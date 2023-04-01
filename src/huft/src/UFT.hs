@@ -87,7 +87,8 @@ vsOfkn = CodeGen.codeGen
 
 vsOf :: Language -> Reader [Asm.Instr]
 vsOf VS = vsOfFile
-vsOf inLang = knOfFile ==> (knRegOfknString >=> return . vsOfkn)
+vsOf inLang = knRegOf inLang ==> (return . vsOfkn)
+-- vsOf inLang = knOfFile ==> (knRegOfknString >=> return . vsOfkn)
 
 voOf :: Language -> Reader [ObjectCode.Instr]
 voOf VO     =  \_ -> return (Error $ Left "There is no reader for .vo")
