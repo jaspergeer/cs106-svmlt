@@ -6,7 +6,7 @@
 
 ;; global, setglobal
 (check-expect (set x 1) 1)
-(check-expect gvar 1)
+(check-expect x 1)
 (set x 45)
 (check-expect x 45)
 (val y 66)
@@ -24,9 +24,6 @@
 (check-expect
   (while
     (number? m)
-    (begin
-      (set m 'done)
-      (println m)))
+    (set m 'done))
     #f)
-(println m)
 (check-expect m 'done)

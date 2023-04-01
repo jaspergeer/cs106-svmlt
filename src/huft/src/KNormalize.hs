@@ -55,7 +55,7 @@ exp rho a e = case e of
     Error.Error (Right t) -> K.Assign t (exp rho a e)
 
   (F.Global n) -> let t = smallest a -- this ones iffy
-   in K.Seq (K.VMOPGLO P.getglobal [t] (O.String n)) (K.Name t)
+   in K.VMOPGLO P.getglobal [t] (O.String n)
   (F.SetGlobal n e) -> bindAnyReg a (exp rho a e)
     (\t -> K.Seq
       (K.VMOPGLO P.setglobal [t] (O.String n))
