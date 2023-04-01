@@ -50,7 +50,9 @@ exp rho a e = case e of
   (F.Local n) -> case E.find n rho of
     Error.Error (Left s) -> error s
     Error.Error (Right t) -> K.Name t
-  (F.SetLocal n e) -> undefined -- we don't have a knf set form
+  (F.SetLocal n e) -> case E.find n rho of
+    Error.Error (Left s) -> error s
+    Error.Error (Right t) -> K.Assign t (exp rho a e)
 
   (F.Global n) -> let t = smallest a -- this ones iffy
    in K.Seq (K.VMOPGLO P.getglobal [t] (O.String n)) (K.Name t)
