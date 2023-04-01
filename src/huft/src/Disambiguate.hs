@@ -2,6 +2,7 @@ module Disambiguate where
 import qualified Primitives as P
 import qualified VScheme as S
 import qualified UnambiguousVScheme as X
+import qualified VSchemeUnparse as U
 
 data Referent = Local | Primitive P.Primitive | OtherGlobal
 
@@ -85,8 +86,8 @@ def d = case d of
   S.Val f (S.Lambda xs e) -> X.Define f xs (exp' e xs)
   S.Val x e -> X.Val x (exp' e [])
   S.Exp e -> X.Exp (exp' e [])
-  S.CheckExpect e e' -> X.CheckExpect "TODO" (exp' e []) "TODO2" (exp' e' [])
-  S.CheckAssert e -> X.CheckAssert "TODO" (exp' e [])
+  S.CheckExpect e e' -> X.CheckExpect (U.ppexp e) (exp' e []) (U.ppexp e') (exp' e' [])
+  S.CheckAssert e -> X.CheckAssert (U.ppexp e) (exp' e [])
 
 disambiguate :: S.Def -> X.Def
 disambiguate = def
