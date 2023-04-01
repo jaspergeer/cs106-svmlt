@@ -59,7 +59,7 @@ exp rho a e = case e of
   (F.SetGlobal n e) -> bindAnyReg a (exp rho a e)
     (\t -> K.Seq
       (K.VMOPGLO P.setglobal [t] (O.String n))
-      (K.Literal $ O.String n))
+      (K.Name t))
   (F.Begin []) -> K.Literal $ O.Bool False
   (F.Begin es) -> 
     let mkSequence [e] = exp rho a e
@@ -86,6 +86,10 @@ def e = case e of
     (F.CheckAssert s e) ->
       bindAnyReg (RS 0) (exp E.empty (RS 0) e)
         (\t -> K.VMOPGLO P.checkAssert [t] (O.String s))
+    (F.Val n e) -> bindAnyReg (RS 0) (exp E.empty (RS 0) e)
+      (\t -> K.Seq
+        (K.VMOPGLO P.setglobal [t] (O.String n))
+        (K.Literal $ O.String n))
 
 bindAnyReg :: RegSet -> Exp -> (Reg -> Exp) -> Exp
 bindAnyReg a e k = case e of
