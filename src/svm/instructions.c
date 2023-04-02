@@ -30,7 +30,7 @@ instruction_info instructions[] = {
   { "dload", DynLoad, parseR2, "$rX := dload $rY" },
 
   // Branching
-  { "cskip", CondSkip, parseR1, "if $rX goto 1" },
+  { "cskip", CondSkip, parseR1, "$rX := not $rX\nif $rX goto 1" },
   { "jump", Jump, parseR0I24, "goto iXYZ" },
 
   // Function Calls

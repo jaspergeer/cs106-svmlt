@@ -28,7 +28,7 @@ typedef enum opcode {
     DynLoad, // R3
 
     // Branching
-    CondSkip, // R3
+    CondSkip, // R1
     Jump, // R0I24
 
     // Function Calls

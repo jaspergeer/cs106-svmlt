@@ -27,3 +27,8 @@
     (set m 'done))
     #f)
 (check-expect m 'done)
+
+;; if
+(check-expect
+  (if (number? m) 10 'a) 'a)
+
