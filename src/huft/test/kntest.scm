@@ -36,3 +36,12 @@
 (define fun (x) x)
 
 (check-assert (function? fun))
+
+;; primcall
+(check-expect
+  (+
+    (*
+      (+ 4 5)
+      (+ 2 3))
+    (/ 10 5))
+  47)
