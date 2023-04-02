@@ -90,6 +90,14 @@ def e = case e of
       (\t -> K.Seq
         (K.VMOPGLO P.setglobal [t] (O.String n))
         (K.Literal $ O.String n))
+    (F.Define funname params body) ->
+      let
+        (funenv, regset) = foldr (\n (env, rs) ->
+          let t = smallest rs
+              rs' = rs \\ t
+          in (E.bind n t env, rs')) (E.bind funname 0 E.empty, RS 1) params
+      in K.Let 0 (K.FunCode [1..(length params)] (exp funenv regset body))
+                 (K.VMOPGLO P.setglobal [0] (O.String funname))
 
 bindAnyReg :: RegSet -> Exp -> (Reg -> Exp) -> Exp
 bindAnyReg a e k = case e of

@@ -32,3 +32,7 @@
 (check-expect
   (if (number? m) 10 'a) 'a)
 
+;; define
+(define fun (x) x)
+
+(check-assert (function? fun))
