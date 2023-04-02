@@ -43,7 +43,7 @@ labelElim instrs env = let
       (O.LoadFunc reg arity <$> translate body) <*> is
     -- goto
     (A.GotoLabel n) -> 
-      E.find n env >>= \x -> (O.Goto (x - pos - 2) :) <$> is
+      E.find n env >>= \x -> (O.Goto (x - pos - 1) :) <$> is
     (A.IfGotoLabel r1 n) -> 
       E.find n env >>= \x -> ([O.Regs "cskip" [r1], O.Goto (x - pos - 2)] ++) <$> is
     -- base cases

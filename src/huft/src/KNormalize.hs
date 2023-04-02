@@ -23,54 +23,54 @@ smallest :: RegSet -> Reg
 smallest (RS i) = i
 
 (\\) :: RegSet -> Reg -> RegSet
-(RS i) \\ x = RS $ max i x
+(RS i) \\ x = RS $ max i (x + 1)
 
 -- K normalization
 
 type Exp = K.Exp Reg
-type Policy = RegSet -> Exp -> (RegSet -> Exp) -> Exp
+type Policy = RegSet -> Exp -> (Reg -> Exp) -> Exp
 -- puts the expression in an register, continues
 
 type Normalizer a = RegSet -> a -> Exp
 
--- what is this A for?
-nbRegsWith normalize bind a xs k = undefined
+nbRegsWith :: Normalizer a -> Policy -> RegSet -> [a] -> ([Reg] -> Exp) -> Exp
+nbRegsWith _ _ _ [] k = k []
+nbRegsWith normalize p a (e:es) k = p a (normalize a e)
+  (\t -> nbRegsWith normalize p (a \\ t) es (\ts -> k (t:ts)))
 
 helper = undefined
 
 -- use the continuation to decrease a
 exp :: E.Env Reg -> RegSet -> F.Exp -> Exp
-exp rho a e = case e of
-  (F.PrimCall p [e]) -> bindAnyReg a (exp rho a e) (\t -> K.VMOP p [t])
-  -- (F.PrimCall p (e:es)) -> undefined
-  -- (F.PrimCall p [e1, e2]) -> bindAnyReg a (exp rho a e1) (\t1 -> 
-  --                            bindAnyReg (a \\ t1) (exp rho (a \\ t1) e2) (\t2 -> 
-  --                            K.VMOP p [t1, t2]))
-  (F.Literal x) -> K.Literal x
-  (F.Local n) -> case E.find n rho of
-    Error.Error (Left s) -> error s
-    Error.Error (Right t) -> K.Name t
-  (F.SetLocal n e) -> case E.find n rho of
-    Error.Error (Left s) -> error s
-    Error.Error (Right t) -> K.Assign t (exp rho a e)
+exp rho a e =
+  let nbRegs = nbRegsWith (exp rho)
+  in case e of
+    (F.PrimCall p es) -> nbRegs bindAnyReg a es (K.VMOP p)
+    (F.Literal x) -> K.Literal x
+    (F.Local n) -> case E.find n rho of
+      Error.Error (Left s) -> error s
+      Error.Error (Right t) -> K.Name t
+    (F.SetLocal n e) -> case E.find n rho of
+      Error.Error (Left s) -> error s
+      Error.Error (Right t) -> K.Assign t (exp rho a e)
 
-  (F.Global n) -> let t = smallest a -- this ones iffy
-   in K.Seq (K.VMOPGLO P.getglobal [t] (O.String n)) (K.Name t)
-  (F.SetGlobal n e) -> bindAnyReg a (exp rho a e)
-    (\t -> K.Seq
-      (K.VMOPGLO P.setglobal [t] (O.String n))
-      (K.Name t))
-  (F.Begin []) -> K.Literal $ O.Bool False
-  (F.Begin es) -> 
-    let mkSequence [e] = exp rho a e
-        mkSequence (e:es) = K.Seq (exp rho a e) (mkSequence es)
-    in mkSequence es
-  (F.IfX e1 e2 e3) -> bindAnyReg a (exp rho a e1)
-    (\t ->  K.If t (exp rho a e2) (exp rho a e3))
-  (F.WhileX e1 e2) ->
-    let t = smallest a
-    in K.While t (exp rho a e1) (exp rho a e2)
-  _ -> error $ show e
+    (F.Global n) -> let t = smallest a -- this ones iffy
+      in K.VMOPGLO P.getglobal [t] (O.String n)
+    (F.SetGlobal n e) -> bindAnyReg a (exp rho a e)
+      (\t -> K.Seq
+        (K.VMOPGLO P.setglobal [t] (O.String n))
+        (K.Name t))
+    (F.Begin []) -> K.Literal $ O.Bool False
+    (F.Begin es) -> 
+      let mkSequence [e] = exp rho a e
+          mkSequence (e:es) = K.Seq (exp rho a e) (mkSequence es)
+      in mkSequence es
+    (F.IfX e1 e2 e3) -> bindAnyReg a (exp rho a e1)
+      (\t ->  K.If t (exp rho a e2) (exp rho a e3))
+    (F.WhileX e1 e2) ->
+      let t = smallest a
+      in K.While t (exp rho a e1) (exp rho a e2)
+    _ -> error $ show e
 
 -- primcall :: P.Primitive -> [F.Exp] -> Exp
 -- primcall p es = exp E.empty (RS 0) (F.PrimCall p es)
@@ -90,6 +90,14 @@ def e = case e of
       (\t -> K.Seq
         (K.VMOPGLO P.setglobal [t] (O.String n))
         (K.Literal $ O.String n))
+    (F.Define funname params body) ->
+      let
+        (funenv, regset) = foldr (\n (env, rs) ->
+          let t = smallest rs
+              rs' = rs \\ t
+          in (E.bind n t env, rs')) (E.bind funname 0 E.empty, RS 1) params
+      in K.Let 0 (K.FunCode [1..(length params)] (exp funenv regset body))
+                 (K.VMOPGLO P.setglobal [0] (O.String funname))
 
 bindAnyReg :: RegSet -> Exp -> (Reg -> Exp) -> Exp
 bindAnyReg a e k = case e of

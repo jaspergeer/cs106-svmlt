@@ -6,7 +6,7 @@
 
 ;; global, setglobal
 (check-expect (set x 1) 1)
-(check-expect gvar 1)
+(check-expect x 1)
 (set x 45)
 (check-expect x 45)
 (val y 66)
@@ -24,9 +24,24 @@
 (check-expect
   (while
     (number? m)
-    (begin
-      (set m 'done)
-      (println m)))
+    (set m 'done))
     #f)
-(println m)
 (check-expect m 'done)
+
+;; if
+(check-expect
+  (if (number? m) 10 'a) 'a)
+
+;; define
+(define fun (x) x)
+
+(check-assert (function? fun))
+
+;; primcall
+(check-expect
+  (+
+    (*
+      (+ 4 5)
+      (+ 2 3))
+    (/ 10 5))
+  47)
