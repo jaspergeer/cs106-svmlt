@@ -41,7 +41,8 @@
      ys
      (cons (car xs) (append (cdr xs) ys))))
 ;  predefined uScheme functions 100b 
-(define revapp (xs ys) ; (reverse xs) followed by ys
+; (reverse xs) followed by ys
+(define revapp (xs ys)
   (if (null? xs)
      ys
      (revapp (cdr xs) (cons (car xs) ys))))
@@ -172,8 +173,8 @@
         (cdr pair)
         nil)))
 
-(define Table.put (t k v)
-  (let ([pair (assoc k (cdr t))])
-    (if pair
-        (set-cdr! pair v)
-        (set-cdr! t (cons (cons k v) (cdr t))))))
+;; (define Table.put (t k v)
+;;   (let ([pair (assoc k (cdr t))])
+;;     (if pair
+;;         (set-cdr! pair v)
+;;         (set-cdr! t (cons (cons k v) (cdr t))))))
