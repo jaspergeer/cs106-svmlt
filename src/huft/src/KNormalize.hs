@@ -74,7 +74,23 @@ exp rho a e =
       bindSmallest a (exp rho a fun)
         (\t -> nbRegs bindSmallest (a \\ t) args
           (\ts -> K.FunCall t ts))
-    _ -> error $ show e
+    (F.Let bindings body) ->
+         let (ns, es) = unzip bindings
+             bind_regs ns ts = foldl (\rho (n, t) -> E.bind n t rho) rho (zip ns ts)
+         in nbRegs bindAnyReg a es
+              (\ts -> exp (bind_regs ns ts) (foldl (\\) a ts) body)
+      -- let mkLet a' [] body = exp rho a' body
+      --     mkLet a' ((n, e):bs) body = nbRegs bindAnyReg a' [e] 
+      --                          (\[t] -> mkLet (a' \\ t) bs body)
+      -- in mkLet a bindings body
+      -- nbregs bindAnyReg a [e] (\[t] -> exp rho (a \\ t) body)
+    -- _ -> error $ show e
+
+-- Implement let bindings. K‑normalize the F.LET form. 
+-- I encourage you to use nbRegs; you can figure out an appropriate policy. 
+-- The continuation will have to remove all the bound registers from the available set. 
+-- You can implement this operation in a special-purpose recursive function, 
+-- or you can use a fold with a “flipped” version of function --.2
 
 -- You will need to use bindSmallest to put the function in the smallest available register, 
 -- then K‑normalize the arguments using nbRegs with bindSmallest as the policy. 

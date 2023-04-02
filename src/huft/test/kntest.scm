@@ -52,10 +52,28 @@
 ;;   (fun 1)
 ;;   1)
 
-(define fun2 (x y) (+ x y))
+;; (define fun2 (x y) (+ x y))
 
-;; (fun2 1 2)
+;; (check-expect
+;;   (fun2 1 2)
+;;   3)
 
-(check-expect
-  (fun2 1 2)
-  3)
+;; y
+
+;; (append (qsort (filter left? rest))
+;;         (cons pivot (qsort (filter right? rest))))
+
+;; let expression
+
+;; I got this from cs 105 cqs of the scheme homework
+
+(val x 3)  
+(check-expect (let ([x 4] [y x]) y) 
+              3)
+(check-expect (let* ([x 4] [y x]) y)
+              4)
+(val y 4)  
+(check-expect (let ([x y] [y x]) y)
+                3)
+(check-expect (let* ([x y] [y x]) y)
+                4)
