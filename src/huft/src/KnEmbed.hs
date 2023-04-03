@@ -62,7 +62,7 @@ def e = S.Exp (exp e)
                 K.VMOP op args -> S.Apply (S.Var (P.name op)) (map S.Var args)
             -- getglobal case
                 K.VMOPGLO op xs v -> case (P.name op, xs, v) of
-                    ("getglobal", [], O.String v) -> S.Var v
+                    ("getglobal", [r], O.String v) -> S.Var v
                     ("setglobal", [x], O.String v) -> S.Set v (S.Var x)
                     -- match check and expect
                     -- may cause undefined behavior
