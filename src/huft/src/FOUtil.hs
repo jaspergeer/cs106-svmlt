@@ -34,7 +34,7 @@ exp e = case e of
     X.PrimCall p es -> F.PrimCall p <$> mapM exp es
     X.LetX X.Let bs body -> F.Let <$> bindings bs <*> exp body
     X.LetX X.LetRec _ _ -> E.Error $ Left "letrec"
-    X.Lambda args e -> E.Error $ Left "lambda"
+    X.Lambda args e -> E.Error $ Left "lambda in code"
     where bindings = mapM (\(x, e) -> (,) x <$> exp e)
 
 def :: X.Def -> E.Error F.Def

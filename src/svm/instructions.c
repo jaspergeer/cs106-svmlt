@@ -47,7 +47,7 @@ instruction_info instructions[] = {
   { "check", Check, parseR1LIT, "check $rX LIT" },
   { "expect", Expect, parseR1LIT, "expect $rX LIT" },
 
-  { "check-assert", CheckAssert, parseR1, "check-assert $rX LIT"},
+  { "check-assert", CheckAssert, parseR1LIT, "check-assert $rX LIT"},
 
   // Arithmetic
   { "+", Add, parseR3, "$rX := $rY + $rZ" },
