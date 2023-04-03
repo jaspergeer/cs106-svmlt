@@ -118,7 +118,7 @@ def e = case e of
         (K.Literal $ O.String n))
     (F.Define funname params body) ->
       let
-        (funenv, regset) = foldr (\n (env, rs) ->
+        (funenv, regset) = foldl (\(env, rs) n ->
           let t = smallest rs
               rs' = rs \\ t
           in (E.bind n t env, rs')) (E.bind funname 0 E.empty, RS 1) params

@@ -3,6 +3,13 @@
 (check-expect (number? 3) #t)            
 (check-expect (number? 'really?) #f)
 (check-assert (symbol? 'really?))
+(check-assert (null? '()))
+(check-assert (not (null? '(a b c))))
+(check-expect (car '(a b c)) 'a)
+(check-expect (cdr '(a b c)) '(b c))
+(check-expect (cons 'a '(b c)) '(a b c))
+(check-expect (and #t #t) #t)
+(check-expect (and #t #f) #f)
 
 ;; ;; global, setglobal
 (check-expect (set x 1) 1)
@@ -58,7 +65,11 @@
   (fun2 1 2)
   3)
 
-;; y
+(define fun3 (x y) (cons x y))
+
+(check-expect
+  (fun3 1 2)
+  (cons 1 2))
 
 ;; (append (qsort (filter left? rest))
 ;;         (cons pivot (qsort (filter right? rest))))
