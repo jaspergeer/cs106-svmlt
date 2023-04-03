@@ -173,8 +173,8 @@
         (cdr pair)
         nil)))
 
-;; (define Table.put (t k v)
-;;   (let ([pair (assoc k (cdr t))])
-;;     (if pair
-;;         (set-cdr! pair v)
-;;         (set-cdr! t (cons (cons k v) (cdr t))))))
+(define Table.put (t k v)
+  (let ([pair (assoc k (cdr t))])
+    (if pair
+        (set-cdr! pair v)
+        (set-cdr! t (cons (cons k v) (cdr t))))))
