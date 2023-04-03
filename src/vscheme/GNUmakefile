@@ -22,3 +22,10 @@ moscow: $(BIN)/vscheme
 .PHONY: mosml
 
 mosml: $(BIN)/vscheme
+
+.PHONY: predef
+
+predef: $(BUILD)/predef-fo.vo
+
+$(BUILD)/predef-fo.vo: $(BIN)/vscheme $(BIN)/uft
+	$(BIN)/vscheme -predef | grep -vw lambda | $(BIN)/uft fo-vo > $@

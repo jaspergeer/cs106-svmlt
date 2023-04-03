@@ -70,7 +70,33 @@ exp rho a e =
     (F.WhileX e1 e2) ->
       let t = smallest a
       in K.While t (exp rho a e1) (exp rho a e2)
-    _ -> error $ show e
+    (F.FunCall fun args) ->
+      bindSmallest a (exp rho a fun)
+        (\t -> nbRegs bindSmallest (a \\ t) args
+          (\ts -> K.FunCall t ts))
+    (F.Let bindings body) ->
+         let (ns, es) = unzip bindings
+             bind_regs ns ts = foldl (\rho (n, t) -> E.bind n t rho) rho (zip ns ts)
+         in nbRegs bindAnyReg a es
+              (\ts -> exp (bind_regs ns ts) (foldl (\\) a ts) body)
+      -- let mkLet a' [] body = exp rho a' body
+      --     mkLet a' ((n, e):bs) body = nbRegs bindAnyReg a' [e] 
+      --                          (\[t] -> mkLet (a' \\ t) bs body)
+      -- in mkLet a bindings body
+      -- nbregs bindAnyReg a [e] (\[t] -> exp rho (a \\ t) body)
+    -- _ -> error $ show e
+
+-- Implement let bindings. K‑normalize the F.LET form. 
+-- I encourage you to use nbRegs; you can figure out an appropriate policy. 
+-- The continuation will have to remove all the bound registers from the available set. 
+-- You can implement this operation in a special-purpose recursive function, 
+-- or you can use a fold with a “flipped” version of function --.2
+
+-- You will need to use bindSmallest to put the function in the smallest available register, 
+-- then K‑normalize the arguments using nbRegs with bindSmallest as the policy. 
+--When K-normalizing the arguments, do not overwrite the register that holds the function.
+
+
 
 -- primcall :: P.Primitive -> [F.Exp] -> Exp
 -- primcall p es = exp E.empty (RS 0) (F.PrimCall p es)
@@ -99,10 +125,13 @@ def e = case e of
       in K.Let 0 (K.FunCode [1..(length params)] (exp funenv regset body))
                  (K.VMOPGLO P.setglobal [0] (O.String funname))
 
+-- bindSmallest behaves just like bindAnyReg, except it doesn’t 
+-- optimize for the case of an expression already in a register. 
+bindSmallest :: RegSet -> Exp -> (Reg -> Exp) -> Exp
+bindSmallest a e k = let t = smallest a 
+                      in K.Let t e (k t)
+
 bindAnyReg :: RegSet -> Exp -> (Reg -> Exp) -> Exp
 bindAnyReg a e k = case e of
   (K.Name n) -> k n
-  _ ->
-    let t = smallest a
-    in K.Let t e (k t)
-
+  _ -> bindSmallest a e k

@@ -53,7 +53,7 @@ expr = let
   letstar [] e = e
   letstar ((x, e') : bs) e = S.LetX S.Let [(x, e')] (letstar bs e)
   letKind = try (S.LetRec <$ tok "letrec")
-        <|> S.Let <$ tok "let"
+        <|> S.Let <$ try (tok "let")
   
   expr' = S.Set <$> try (tok "set" *> name) <*> expr
       <|> S.IfX <$> try (tok "if" *> expr) <*> expr <*> expr
@@ -142,11 +142,11 @@ single x = [x]
 
 def :: Parser [S.Def]
 def = let
-  def' = S.Val <$> (tok "val" *> name) <*> expr
-     <|> S.Define <$> (tok "define" *> name) <*> parend formals <*> expr
-     <|> S.CheckExpect <$> (tok "check-expect" *> expr) <*> expr
-     <|> S.CheckAssert <$> (tok "check-assert" *> expr)
-     <|> S.Use <$> (tok "use" *> name)
+  def' = S.Val <$> try (tok "val" *> name) <*> expr
+     <|> S.Define <$> try (tok "define" *> name) <*> parend formals <*> expr
+     <|> S.CheckExpect <$> try (tok "check-expect" *> expr) <*> expr
+     <|> S.CheckAssert <$> try (tok "check-assert" *> expr)
+     <|> S.Use <$> try  (tok "use" *> name)
   in try (parend (single <$> def'
  <|> desugarRecord <$> (tok "record" *> name) <*> brackd (many name)))
  <|> single . S.Exp <$> expr

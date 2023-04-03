@@ -104,7 +104,6 @@ structure VSchemeUtils : sig
   val car : exp -> exp
   val cdr : exp -> exp
   val cons : exp -> exp -> exp
-  val mkclosure : exp -> exp -> exp
   val list : exp list -> exp
   val nth : int -> exp -> exp
   val setnth : exp -> int -> exp -> exp
@@ -121,8 +120,6 @@ struct
   fun cdr e = S.APPLY (S.VAR "cdr", [e])
   fun cons x xs = S.APPLY (S.VAR "cons", [x, xs])
   fun setcar e v = S.APPLY (S.VAR "set-car!", [e, v])
-
-  fun mkclosure code freevars = S.APPLY (S.VAR "mkclosure", [code, freevars])
 
   fun nth 0 e = car e
     | nth k e = nth (k-1) (cdr e)

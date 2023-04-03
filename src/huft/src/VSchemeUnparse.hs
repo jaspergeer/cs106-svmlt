@@ -29,6 +29,8 @@ value (S.Pair car cdr) =
 kw k docs = P.group $ P.parens $ P.pretty k <+> P.vsep docs
 wrap = P.group . P.parens . P.vsep
 
+-- nestedBindings (prefix', S.LetX (S.Let, [(x, e')], e)) = nestedBindings ((x, e') :: prefix', e)
+-- nestedBindings (prefix', e) = (rev prefix', e)
 
 exp (S.Literal v) = case v of
         S.Int _ -> value v
@@ -42,6 +44,8 @@ exp (S.IfX e1 e2 e3) = P.nest 3 $ kw "if" [exp e1, exp e2, exp e3]
 exp (S.WhileX e1 e2) = P.nest 3 $ kw "while" [exp e1, exp e2]
 exp (S.Begin es) = P.group $ P.nest 3 $ P.parens $ P.pretty"begin" <+> P.vsep (map exp es)
 exp (S.Apply e es) = P.nest 3 $ wrap (exp e : map exp es)
+-- not sure how to use this
+-- exp (S.LetX S.LET [(x, e')], e)
 exp (S.LetX lk bs e) = case lk of
     S.Let -> P.nest 3 $ pplet "let" bindings (exp e)
     S.LetRec -> P.nest 3 $ pplet "letrec" bindings (exp e)
