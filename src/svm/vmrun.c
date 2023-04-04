@@ -185,7 +185,6 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       {      
         uint8_t funreg = uX(instr);
         uint8_t lastarg = uY(instr);
-        print("r%d = %v\n",uX(instr) + (reg0 - vm->registers),RX);
         if (isNil(RX)) {
           runerror(vm, "Tried to call nil; maybe global '%s' is not defined?",
                    lastglobalset(vm, funreg, fun, stream_ptr));
@@ -211,7 +210,6 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       break;
     case GetGlobal:
       RX = globals[uYZ(instr)];
-      print("r%d = %v\n",uX(instr) + (reg0 - vm->registers),RX);
       break;
     case SetGlobal:
       globals[uYZ(instr)] = RX;
