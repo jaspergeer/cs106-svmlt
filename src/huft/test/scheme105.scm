@@ -237,16 +237,15 @@
 ;; ;;   (mirror a) == a, where a is an atom
 ;; ;;   (mirror (cons y ys)) == (append (mirror ys) (list1 (mirror y)))
 
-;; (define mirror (xs)
-;;     (if (atom? xs)
-;;         xs
-;;         (append (mirror (cdr xs)) (list1 (mirror (car xs))))))
-
-;;         ;; (check-expect (append '(1 2 3) '(4 5 6)) '(1 2 3 4 5 6))
-;;         (check-expect (mirror '(1)) '(1))
-;;         ;; (check-expect (mirror '(1 2 3 4 5)) '(5 4 3 2 1))
-;;         ;; (check-expect (mirror '((a (b 5)) (c d) e)) '(e (d c) ((5 b) a)))
-;;         ;; (check-expect (mirror '()) '())
+(define mirror (xs)
+    (if (atom? xs)
+        xs
+        (append (mirror (cdr xs)) (list1 (mirror (car xs))))))
+  
+        (check-expect (mirror '(1)) '(1))
+        (check-expect (mirror '(1 2 3 4 5)) '(5 4 3 2 1))
+        (check-expect (mirror '((a (b 5)) (c d) e)) '(e (d c) ((5 b) a)))
+        (check-expect (mirror '()) '())
 
 
 
@@ -257,16 +256,16 @@
 ;; ;;   (flatten a) == '(a), where a is an atom
 ;; ;;   (flatten (cons x xs)) == (append (flatten x) (flatten xs))
 
-;; (define flatten (xs)
-;;     (if (null? xs)
-;;         '()
-;;         (if (atom? xs)
-;;             (cons xs '())
-;;             (append (flatten (car xs)) (flatten (cdr xs))))))
+(define flatten (xs)
+    (if (null? xs)
+        '()
+        (if (atom? xs)
+            (cons xs '())
+            (append (flatten (car xs)) (flatten (cdr xs))))))
 
-;;         (check-expect (flatten '((((a))))) '(a))
-;;         (check-expect (flatten '((hi) (hello))) '(hi hello))
-;;         (check-expect (flatten '((a) () ((b c) d  e))) '(a b c d e))
+        (check-expect (flatten '((((a))))) '(a))
+        (check-expect (flatten '((hi) (hello))) '(hi hello))
+        (check-expect (flatten '((a) () ((b c) d  e))) '(a b c d e))
 
 
 
@@ -283,18 +282,18 @@
 ;; ;;   (takewhile p? (cons y ys)) == (cons y (takewhile p? ys)), where p? y = true
 ;; ;;   (takewhile p? (cons y ys)) == '(), where p? y == false
 
-;; (define takewhile (p? xs)
-;;         (if (null? xs)
-;;             '()
-;;             (if (p? (car xs))
-;;                 (cons (car xs) (takewhile p? (cdr xs)))
-;;                 '())))
+(define takewhile (p? xs)
+        (if (null? xs)
+            '()
+            (if (p? (car xs))
+                (cons (car xs) (takewhile p? (cdr xs)))
+                '())))
 
-;;         (define eq1? (x) #t)
+        (define p1? (x) (= x 1))
+        (check-expect (takewhile p1? '(1 0 1 0 11 0 1)) '(1))
 
-;;         (check-expect (takewhile eq1? '(1 0 1 0 11 0 1)) '(1))
-;;         ;; (check-expect (takewhile (lambda (x) (= (mod x 2) 0)) 
-;;         ;;                 '(2 4 6 7 8 10 12)) '(2 4 6))
+        ;; (check-expect (takewhile (lambda (x) (= (mod x 2) 0)) 
+        ;;                 '(2 4 6 7 8 10 12)) '(2 4 6))
 
 
 
@@ -307,12 +306,12 @@
 ;; ;;   (dropwhile p? (cons y ys)) == (dropwhile ys), where p? y == true
 ;; ;;   (dropwhile p? (cons y ys)) == (cons y ys), where p? y == false
 
-;; (define dropwhile (p? xs)
-;;     (if (null? xs)
-;;         '()
-;;         (if (p? (car xs))
-;;             (dropwhile p? (cdr xs))
-;;             xs)))
+(define dropwhile (p? xs)
+    (if (null? xs)
+        '()
+        (if (p? (car xs))
+            (dropwhile p? (cdr xs))
+            xs)))
 
 ;;         ;; (check-expect (dropwhile (lambda (x) (= x 1)) 
 ;;         ;;                          '(1 0 1 0 11 0 1)) '(0 1 0 11 0 1))
@@ -380,94 +379,91 @@
 ;; ;;   (zip '() '()) == '()
 ;; ;;   (zip (cons w ws) (cons z zs)) == (append (bind w z '()) (zip ws zs))
 
-;; (define zip (xs ys)
-;;     (if (and (null? xs) (null? ys))
-;;         '()
-;;         (append (bind (car xs) (car ys) '()) (zip (cdr xs) (cdr ys)))))
+(define zip (xs ys)
+    (if (and (null? xs) (null? ys))
+        '()
+        (append (bind (car xs) (car ys) '()) (zip (cdr xs) (cdr ys)))))
 
-;;         (check-expect (zip '(1 0) '(a b)) '((1 a) (0 b)))
-;;         (check-expect (zip '(1) '(a)) '((1 a)))
-;;         (check-expect (zip '(11 11 15) '(Guyer Sheldon Korman)) 
-;;                      '((11 Guyer) (11 Sheldon) (15 Korman)))
-;;         ;; (check-expect (zip '(1 0) '(a)) '((1 a)))
-;;         ;; do i consider this case, in practice or in law?
+        (check-expect (zip '(1 0) '(a b)) '((1 a) (0 b)))
+        (check-expect (zip '(1) '(a)) '((1 a)))
+        (check-expect (zip '(11 11 15) '(Guyer Sheldon Korman)) 
+                     '((11 Guyer) (11 Sheldon) (15 Korman)))
 
 
+;; (unzip ps) converts a list of pairs to a pair of lists.
 
-;; ;; ;; (unzip ps) converts a list of pairs to a pair of lists.
+;; laws:
+;;   (unzip ps) = (cons (map car ps) (cons (map cadr ps) '())))
 
-;; ;; laws:
-;; ;;   (unzip ps) = (cons (map car ps) (cons (map cadr ps) '())))
+;; (define unzip (ps)
+;;         (cons (map car ps) (cons (map cadr ps) '())))
 
-;; ;; (define unzip (ps)
-;; ;;         (cons (map car ps) (cons (map cadr ps) '())))
+;; car and cadr got etaExpanded
 
-;; ;; car and cadr got etaExpanded
+;; (define plus1 (x) (+ x 1))
 
-;; ;; (define plus1 (x) (+ x 1))
+;; (define mapp (xs) (map plus1 xs))
 
-;; ;; (define mapp (xs) (map plus1 xs))
+;; (define unzip (ps)
+;;         (cons (map car ps) (cons (map cadr ps) '())))
 
-;; ;; (define unzip (ps)
-;; ;;         (cons (map car ps) (cons (map cadr ps) '())))
-
-;;         ;; (check-expect  (unzip '((1 a) (2 b) (3 c))) '((1 2 3) (a b c)))
+;;         (check-expect  (unzip '((1 a) (2 b) (3 c))) '((1 2 3) (a b c)))
 
 
 
-;; ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; ;; ;;;;
-;; ;; ;;;;  Exercise D
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;
+;;;;  Exercise D
 
 
-;; ;; ;; (arg-max f xs) a function f that maps a value in set xs to a number,
-;; ;; ;; and a nonempty list as of values in set A. It returns an (in fact the first)
-;; ;; ;; element a in as for which (f a) is as large as possible.
+;; (arg-max f xs) a function f that maps a value in set xs to a number,
+;; and a nonempty list as of values in set A. It returns an (in fact the first)
+;; element a in as for which (f a) is as large as possible.
 
-;; ;; ;; laws:
-;; ;; ;;   arg-max f xs == (car (filter (lambda (x) (= (f x) (max* (map f xs)))) xs)))
+;; laws:
+;;   arg-max f xs == (car (filter (lambda (x) (= (f x) (max* (map f xs)))) xs)))
 
-;; ;; ;; for solution to run, i need to copy the definition of max*
+;; for solution to run, i need to copy the definition of max*
 
-;; ;; ;; (max* xs) finds the maximum of a non-empty list of integers
+;; (max* xs) finds the maximum of a non-empty list of integers
 
-;; ;; (define max* (xs)
-;; ;;     (foldl max (car xs) xs))
+;; (define max* (xs)
+;;     (foldl max (car xs) xs))
 
-;; ;; ;; (define arg-max (f xs)
-;; ;; ;;         (car (filter (lambda (x) (= (f x) (max* (map f xs)))) xs)))
+;; (define arg-max (f xs)
+;;         (car (filter (lambda (x) (= (f x) (max* (map f xs)))) xs)))
 
-;; ;; ;;         (check-expect (arg-max car '((105 PL) (160 Algorithms) (170 Theory)))
-;; ;; ;;                       '(170 Theory))
-;; ;; ;;         (check-expect (arg-max (lambda (a) (* a a)) '(5 4 3 2 1)) 5)
-;; ;; ;;         (check-expect (arg-max car '((105 PL) (170 Algorithms) (170 Theory)))
-;; ;; ;;                       '(170 Algorithms))
-
-
-
-;; ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; ;; ;;;;
-;; ;; ;;;;  Exercise E
+;;         (check-expect (arg-max car '((105 PL) (160 Algorithms) (170 Theory)))
+;;                       '(170 Theory))
+;;         (check-expect (arg-max (lambda (a) (* a a)) '(5 4 3 2 1)) 5)
+;;         (check-expect (arg-max car '((105 PL) (170 Algorithms) (170 Theory)))
+;;                       '(170 Algorithms))
 
 
-;; ;; ;; (rightmost-point ps) takes a nonempty list of point records
-;; ;; ;; and returns the first one with the largest x coordinate.
-;; ;; ;; Break ties by returning the first point with max x
 
-;; ;; ;; laws:
-;; ;; ;;   (arg-max f xs) == (arg-max point-x ps)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;
+;;;;  Exercise E
 
-;; ;; ;; (record point [x y])
 
-;; ;; ;; (define rightmost-point (ps)
-;; ;; ;;     (arg-max point-x ps))
+;; (rightmost-point ps) takes a nonempty list of point records
+;; and returns the first one with the largest x coordinate.
+;; Break ties by returning the first point with max x
 
-;; ;;         ;; (check-expect (rightmost-point '([make-point 1 2] [make-point 3 4])) 
-;; ;;         ;;                                 '[make-point 3 4])
-;; ;;         ;; (check-expect (rightmost-point '([make-point 5 6] 
-;; ;;         ;;                                  [make-point 1 2]
-;; ;;         ;;                                  [make-point 3 4]
-;; ;;         ;;                                  [make-point 5 7])) '[make-point 5 6])
+;; laws:
+;;   (arg-max f xs) == (arg-max point-x ps)
+
+;; (record point [x y])
+
+;; (define rightmost-point (ps)
+;;     (arg-max point-x ps))
+
+        ;; (check-expect (rightmost-point '([make-point 1 2] [make-point 3 4])) 
+        ;;                                 '[make-point 3 4])
+        ;; (check-expect (rightmost-point '([make-point 5 6] 
+        ;;                                  [make-point 1 2]
+        ;;                                  [make-point 3 4]
+        ;;                                  [make-point 5 7])) '[make-point 5 6])
 
 
 
