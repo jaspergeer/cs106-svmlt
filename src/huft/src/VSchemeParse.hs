@@ -34,6 +34,18 @@ valOfSx s = case s of
   Sx.List (x:xs) -> S.Pair (valOfSx x) (valOfSx (Sx.List xs))
   Sx.List [] -> S.EmptyList
 
+deComment xs = let
+  inComment xs = case xs of
+    ('\n':xs) -> '\n' : outComment xs
+    (x:xs) -> ' ' : inComment xs
+    [] -> []
+  outComment xs = case xs of
+    ('\\':';':xs) -> '\\' : ';' : outComment xs
+    (';':xs) -> ' ' : inComment xs
+    (x:xs) -> x : outComment xs
+    [] -> []
+  in outComment xs
+
 tok = ParseUtils.token
 int = ParseUtils.int
 double = ParseUtils.double
@@ -151,12 +163,11 @@ def = let
  <|> desugarRecord <$> (tok "record" *> name) <*> brackd (many name)))
  <|> single . S.Exp <$> expr
 
-comment :: Parser ()
-comment = () <$ tok ";" <* manyTill anyChar endOfLine <* spaces
+-- comment :: Parser ()
+-- comment = () <$ tok ";" <* manyTill anyChar endOfLine <* spaces
 
 parse :: Parser [S.Def]
-parse = spaces *> skipMany comment *>
-  (concat <$> manyTill (def <* skipMany comment) eof)
+parse = spaces *> (concat <$> manyTill def eof)
 
 -- defs :: Parser [S.Def]
 -- defs = many def -- ????
