@@ -30,6 +30,8 @@ CFLAGS = -std=c11 -pedantic -Wall -Wextra -Werror -g -I/usr/include
 
 .PHONY: all obj clean
 all: $(EXE)
+	@: do nothing, and say nothing about doing nothing
+
 obj: $(OBJ) $(MOBJ)
 
 clean:

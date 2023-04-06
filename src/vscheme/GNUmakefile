@@ -25,7 +25,10 @@ mosml: $(BIN)/vscheme
 
 .PHONY: predef
 
-predef: $(BUILD)/predef-fo.vo
+predef: $(BUILD)/predef-fo.vo $(BUILD)/predef-ho.vo
 
 $(BUILD)/predef-fo.vo: $(BIN)/vscheme $(BIN)/uft
 	$(BIN)/vscheme -predef | grep -vw lambda | $(BIN)/uft fo-vo > $@
+
+$(BUILD)/predef-ho.vo: $(BIN)/vscheme $(BIN)/uft
+	$(BIN)/vscheme -predef | $(BIN)/uft ho-vo > $@

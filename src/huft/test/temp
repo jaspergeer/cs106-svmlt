@@ -1,0 +1,13 @@
+
+(define f (x y) (begin (set x 1) (set y 2)))
+
+(f 2 3)
+
+;; (println x)
+
+;; (val x 3)
+;; (check-expect x 3)
+
+;; (val x 1)
+;; (check-assert x)
+

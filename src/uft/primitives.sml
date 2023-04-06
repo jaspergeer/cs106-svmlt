@@ -44,6 +44,9 @@ structure Primitive :> sig
   val check        : primitive   (* for converting check-expect to K-normal form *)
   val expect       : primitive   (* for converting check-expect to K-normal form *)
   val check_assert : primitive
+  val mkclosure    : primitive
+  val setclslot    : primitive
+  val getclslot    : primitive
 end
   =
 struct
@@ -51,6 +54,7 @@ struct
   (* Pure, register-setting primitives grouped by arity.  You can extend these lists *)
 
   val binary  = [ "+", "-", "*", "/", "<", ">", "cons", "=", "idiv"
+                , "mkclosure"
                 ]
   val unary   = [ "boolean?", "null?", "number?", "pair?", "function?", "nil?"
                 , "symbol?", "car", "cdr"
