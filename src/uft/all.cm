@@ -7,6 +7,7 @@ group is
   escapes.sml     (* character escapes for string literals *)
 
   env.sml         (* environment abstraction *)
+  set.sml         (* set abstraction *)
   ioutil.sml      (* convenience functions for I/O *)
 
   (***** all the languages we'll eventually translate ****)
@@ -80,9 +81,18 @@ group is
   foscheme.sml      (* source language "first-order Scheme" *)
   foutil.sml        (* embedding/projection for foscheme <-> vscheme *)
 
+  clscheme.sml       (* first-order scheme plus closure forms *)
+
   knormalize.sml    (* K-normalizer *)
      (* translates foscheme in module 9, then clscheme in module 10 *)
 
+
+
+  (********* CLOSURE CONVERSION: Module 10 *****)
+
+  closure-convert.sml   (* closure conversion: you implement *)
+  foclutil.sml          (* embed First-Order Scheme into Closed Scheme *) 
+  mutability.sml        (* detect and repair mutable vars in closures *)
 
 
   (*********** UNIVERSAL FORWARD TRANSLATOR **********)
