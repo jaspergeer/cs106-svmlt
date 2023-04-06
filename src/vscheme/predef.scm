@@ -41,8 +41,7 @@
      ys
      (cons (car xs) (append (cdr xs) ys))))
 ;  predefined uScheme functions 100b 
-; (reverse xs) followed by ys
-(define revapp (xs ys)
+(define revapp (xs ys) ; (reverse xs) followed by ys
   (if (null? xs)
      ys
      (revapp (cdr xs) (cons (car xs) ys))))
@@ -90,7 +89,10 @@
       (alist-first-attribute alist)
       (find k (cdr alist)))))
 ;  predefined uScheme functions 125a 
+(define o (f g) (lambda (x) (f (g x))))          ; ((o f g) x) = (f (g x))
 ;  predefined uScheme functions 126b 
+(define curry   (f) (lambda (x) (lambda (y) (f x y))))
+(define uncurry (f) (lambda (x y) ((f x) y)))
 ;  predefined uScheme functions 129a 
 (define filter (p? xs)
   (if (null? xs)

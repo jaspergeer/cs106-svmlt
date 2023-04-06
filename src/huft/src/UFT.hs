@@ -57,7 +57,7 @@ instance Exception InternalException
 -- Reader functions 
 
 schemeOfFile :: Reader [VScheme.Def]
-schemeOfFile infile = hGetContents' infile <&> ParseUtils.parseAndErr VSchemeParse.parse
+schemeOfFile infile = hGetContents' infile <&> ParseUtils.parseAndErr VSchemeParse.parse . VSchemeParse.deComment
 
 schemexOfFile :: Reader [UnambiguousVScheme.Def]
 schemexOfFile = schemeOfFile ==> ((E.Error . Right) . map Disambiguate.disambiguate)

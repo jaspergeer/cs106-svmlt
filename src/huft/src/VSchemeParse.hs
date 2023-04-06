@@ -34,6 +34,18 @@ valOfSx s = case s of
   Sx.List (x:xs) -> S.Pair (valOfSx x) (valOfSx (Sx.List xs))
   Sx.List [] -> S.EmptyList
 
+deComment xs = let
+  inComment xs = case xs of
+    ('\n':xs) -> '\n' : outComment xs
+    (x:xs) -> ' ' : inComment xs
+    [] -> []
+  outComment xs = case xs of
+    ('\\':';':xs) -> '\\' : ';' : outComment xs
+    (';':xs) -> ' ' : inComment xs
+    (x:xs) -> x : outComment xs
+    [] -> []
+  in outComment xs
+
 tok = ParseUtils.token
 int = ParseUtils.int
 double = ParseUtils.double
@@ -55,7 +67,7 @@ expr = let
   letKind = try (S.LetRec <$ tok "letrec")
         <|> S.Let <$ try (tok "let")
   
-  expr' = S.Set <$> try (tok "set" *> name) <*> expr
+  expr' = S.Set <$> try (tok "set " *> name) <*> expr
       <|> S.IfX <$> try (tok "if" *> expr) <*> expr <*> expr
       <|> S.WhileX <$> try (tok "while" *> expr) <*> expr
       <|> S.Begin <$> try (tok "begin" *> many expr)
@@ -142,21 +154,20 @@ single x = [x]
 
 def :: Parser [S.Def]
 def = let
-  def' = S.Val <$> try (tok "val" *> name) <*> expr
-     <|> S.Define <$> try (tok "define" *> name) <*> parend formals <*> expr
+  def' = S.Val <$> try (tok "val " *> name) <*> expr
+     <|> S.Define <$> try (tok "define " *> name) <*> parend formals <*> expr
      <|> S.CheckExpect <$> try (tok "check-expect" *> expr) <*> expr
      <|> S.CheckAssert <$> try (tok "check-assert" *> expr)
-     <|> S.Use <$> try  (tok "use" *> name)
+     <|> S.Use <$> try  (tok "use " *> name)
   in try (parend (single <$> def'
  <|> desugarRecord <$> (tok "record" *> name) <*> brackd (many name)))
  <|> single . S.Exp <$> expr
 
-comment :: Parser ()
-comment = () <$ tok ";" <* manyTill anyChar endOfLine <* spaces
+-- comment :: Parser ()
+-- comment = () <$ tok ";" <* manyTill anyChar endOfLine <* spaces
 
 parse :: Parser [S.Def]
-parse = spaces *> skipMany comment *>
-  (concat <$> manyTill (def <* skipMany comment) eof)
+parse = spaces *> (concat <$> manyTill def eof)
 
 -- defs :: Parser [S.Def]
 -- defs = many def -- ????

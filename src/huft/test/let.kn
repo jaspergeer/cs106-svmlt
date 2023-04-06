@@ -1,0 +1,30 @@
+;; If you choose the bindAnyReg policy and if both x and y are already in registers, the swap will generate no code at all. Your UFT will simply K‑normalize the body of the let using a different environment in which the names are swapped. With the bindAnyReg policy, that’s expected behavior, not a bug. If you have concerns about that behavior, choose a different policy.
+
+;; (val x 4)
+;; (check-expect (let ([x y] [y x]) x) 4)
+
+
+;;   (define f (x y)
+;;     (let ([x y] [y x]) 
+;;          (set x 1))
+;;   )
+
+;;    (val x 2)
+;;    (f 1 x)
+
+;;    (check-expect x 2)
+
+   (check-expect (- 2 1) -1)
+
+;; ;; bindAnyReg
+
+;; ;; (let ([$r0 (lambda ($r1 $r2) (- $r2 $r1))])
+;; ;;    (set minus $r0))
+
+;; ;; binSmallest
+;; (let ([$r0 (lambda ($r1 $r2) (let ([$r3 $r2]) (let ([$r4 $r1]) (- $r3 $r4))))])
+;;    (set minus $r0))
+
+;; (define localLetMixed (n m)
+;;    (let ([n m] [m n] [x 3]) (+ x (+ n m))))
+;; (check-expect (localLetMixed 1 2) 6)

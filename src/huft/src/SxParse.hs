@@ -31,5 +31,5 @@ sx = char '\'' *> (Sx.List <$> (tok "(" *> many sx' <* tok ")")
         <|> Sx.Real <$> double
         <|> Sx.Bool <$> bool
       sx' = (Sx.List <$> (tok "(" *> many sx' <* tok ")"))
-        <|> Sx.Sym <$> name
         <|> nums
+        <|> Sx.Sym <$> name
