@@ -59,7 +59,8 @@ executable huft
         KNormalize,
         ClScheme,
         CSUtil,
-        ClConvert
+        ClConvert,
+        FoClUtil
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
