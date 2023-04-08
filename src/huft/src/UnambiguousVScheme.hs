@@ -1,11 +1,15 @@
 module UnambiguousVScheme where
 
+-- in vscheme.sml in norman's uft
+
 import qualified Primitives as P
 import qualified VScheme as S
 
 data LetKind = Let | LetRec deriving Show
 
 type Name = String
+
+type Lambda = ([Name], Exp)
 
 data Exp = Literal Value
          | Local Name
@@ -26,7 +30,7 @@ data Value = Sym Name
            | Real Double
            | Bool Bool
            | EmptyList
-           
+
 instance Show Value where
   show v = case v of
     Sym n -> n

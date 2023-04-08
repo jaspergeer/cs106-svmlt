@@ -34,6 +34,10 @@ import qualified ParseUtils
 import qualified FOScheme
 import qualified FOUtil
 import qualified KNormalize
+import qualified ClScheme
+import qualified ClConvert
+import qualified FOClUtil
+import qualified CSUtil
 
 type Emitter a = Handle -> a -> IO ()
 type Reader a = Handle -> IO (E.Error a)
@@ -72,12 +76,22 @@ knOfFile = schemexOfFile ==> mapM KnProject.def  -- projection HO -> KN
 foOfFile :: Reader [FOScheme.Def]
 foOfFile = schemexOfFile ==> mapM FOUtil.def
 
--- Materializer functions
+---- Materializer functions ----
+
+hoxOf :: Language -> Reader [UnambiguousVScheme.Def]
+hoxOf HOX = schemexOfFile
+hoxOf _ = throw Backward
 
 hoOf :: Language -> Reader [UnambiguousVScheme.Def]
 hoOf HO = schemexOfFile
 hoOf HOX = error "imperative features (HOX to HO)"
 hoOf _ = throw Backward
+
+clOf :: Language -> Reader [ClScheme.Def]
+clOf CL = clOf FO
+clOf HO = hoOf HO ==> (mapM $ return . ClConvert.close)
+clOf HOX = hoOf HOX ==> (mapM $ return . ClConvert.close)
+clOf inLang = foOf inLang ==> (mapM $ return . FOClUtil.embed)
 
 vsOfkn :: [KNF.Exp ObjectCode.Reg] -> [Asm.Instr]
 -- (CodeGen is a infallible projection), and we want to delay
@@ -114,7 +128,7 @@ knStringofknReg = mapM (KnRename.mapx (return .KnRename.nameOfReg))
 
 knRegOf :: Language -> Reader [KNF.Exp ObjectCode.Reg]
 knRegOf KN = knOfFile ==> knRegOfknString
-knRegOf _ = foOfFile  ==> (return . map KNormalize.def)
+knRegOf inlang = clOf inlang  ==> (return . map KNormalize.def)
 
 -- Emitter functions
 
@@ -140,6 +154,9 @@ emitKn outfile = emitScheme outfile . map KnEmbed.def -- projection KN -> HOX
 emitFO :: Emitter [FOScheme.Def]
 emitFO outfile = emitScheme outfile . map FOUtil.embed
 
+emitCL :: Emitter [ClScheme.Def]
+emitCL outfile = emitScheme outfile . map CSUtil.embed
+
 -- Universal Forward Translator
 
 data UFTException = NotForward Language Language
@@ -153,7 +170,10 @@ translate inLang outLang infile outfile = catch
     VO -> voOf inLang infile <&> (emitVO outfile <$>)
     HO -> hoOf inLang infile <&> (emitHO outfile <$>)
     KN -> knTextOf inLang infile <&> (emitKn outfile <$>)
-    FO -> foOf inLang infile <&> (emitFO outfile <$>))
+    FO -> foOf inLang infile <&> (emitFO outfile <$>)
+    CL -> clOf inLang infile <&> (emitCL outfile <$>)
+    HOX -> hoxOf inLang infile <&> (emitHO outfile <$>)
+    )
   (\e -> case e of
     Backward -> throw (NotForward inLang outLang)
     NoTranslationTo l -> throw (NotForward inLang l))
