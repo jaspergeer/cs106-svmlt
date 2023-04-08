@@ -29,7 +29,6 @@ exp e =
     in mkclosure
       [(S.Lambda ("$closure" : formals) (exp body)),
        foldr (\e l -> cons (exp e) l) (S.Literal S.EmptyList) captured]
-
   C.LetRec bs e ->
     S.LetX S.LetRec (map (\ (f, c) -> (f, exp (C.ClosureX c))) bs) (exp e)
   C.FunCall f es -> S.Apply (exp f) (map exp es)

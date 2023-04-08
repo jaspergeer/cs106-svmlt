@@ -1,7 +1,7 @@
 -- embedding first-order Scheme to Closed Scheme, This cannot failed
 -- used to read closed scheme from a file (piggyback on the FO reader)
 
-module FoClUtil where
+module FOClUtil where
 
 import Prelude hiding ( exp )
 import qualified ClScheme as C
