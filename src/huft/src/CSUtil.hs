@@ -7,6 +7,8 @@ import qualified VScheme as S
 import qualified VSchemeUtils as SU
 import qualified KnEmbed
 
+-- Embedding
+exp :: C.Exp -> S.Exp
 exp e = 
   let binding (x, e) = (x, exp e)
   in case e of
@@ -25,7 +27,13 @@ exp e =
   C.SetGlobal x e -> S.Set x (exp e)
   C.WhileX c body -> S.WhileX (exp c) (exp body)
 
+helper = undefined
+
+def :: C.Def -> S.Def
 def e = case e of
   C.Exp e -> S.Exp (exp e)
   C.Val x e -> S.Val x (exp e)
-  C.Define f lambda -> S.Val f (exp (C.ClosureX (C.Closure lambda [])))
+  C.Define f (C.FunCode ns e) -> S.Val f (exp (C.ClosureX (C.Closure ns e [])))
+
+embed :: C.Def -> S.Def
+embed = def
