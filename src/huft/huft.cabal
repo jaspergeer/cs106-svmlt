@@ -56,7 +56,10 @@ executable huft
         AsmUtils,
         FOScheme,
         FOUtil,
-        KNormalize
+        KNormalize,
+        ClScheme,
+        CSUtil,
+        ClConvert
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
