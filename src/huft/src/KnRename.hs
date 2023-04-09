@@ -35,3 +35,7 @@ mapx f e =
     K.VMOP op ns -> K.VMOP op <$> mapM f ns
     K.VMOPGLO op ns lit -> K.VMOPGLO op <$> mapM f ns <*> pure lit
     K.Literal lit -> return (K.Literal lit)
+    K.Captured n -> return (K.Captured n)
+    K.ClosureX (K.Closure formals body captured) -> 
+      K.ClosureX <$> (K.Closure <$> mapM f formals <*> mx body <*> mapM f captured) 
+      -- there's probably a better way to write this

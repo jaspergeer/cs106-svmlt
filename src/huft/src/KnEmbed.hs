@@ -6,8 +6,6 @@ import qualified VScheme as S
 import qualified Primitives as P
 import qualified ObjectCode as O
 
-let' x e' e = S.LetX S.Let [(x, e')] e
-
 -- The value function is actually a projection, not an embedding: 
 -- the VM code supports floating-point values, string values and nil, 
 -- neither of which can be written as vScheme literals. Nonetheless, 
@@ -45,6 +43,8 @@ value O.EmptyList = S.EmptyList
 -- exp (K.VMOP op args) = S.Apply (S.Var (P.name op)) (map S.Var args)
 -- exp (K.VMOPGLO op args) = S.Apply (S.Var (P.name op)) (map S.Var args)
 
+let' x e' = S.LetX S.Let [(x, e')]
+
 def :: K.Exp S.Name -> S.Def
 def e = S.Exp (exp e)
     where   exp e = case e of
@@ -62,11 +62,22 @@ def e = S.Exp (exp e)
                 K.VMOP op args -> S.Apply (S.Var (P.name op)) (map S.Var args)
             -- getglobal case
                 K.VMOPGLO op xs v -> case (P.name op, xs, v) of
+                    ("getglobal", [], O.String v) -> S.Var v
                     ("getglobal", [r], O.String v) -> S.Var v
                     ("setglobal", [x], O.String v) -> S.Set v (S.Var x)
+
                     -- match check and expect
                     -- may cause undefined behavior
                     _ -> S.Apply (S.Var (P.name op)) (map S.Var xs ++ [S.Literal (value v)])
                 K.FunCall f args -> S.Apply (S.Var f) (map S.Var args)
+                K.Captured i -> S.Apply (S.Var "CAPTURED-IN") [S.Literal $ S.Int i, S.Var "$closure"]
+                K.ClosureX (K.Closure formals body captured) ->
+                    let mkclosure = S.Apply (S.Var "mkclosure")
+                        cons x y = S.Apply (S.Var "cons") [x, y]
+                    in mkclosure [S.Lambda ("$closure" : formals) (exp body),
+                                  foldr (\e l -> cons (exp e) l) (S.Literal S.EmptyList) (map K.Name captured)] 
+                                  -- change captured because the KNF representation is [a] rather than [Exp a], 
+                                  -- use the former to be consistent with modele 10 handout
+
 -- What will happen if the offset of the VMOPL is not a string in getglobal case:
--- impossible, should have some error message for debugging,
+-- Ans: impossible, should have some error message for debugging,

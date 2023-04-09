@@ -38,7 +38,6 @@ nbRegsWith _ _ _ [] k = k []
 nbRegsWith normalize p a (e:es) k = p a (normalize a e)
   (\t -> nbRegsWith normalize p (a \\ t) es (\ts -> k (t:ts)))
 
-helper = undefined
 exp :: E.Env Reg -> RegSet -> C.Exp -> Exp
 exp rho a e =
   let nbRegs = nbRegsWith (exp rho)
@@ -74,17 +73,46 @@ exp rho a e =
     (C.Let bindings body) ->
          let (ns, es) = unzip bindings
              bind_regs ns ts = foldl (\rho (n, t) -> E.bind n t rho) rho (zip ns ts)
-         in nbRegs bindAnyReg a es
+         in nbRegs bindSmallest a es
               (\ts -> exp (bind_regs ns ts) (foldl (\\) a ts) body)
-      -- let mkLet a' [] body = exp rho a' body
-      --     mkLet a' ((n, e):bs) body = nbRegs bindAnyReg a' [e] 
-      --                          (\[t] -> mkLet (a' \\ t) bs body)
-      -- in mkLet a bindings body
-      -- nbregs bindAnyReg a [e] (\[t] -> exp rho (a \\ t) body)
-    (C.ClosureX (C.Closure formals body captured)) -> error "Closure"
-    (C.Captured i) -> error "captured"
+    (C.ClosureX (C.Closure formals body [])) ->
+      let
+        -- update funreg by always binding smallest to the formals
+        -- maybe can rewrite with bindSmallestReg policy?
+        -- NEED TO CHECK the justification of the `funcode` helper function
+        (args, funbody) = funcode (C.FunCode formals body)
+      in K.FunCode args funbody
+    (C.ClosureX (C.Closure formals body captured)) -> 
+      let
+        -- if the captured vars is not empty, they must be put in regs by nbRegsWith
+      in
+        nbRegs bindAnyReg a captured (\ts ->
+      let
+        (args, funbody) = funcode (C.FunCode formals body)
+        in
+          K.ClosureX (K.Closure args funbody ts))
+
+    (C.Captured i) -> K.Captured i
     (C.LetRec bindings body) -> error "LetRec"
     -- _ -> error $ show e
+
+-- This function does almost the same thing as the code you have written 
+-- that K‑normalizes the F.DEFINE form: 
+-- the formal parameters go into an environment,
+--  and every nonzero register that is not used to hold a formal parameter 
+-- is available. The only difference from F.DEFINE is that in a 
+-- lambda expression, the function has no name, 
+-- so the environment does not bind a function name to register 0.
+
+funcode :: C.FunCode -> K.Funcode Reg
+funcode (C.FunCode formals body) =
+  let
+      args = [1..length formals]
+      (funenv, regset) = foldl (\(rho, a) n -> 
+                (E.bind n (smallest a) rho, a \\ smallest a)) (E.empty, RS 1) formals
+      funbody = exp funenv regset body
+  in (args, funbody)
+
 
 -- Implement let bindings. K‑normalize the C.LET form. 
 -- I encourage you to use nbRegs; you can figure out an appropriate policy. 
@@ -95,7 +123,6 @@ exp rho a e =
 -- You will need to use bindSmallest to put the function in the smallest available register, 
 -- then K‑normalize the arguments using nbRegs with bindSmallest as the policy. 
 --When K-normalizing the arguments, do not overwrite the register that holds the function.
-
 
 
 -- primcall :: P.Primitive -> [C.Exp] -> Exp
@@ -116,6 +143,16 @@ def e = case e of
       (\t -> K.Seq
         (K.VMOPGLO P.setglobal [t] (O.String n))
         (K.Literal $ O.String n))
+    (C.Define funname (C.FunCode formals body)) ->
+      let
+        args = [1..length formals]
+        (funenv, regset) = foldl (\(env, rs) n ->
+          let t = smallest rs
+              rs' = rs \\ t
+          in (E.bind n t env, rs')) (E.bind funname 0 E.empty, RS 1) formals
+      in bindAnyReg (RS 0) (K.FunCode args (exp funenv regset body))
+          (\t -> (K.setglobal funname t))
+
     -- (C.Define funname params body) ->
     --   let
     --     (funenv, regset) = foldl (\(env, rs) n ->
