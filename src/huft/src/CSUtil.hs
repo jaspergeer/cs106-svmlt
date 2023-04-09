@@ -50,6 +50,8 @@ def e = case e of
   C.Exp e -> S.Exp (exp e)
   C.Val x e -> S.Val x (exp e)
   C.Define f (C.FunCode ns e) -> S.Val f (exp (C.ClosureX (C.Closure ns e [])))
+  C.CheckExpect s e s' e' -> S.CheckExpect (exp e) (exp e')
+  C.CheckAssert s e -> S.CheckAssert (exp e)
 
 embed :: C.Def -> S.Def
 embed = def
