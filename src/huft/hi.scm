@@ -6,22 +6,15 @@
             (let ([pivot (car xs)])
                (let ([rest (cdr xs)])
                   (let ([right? (mkclosure
-                           (lambda ($closure n)
-                              (>
-                                 (car (cdr $closure))
-                                 (car (cdr (cdr $closure)))))
-                           (cons n (cons pivot '())))])
+                           (lambda ($closure n) (> n (CAPTURED-IN 0 $closure)))
+                           (cons pivot '()))])
                      (let ([left? (o
-                              (mkclosure
-                                 (lambda ($closure x1)
-                                    (not (car (cdr $closure))))
-                                 (cons x1 '()))
+                              (mkclosure (lambda ($closure x1) (not x1)) '())
                               right?)])
                         (append
                            (qsort (filter left? rest))
                            (cons pivot (qsort (filter right? rest))))))))))
       '()))
-
 (val iota^
    (mkclosure
       (lambda ($closure n) (if (= n 0) '() (cons n (iota^ (- n 1)))))

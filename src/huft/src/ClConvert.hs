@@ -47,10 +47,10 @@ closedExp captured e =
     let --  (* I recommend internal function exp : X.exp -> C.exp *)
         closure :: X.Lambda -> C.Closure
         closure (xs, body) =
-            let freevars = S.toList (free body) 
+            let freevars = S.toList $ S.difference (free body) (S.fromList xs)
             -- maybe S.toList $ S.difference (free body) (S.fromList xs) ?
                 cons x y = C.PrimCall P.cons [x, y]
-            in C.Closure xs (closedExp freevars e)
+            in C.Closure xs (closedExp freevars body)
                             (map (\x -> case indexOf x captured of
                                 Just i -> C.Captured i
                                 Nothing -> C.Local x) freevars)
