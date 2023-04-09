@@ -33,7 +33,7 @@ struct
                of SOME p => PRIMITIVE p
                 | NONE => OTHER_GLOBAL
 
-  (***************** machinery for disambiguating primtive functions *************)
+  (************* machinery for disambiguating primitive functions *************)
 
   fun etaExpand p = (* used when a primitive occurs in a value position *)
     let val args = ["x", "y", "z", "w"]
