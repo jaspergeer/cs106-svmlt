@@ -46,7 +46,7 @@ closedExp :: [X.Name] -> X.Exp -> C.Exp
 closedExp captured e = 
     let --  (* I recommend internal function exp : X.exp -> C.exp *)
         closure :: X.Lambda -> C.Closure
-        closure (xs, body) =
+        closure (X.Lambda xs body) =
             let freevars = S.toList $ S.difference (free body) (S.fromList xs)
             -- maybe S.toList $ S.difference (free body) (S.fromList xs) ?
                 cons x y = C.PrimCall P.cons [x, y]
@@ -69,9 +69,15 @@ closedExp captured e =
             (X.Begin es) -> C.Begin (map exp es)
             (X.FunCall e1 es) -> C.FunCall (exp e1) (map exp es)
             (X.PrimCall p es) -> C.PrimCall p (map exp es)
-            (X.LetX X.Let bs e) -> C.Let (map (\(x, e) -> (x, exp e) ) bs) (exp e)
-            (X.LetX X.LetRec bs e) -> undefined
-            (X.Lambda xs e) -> C.ClosureX (closure (xs, e))
+            (X.LetX X.Let bs e) -> C.Let (map (\(x, e) -> (x, exp e)) bs) (exp e)
+            -- (X.LetX X.LetRec bs e) ->
+            --   let
+            --     unLambda (X.LambdaX lambda) = lambda
+            --     unLambda _ = error "parser failed to insist on a lambda"
+            --     bindings = map (\(n, ex) -> (n, closure (unLambda ex))) bs
+            --   in C.LetRec bindings (exp e)
+            (X.LambdaX (X.Lambda xs e)) -> C.ClosureX (closure (X.Lambda xs e))
+            _ -> error $ show e
     in exp e
 
 free :: X.Exp -> S.Set X.Name
@@ -91,7 +97,7 @@ free e = case e of
                                                  (S.fromList (map fst xs)))
     (X.LetX X.LetRec xs e) -> S.difference (S.union (S.unions (map (free . snd) xs)) (free e))
                                            (S.fromList (map fst xs))
-    (X.Lambda xs e) -> S.difference (free e) (S.fromList xs) 
+    (X.LambdaX (X.Lambda xs e)) -> S.difference (free e) (S.fromList xs) 
 
 close :: X.Def -> C.Def
 close d = case d of

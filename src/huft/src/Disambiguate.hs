@@ -36,7 +36,7 @@ referent x locals =
 
 -- used when a primitive occurs in a value position
 etaExpand :: P.Primitive -> X.Exp
-etaExpand p = X.Lambda args (X.PrimCall p (map X.Local args))
+etaExpand p = X.LambdaX (X.Lambda args (X.PrimCall p (map X.Local args)))
       where args = map (\i -> "x" ++ show i) [1..P.arity p]-- translation of literals
 
 value :: S.Value -> X.Exp
@@ -77,7 +77,7 @@ exp' e locals =
               bs = map (\(x, e) -> (x, exp' e locals)) bindings
               e' = exp' e locals
           in X.LetX X.LetRec bs e'
-        S.Lambda xs e -> X.Lambda xs (exp' e (xs ++ locals))
+        S.Lambda xs e -> X.LambdaX (X.Lambda xs (exp' e (xs ++ locals)))
   in exp e
 
 def :: S.Def -> X.Def

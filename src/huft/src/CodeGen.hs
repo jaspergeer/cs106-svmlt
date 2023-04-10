@@ -146,7 +146,7 @@ codeGen es = foldr (.) empty (evalState (mapM forEffect' es) 0) []
 letrec :: [(Reg, K.Closure Reg)] -> HughesList Instruction
 letrec bindings = 
   let alloc (f_i, K.Closure formals body captures) = s (U.mkclosure f_i f_i (length captures))
-      init  (f_i, K.Closure formals body captures) = l (mapi (\i r -> U.setclslot f_i i r) captures)
+      init  (f_i, K.Closure formals body captures) = l (mapi (U.setclslot f_i) captures)
   in hconcat (map alloc bindings) . hconcat (map init bindings)
 
 
