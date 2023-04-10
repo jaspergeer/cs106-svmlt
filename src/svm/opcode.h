@@ -60,6 +60,9 @@ typedef enum opcode {
     // Type Predicates
     IsFunc, IsPair, IsSym, IsNum, IsBool, IsNull, IsNil,
 
+    // closure (module 10)
+    MkClosure, GetClSlot, SetClSlot,
+
     Unimp, // stand-in for opcodes not yet implemented
     Unimp2, // stand-in for opcodes not yet implemented
     Halt // so model compiles

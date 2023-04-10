@@ -316,4 +316,12 @@ static inline bool isNil(Value v) {
   return eqvalue(v, nilValue);
 }
 
+static inline bool isVMClosure(Value v) {
+  return v.tag == VMClosure;
+}
+
+static inline bool isVMFunction(Value v) {
+  return v.tag == VMFunction;
+}
+
 #endif

@@ -78,6 +78,8 @@ eR1U16 op r1 u16 = A.ObjectCode (O.RegsInt op [r1] u16)
 eR2U8 op r1 r2 u8 = A.ObjectCode (O.RegsInt op [r1, r2] u8)
 eR0I24 op i24 = A.ObjectCode (O.RegsInt op [] i24)
 
+eR2U8' op r1 u8 r2 = A.ObjectCode (O.RegsInt op [r1, r2] u8)
+
 oneOfStr :: [String] -> Parser String
 oneOfStr strs = lexeme $ choice (map (try . string) strs)
 
@@ -93,7 +95,7 @@ singleLineInstr =
   <|> try (eR1 <$> oneOfStr A.opcodesR1 <*> reg)
   <|> try (eR0 <$> oneOfStr A.opcodesR0)
 
-  <|> try (flip eR2U8 <$> reg <* setTo <*> oneOfStr A.opcodesR2U8 <*> reg <*> int)
+  -- <|> try (flip eR2U8 <$> reg <* setTo <*> oneOfStr A.opcodesR2U8 <*> reg <*> int)
   <|> try (flip eR1U16<$> reg <* setTo <*> oneOfStr A.opcodesR1U16 <*> int)
   <|> try (eR0I24 <$> oneOfStr A.opcodesR0I24 <*> int)
 
@@ -113,6 +115,9 @@ singleLineInstr =
 
   <|> try (eR1GLO "getglobal" <$> reg <* setTo <*> (tok "G[" *> name <* tok "]"))
   <|> try (flip (eR1GLO "setglobal") <$> (tok "G[" *> name <* tok "]") <* setTo <*> reg)
+  <|> try (eR2U8 "mkclosure" <$> reg <* setTo <*> (tok "closure[" *> reg <* tok ",") <*> int <* tok "]" )
+  <|> try ( eR2U8 "getclslot" <$> reg <* tok "." <*> reg <* setTo <*> int)
+  <|> try (eR2U8' "setclslot" <$> reg <* tok "." <*> int <* setTo <*> reg)
   where setTo = tok ":="
 
 comment :: Parser ()

@@ -12,12 +12,11 @@ type VMOP = P.Primitive
 -- type parameter 'a is a _name_, typically
 -- instantiated as `string` or `ObjectCode.reg`
 
--- missing apply? but not seen in handout
-
 data Exp a = Literal Literal
            | Name a
            | If a (Exp a) (Exp a)
            | Let a (Exp a) (Exp a)
+           | LetRec [(a, Closure a)] (Exp a)
            | Seq (Exp a) (Exp a)
            | Assign a (Exp a)
            | While a (Exp a) (Exp a)
@@ -25,7 +24,14 @@ data Exp a = Literal Literal
            | FunCall a [a]
            | VMOP VMOP [a]
            | VMOPGLO VMOP [a] Literal
+           | Captured Int
+           | ClosureX (Closure a)
            deriving Show
+
+type Funcode a = ([a], Exp a) -- lambda with no free names
+
+data Closure a = Closure [a] (Exp a) [a] -- funcode, registers holding values of captured variables
+    deriving Show
 
 --    create these @(x,...x, v) forms:
 --      setglobal(register, name-of-global)

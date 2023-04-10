@@ -49,12 +49,14 @@ struct
      with the three new cases added *)
 
   fun exp (C.CAPTURED i) =
-        (* You can use combinations of car/cdr, which can be created
-           using SU.car, SU.cdr, and SU.nth.  Remember that in the
-           embedding, the function is at the head, so for example
-           captured variable 0 is in position 1: `(car (cdr $closure))` *)
+        (* The embedding of a `CAPTURED` form should call the predefined
+           vScheme function `CAPTURED-IN`.
+         *)
         Impossible.exercise "embed reference to captured variable"
     | exp (C.CLOSURE ((formals, body), captured)) =
+        (* The embedding of a `CLOSURE` form should call the primitive
+           vScheme function `mkclosure`.
+         *)
         Impossible.exercise "embed closure"
     | exp (C.LETREC  (bs, e))  =
         (* I've done this one *)

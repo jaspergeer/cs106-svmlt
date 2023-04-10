@@ -26,6 +26,9 @@ s e tail = e : tail
 l :: [a] -> HughesList a
 l es tail = es ++ tail
 
+hconcat :: [HughesList a] -> HughesList a
+hconcat = foldr (.) empty
+
 -- I am very proud of this
 (<.>) :: (Applicative f) => f (b -> c) -> f (a -> b) -> f (a -> c)
 x <.> y = (.) <$> x <*> y
@@ -60,7 +63,21 @@ toReg' dest e = case e of
     K.Let x e1 e' -> toReg' x e1 <.> toReg' dest e'
     K.Seq e1 e2 -> forEffect' e1 <.> toReg' dest e2 -- not sure how does this works
     K.Assign x e -> toReg' x e <.> toReg' dest (K.Name x) -- I assume this is copy reg
+    K.Captured i -> return $ s $ U.captured dest i
+    K.ClosureX (K.Closure args body captured) -> do
+      b' <- toReturn' body
+      return $ s (A.LoadFunc dest (length args) (b' [])) .
+               s (U.mkclosure dest dest (length captured)) .
+               l (mapi (\i r -> U.setclslot dest i r) captured)
 
+-- Using A.mkclosure, allocate the closure into that register.
+-- Initialize the slots by emitting a sequence of instructions created using A.setclslot.
+
+mapi :: (Int -> a -> b) -> [a] -> [b]
+mapi f xs =
+  let go i [] = []
+      go i (x:xs) = f i x : go (i+1) xs
+  in go 0 xs
 
 forEffect' :: K.Exp Reg -> U.UniqueLabelState (HughesList Instruction)
 forEffect' e = case e of
@@ -89,6 +106,9 @@ forEffect' e = case e of
   K.Let x e e' -> toReg' x e <.> forEffect' e'
   K.Seq e1 e2 -> forEffect' e1 <.> forEffect' e2
   K.Assign x e -> toReg' x e
+  -- If a CLOSURE form is evaluated for side effect, it is simply discarded
+  K.Captured i -> return empty
+  K.ClosureX (K.Closure args body captured) -> return empty
 
 -- wont be implementing till module 8
 toReturn' :: K.Exp Reg -> U.UniqueLabelState (HughesList Instruction)
@@ -111,6 +131,33 @@ toReturn' e = case e of
   K.Seq e1 e2 -> forEffect' e1 <.> toReturn' e2
   K.Let x e e' -> toReg' x e <.> toReturn' e'
   K.Assign _ e -> toReturn' e
+  -- not sure?
+  K.Captured i -> toReg' 0 e <.> return (s $ U.regs "return" [0])
+  K.ClosureX (K.Closure args body captured) -> toReg' 0 e <.> return (s $ U.regs "return" [0])
+  K.LetRec bindings body -> do
+    body' <- toReg' 0 body
+    return $ letrec bindings . body' . s (U.regs "return" [0])
 
 codeGen :: [K.Exp Reg] -> [Instruction]
 codeGen es = foldr (.) empty (evalState (mapM forEffect' es) 0) []
+
+letrec :: [(Reg, K.Closure Reg)] -> HughesList Instruction
+letrec bindings = 
+  let alloc (f_i, K.Closure formals body captures) = s (U.mkclosure f_i f_i (length captures))
+      init  (f_i, K.Closure formals body captures) = l (mapi (\i r -> U.setclslot f_i i r) captures)
+  in hconcat (map alloc bindings) . hconcat (map init bindings)
+
+
+
+-- fun letrec gen (bindings, body) =
+--    let val _ = letrec : (reg K.exp ‑> instruction hughes_list)
+--                      ‑> (reg * reg K.closure) list * reg K.exp
+--                      ‑> instruction hughes_list
+--       (* one helper function to allocate and another to initialize *)
+--       fun alloc (f_i, closure as (funcode as (formals, body), captures)) = ...
+--       fun init  (f_i, closure as (funcode as (formals, body), captures)) = ...
+--   in  hconcat (map alloc bindings) o hconcat (map init bindings) o gen body
+--   end
+-- and toReg' ...
+-- and forEffect' ...
+-- and toReturn' ...

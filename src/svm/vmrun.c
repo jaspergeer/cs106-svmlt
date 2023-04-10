@@ -19,6 +19,7 @@
 #include "value.h"
 #include "vmstate.h"
 #include "vmrun.h"
+#include "vmsizes.h"
 
 #include "print.h"
 #include "disasm.h"
@@ -50,7 +51,9 @@ void vmrun(VMState vm, struct VMFunction* fun) {
   const char *dump_call   = svmdebug_value("call");
   (void) dump_call;
   
-  Value *reg0 = vm->registers;
+
+  Value *reg0 = vm->registers; 
+  // invariant is vm->registers always points to the start of the registers?
   for (;;) {
     uint32_t instr = *stream_ptr;
 
@@ -150,12 +153,17 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         struct VMFunction *caller = running;
 
         const char *funname = lastglobalset(vm, funreg, caller, stream_ptr);
-        if (!isFunction(RY)) {
-          if (funname)
+        
+        struct VMFunction *callee = NULL;
+        if (isVMFunction(RY)) {
+          callee = AS_VMFUNCTION(vm, RY);
+        } else if (isVMClosure(RY)) {
+          callee = AS_CLOSURE(vm, RY)->f;
+        } else {
+          if (funname) // need to improve error message
             runerror(vm, "Tried to call %v; maybe global '%s' is not defined?", RY, funname);
           runerror(vm, "Tried to call %v", RY);
         }
-        struct VMFunction *callee = AS_VMFUNCTION(vm, RY);
         
         // arity check
         if (arity != callee->arity)
@@ -164,7 +172,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
 
         // register overflow check
         if (reg0 + callee->nregs >= vm->registers + (NUM_REGISTERS - 1))
-          runerror(vm, "Register file overflow.");
+          runerror(vm, "Register file overflow in Call.");
 
         // stack overflow check
         if (stack_ptr == vm->call_stack + (CALL_STACK_SIZE - 1))
@@ -185,21 +193,30 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       {      
         uint8_t funreg = uX(instr);
         uint8_t lastarg = uY(instr);
-        if (isNil(RX)) {
-          runerror(vm, "Tried to call nil; maybe global '%s' is not defined?",
-                   lastglobalset(vm, funreg, fun, stream_ptr));
+
+        struct VMFunction *callee = NULL;
+        
+        if (isVMFunction(RX)) {
+          callee = AS_VMFUNCTION(vm, RX);
+        } else if (isVMClosure(RY)) {
+          callee = AS_CLOSURE(vm, RZ)->f;
+        } else {
+          const char *funname = lastglobalset(vm, funreg, running, stream_ptr);
+          if (funname) // need to improve error message
+            runerror(vm, "Tried to call %v; maybe global '%s' is not defined?", RX, funname);
+          runerror(vm, "Tried to call %v", RY);
         }
 
         if (reg0 + lastarg >= vm->registers + (NUM_REGISTERS - 1)) {
           runerror(vm, "Register file overflow");
         }
 
-        // reg file overflow
-        if (reg0 + funreg > vm->registers + 255) {
-          runerror(vm, "Register file overflow");
-        }
+        // reg file overflow, inherently wrong check
+        // if (reg0 + funreg > vm->registers + 256) {
+        //   runerror(vm, "Register file overflow");
+        // }
 
-        stream_ptr = AS_VMFUNCTION(vm, RX)->instructions - 1;
+        stream_ptr = callee->instructions - 1;
         memmove(reg0, reg0 + funreg, (lastarg - funreg + 1) * sizeof(Value));        
       }
       break;
@@ -296,7 +313,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
     // S-Expressions
     case Cons:
       {
-        VMNEW(struct VMBlock *, block,  sizeof *block + 2 * sizeof block->slots[0]);
+        VMNEW(struct VMBlock *, block, vmsize_block(2));
         block->nslots = 2;
         block->slots[0] = RY;
         block->slots[1] = RZ;
@@ -332,6 +349,27 @@ void vmrun(VMState vm, struct VMFunction* fun) {
     case IsNil:
       RX = mkBooleanValue(isNil(RY));
       break;
+
+    // closure (module 10)
+
+    case MkClosure:
+      {
+        struct VMFunction *f = AS_VMFUNCTION(vm, RY);
+        VMNEW(struct VMClosure *, closure, vmsize_closure(uZ(instr)));
+
+        (void) f;
+        closure->f = f;
+        closure->nslots = uZ(instr);
+        RX = mkClosureValue(closure);
+      }
+
+    case SetClSlot:
+        AS_CLOSURE(vm, RX)->captured[uZ(instr)] = RY;
+        break;
+    case GetClSlot:
+        RX = AS_CLOSURE(vm, RY)->captured[uZ(instr)];
+        break;
+
     }
     ++stream_ptr;
   }

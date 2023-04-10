@@ -25,7 +25,16 @@ struct
   fun curry3 f x y z = f (x, y, z)
   fun pair x y = (x, y)
 
-  fun reject form = error ("Form `" ^ form ^ "` isn't in first-order Scheme.")
+  val expString = WppScheme.expString o Disambiguate.ambiguateExp
+
+  fun reject form = error ("Expression `" ^ form ^ "` isn't in first-order Scheme.")
+ 
+  fun lambdaOf formals =
+    String.concat ["(lambda (", String.concatWith " " formals, ") ...)"]
+
+  fun whenSmall msg = (* keep message only if small *)
+    if size msg < 60 then SOME msg else NONE
+
 
   local  (* projection *)
     fun exp (X.LITERAL v)        = succeed (F.LITERAL (KNProject.value v))
@@ -39,8 +48,9 @@ struct
       | exp (X.FUNCALL (e, es))  = curry F.FUNCALL <$> exp e <*> exps es
       | exp (X.PRIMCALL (x, es)) = curry F.PRIMCALL x <$> exps es
       | exp (X.LETX (X.LET,     bs, body)) = curry F.LET     <$> bindings bs <*> exp body
-      | exp (X.LETX (X.LETREC, _, _))      = reject "letrec"
-      | exp (X.LAMBDA (xs, e))             = reject "lambda"
+      | exp (e as X.LETX (X.LETREC, _, _))  = reject "(letrec (...) ...)"
+      | exp (e as X.LAMBDA (formals, _)) =
+          reject (getOpt (whenSmall (expString e), lambdaOf formals))
     and exps es = Error.list (map exp es)
     and bindings bs = Error.list (map (fn (x, e) => pair x <$> exp e) bs)
 

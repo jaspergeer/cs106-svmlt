@@ -14,6 +14,16 @@
                 (cons f (cons g '()))))
     '()))
 
+(begin (let ([$r0 (let ([$r0 (let ([$r0 o])
+                           (let ([$r1 (lambda ($r1) (not $r0))])
+                              (let ([$r2 (lambda ($r1) (not $r0))])
+                                 ($r0 $r1 $r2))))])
+                (let ([$r1 #t])
+                   ($r0 $r1)))])
+      (check $r0 '((o not not) #t)))
+   (let ([$r0 #t])
+      (expect $r0 '#t)))
+
 ;; (define qsort (xs)
 ;;   (if (null? xs)
 ;;       '()

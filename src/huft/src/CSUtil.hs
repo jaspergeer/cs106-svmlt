@@ -5,12 +5,12 @@ import qualified ClScheme as C
 import qualified Primitives as P
 import qualified VScheme as S
 import qualified VSchemeUtils as SU
+import qualified ObjectCode as O
 import qualified KnEmbed
 
-  -- (* You can use combinations of car/cdr, which can be created
-  --    using SU.car, SU.cdr, and SU.nth.  Remember that in the
-  --    embedding, the function is at the head, so for example
-  --    captured variable 0 is in position 1: `(car (cdr $closure))` *)
+-- (* The embedding of a `CAPTURED` form should call the predefined
+--     vScheme function `CAPTURED-IN`.
+--   *)
 
 -- Embedding
 exp :: C.Exp -> S.Exp
@@ -18,11 +18,7 @@ exp e =
   let binding (x, e) = (x, exp e)
   in case e of
   C.Captured i ->
-    let car e = S.Apply (S.Var "car") [e]
-        cdr e = S.Apply (S.Var "cdr") [e]
-        captured 0 k = car . cdr $ (k "$closure")
-        captured i k = captured (i - 1) (cdr . k)
-    in captured i (S.Var)
+    S.Apply (S.Var "CAPTURED-IN") [S.Literal $ S.Int i, S.Var "$closure"] 
   C.ClosureX (C.Closure formals body captured) ->
     let mkclosure = S.Apply (S.Var "mkclosure")
         cons x y = S.Apply (S.Var "cons") [x, y]
@@ -50,6 +46,8 @@ def e = case e of
   C.Exp e -> S.Exp (exp e)
   C.Val x e -> S.Val x (exp e)
   C.Define f (C.FunCode ns e) -> S.Val f (exp (C.ClosureX (C.Closure ns e [])))
+  C.CheckExpect s e s' e' -> S.CheckExpect (exp e) (exp e')
+  C.CheckAssert s e -> S.CheckAssert (exp e)
 
 embed :: C.Def -> S.Def
 embed = def
