@@ -82,9 +82,7 @@ def e = S.Exp (exp e)
                     let
                         mkclosure = S.Apply (S.Var "mkclosure")
                         cons x y = S.Apply (S.Var "cons") [x, y]
-                        bindings' = map (\(f, K.Closure formals body captured) -> 
-                            (f, mkclosure [S.Lambda ("$closure" : formals) (exp body),
-                                           foldr (\e l -> cons (exp e) l) (S.Literal S.EmptyList) (map K.Name captured)])) bindings
+                        bindings' = map (\(f, closure) -> (f, exp (K.ClosureX closure))) bindings
                         body' = exp body
                     in S.LetX S.LetRec bindings' body'
 

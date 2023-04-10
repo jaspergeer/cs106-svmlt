@@ -93,7 +93,14 @@ exp rho a e =
           K.ClosureX (K.Closure args funbody ts))
 
     (C.Captured i) -> K.Captured i
-    (C.LetRec bindings body) -> error "LetRec"
+    (C.LetRec bindings body) ->
+      let
+        (a', bindings') = foldr (\(n, _) (a, binds) ->
+          let t = smallest a
+          in (a \\ t, (n, t) : binds)) (a, []) bindings
+        rho' = foldr (\(n,t) rho -> E.bind n t rho) rho bindings'
+        closure c k = nbRegsWith (exp rho') bindSmallest a' 
+      in undefined
     -- _ -> error $ show e
 
 -- This function does almost the same thing as the code you have written 
