@@ -70,14 +70,13 @@ closedExp captured e =
             (X.FunCall e1 es) -> C.FunCall (exp e1) (map exp es)
             (X.PrimCall p es) -> C.PrimCall p (map exp es)
             (X.LetX X.Let bs e) -> C.Let (map (\(x, e) -> (x, exp e)) bs) (exp e)
-            -- (X.LetX X.LetRec bs e) ->
-            --   let
-            --     unLambda (X.LambdaX lambda) = lambda
-            --     unLambda _ = error "parser failed to insist on a lambda"
-            --     bindings = map (\(n, ex) -> (n, closure (unLambda ex))) bs
-            --   in C.LetRec bindings (exp e)
+            (X.LetX X.LetRec bs e) ->
+              let
+                unLambda (X.LambdaX lambda) = lambda
+                unLambda _ = error "parser failed to insist on a lambda"
+                bindings = map (\(n, e) -> (n, closure (unLambda e))) bs
+              in C.LetRec bindings (C.Local "aa")
             (X.LambdaX (X.Lambda xs e)) -> C.ClosureX (closure (X.Lambda xs e))
-            _ -> error $ show e
     in exp e
 
 free :: X.Exp -> S.Set X.Name
