@@ -101,7 +101,9 @@ exp rho a e =
         closure :: C.Closure -> (K.Closure Reg -> Exp) -> Exp
         closure (C.Closure formals body captured) k =
           nbRegsWith (exp rho') bindAnyReg a' captured
-          (\ts -> k (K.Closure [] (exp rho' a' body) ts)) -- I don't think we have formals for these closures
+          (\ts -> k (
+            let (args, funbody) = funcode (C.FunCode formals body)
+            in K.Closure args funbody ts))
         map' f' [] k = k []
         map' f' (x:xs) k =
           f' x (\y -> map' f' xs (\ys -> k (y:ys)))
