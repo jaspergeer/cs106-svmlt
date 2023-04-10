@@ -112,13 +112,15 @@ forEffect' e = case e of
 
 -- wont be implementing till module 8
 toReturn' :: K.Exp Reg -> U.UniqueLabelState (HughesList Instruction)
-toReturn' e = case e of
-  K.Literal lit -> toReg' 0 e <.> return (s $ U.regs "return" [0])
-  K.Name a -> return $ s $ U.regs "return" [a]
-  K.VMOP prim args -> toReg' 0 e <.> return (s $ U.regs "return" [0])
-  K.VMOPGLO prim args v -> toReg' 0 e <.> return (s $ U.regs "return" [0])
+toReturn' e = let
+  returnx x = U.regs "return" [x]
+  in case e of
+  K.Literal lit -> toReg' 0 e <.> return (s $ returnx 0)
+  K.Name a -> return $ s $ returnx a
+  K.VMOP prim args -> toReg' 0 e <.> return (s $ returnx 0)
+  K.VMOPGLO prim args v -> toReg' 0 e <.> return (s $ returnx 0)
   K.FunCall funreg args -> return $ s $ U.tailcall funreg args
-  K.FunCode args body -> toReg' 0 e <.> return (s $ U.regs "return" [0])
+  K.FunCode args body -> toReg' 0 e <.> return (s $ returnx 0)
   -- control flow
   K.If x e1 e2 -> do
       l <- U.newLabel
@@ -126,17 +128,17 @@ toReturn' e = case e of
       branch1 <- toReturn' e1
       return $ s (U.ifgoto x l) . branch2 .
                s (U.deflabel l) . branch1
-  K.While x e e' -> toReg' 0 e <.> return (s $ U.regs "return" [0])
+  K.While x e e' -> toReg' 0 e <.> return (s $ returnx 0)
   -- floatable
   K.Seq e1 e2 -> forEffect' e1 <.> toReturn' e2
   K.Let x e e' -> toReg' x e <.> toReturn' e'
   K.Assign _ e -> toReturn' e
   -- not sure?
-  K.Captured i -> toReg' 0 e <.> return (s $ U.regs "return" [0])
-  K.ClosureX (K.Closure args body captured) -> toReg' 0 e <.> return (s $ U.regs "return" [0])
+  K.Captured i -> toReg' 0 e <.> return (s $ returnx 0)
+  K.ClosureX (K.Closure args body captured) -> toReg' 0 e <.> return (s $ returnx 0)
   K.LetRec bindings body -> do
     body' <- toReg' 0 body
-    return $ letrec bindings . body' . s (U.regs "return" [0])
+    return $ letrec bindings . body' . s (returnx 0)
 
 codeGen :: [K.Exp Reg] -> [Instruction]
 codeGen es = foldr (.) empty (evalState (mapM forEffect' es) 0) []
@@ -144,7 +146,7 @@ codeGen es = foldr (.) empty (evalState (mapM forEffect' es) 0) []
 letrec :: [(Reg, K.Closure Reg)] -> HughesList Instruction
 letrec bindings = 
   let alloc (f_i, K.Closure formals body captures) = s (U.mkclosure f_i f_i (length captures))
-      init  (f_i, K.Closure formals body captures) = l (mapi (\i r -> U.setclslot f_i i r) captures)
+      init  (f_i, K.Closure formals body captures) = l (mapi (U.setclslot f_i) captures)
   in hconcat (map alloc bindings) . hconcat (map init bindings)
 
 

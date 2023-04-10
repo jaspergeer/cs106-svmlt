@@ -87,13 +87,28 @@ exp rho a e =
         -- if the captured vars is not empty, they must be put in regs by nbRegsWith
       in
         nbRegs bindAnyReg a captured (\ts ->
-      let
-        (args, funbody) = funcode (C.FunCode formals body)
-        in
-          K.ClosureX (K.Closure args funbody ts))
+        let (args, funbody) = funcode (C.FunCode formals body)
+        in K.ClosureX (K.Closure args funbody ts))
 
     (C.Captured i) -> K.Captured i
-    (C.LetRec bindings body) -> error "LetRec"
+    (C.LetRec bindings body) ->
+      let
+        (a', bindings') = foldr (\(n, _) (a, binds) ->
+          let t = smallest a
+          in (a \\ t, (n, t) : binds)) (a, []) bindings
+        (_, ts) = unzip bindings'
+        rho' = foldr (\(n,t) rho -> E.bind n t rho) rho bindings'
+        closure :: C.Closure -> (K.Closure Reg -> Exp) -> Exp
+        closure (C.Closure formals body captured) k =
+          nbRegsWith (exp rho') bindAnyReg a' captured
+          (\ts -> k
+            (let (args, funbody) = funcode (C.FunCode formals body)
+             in K.Closure args funbody ts))
+        map' f' [] k = k []
+        map' f' (x:xs) k =
+          f' x (\y -> map' f' xs (\ys -> k (y:ys)))
+      in map' (closure . snd) bindings
+        (\cs -> K.LetRec (zip ts cs) (exp rho' a' body))
     -- _ -> error $ show e
 
 -- This function does almost the same thing as the code you have written 

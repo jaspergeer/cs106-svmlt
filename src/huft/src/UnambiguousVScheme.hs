@@ -9,7 +9,7 @@ data LetKind = Let | LetRec deriving Show
 
 type Name = String
 
-type Lambda = ([Name], Exp)
+data Lambda = Lambda [Name] Exp deriving Show
 
 data Exp = Literal Value
          | Local Name
@@ -22,7 +22,7 @@ data Exp = Literal Value
          | FunCall Exp [Exp]
          | PrimCall P.Primitive [Exp]
          | LetX LetKind [(Name, Exp)] Exp
-         | Lambda [Name] Exp
+         | LambdaX Lambda
          deriving Show
 
 data Value = Sym Name
@@ -60,4 +60,4 @@ whatIs (FunCall e es) = "fun call"
 whatIs (PrimCall p es) = "prim call " ++ P.name p
 whatIs (LetX Let bs e) = "let"
 whatIs (LetX LetRec bs e) = "letrec"
-whatIs (Lambda xs e) = "lambda"
+whatIs (LambdaX (Lambda xs e)) = "lambda"

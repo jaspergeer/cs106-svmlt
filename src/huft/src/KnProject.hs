@@ -43,7 +43,7 @@ exp e = case e of
     ("expect", [e, X.Literal v]) -> K.VMOPGLO p <$> mapM asName [e] <*> return (value v)
     (_ , es)       -> K.VMOP p <$> mapM asName es
   X.FunCall e es -> K.FunCall <$> asName e <*> mapM asName es
-  X.Lambda args e -> K.FunCode args <$> exp e
+  X.LambdaX (X.Lambda args e) -> K.FunCode args <$> exp e
   e -> E.Error $ Left $ "Cannot project " ++ show e ++ "to KNF"
 
 def :: X.Def -> E.Error (K.Exp String)

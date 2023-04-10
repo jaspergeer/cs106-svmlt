@@ -38,7 +38,7 @@ exp' e = case maybeValue e of
     X.LetX X.LetRec bs e -> S.LetX S.LetRec (map binding bs) (exp e)
     X.Begin es -> S.Begin (map exp es)
     X.WhileX c body -> S.WhileX (exp c) (exp body)
-    X.Lambda xs e -> S.Lambda xs (exp e)
+    X.LambdaX (X.Lambda xs e) -> S.Lambda xs (exp e)
   binding (x, e) = (x, exp e)
 
 def d = case d of
