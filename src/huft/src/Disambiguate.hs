@@ -73,9 +73,9 @@ exp' e locals =
               e' = exp' e (map fst bindings ++ locals)
           in X.LetX X.Let bs e'
         S.LetX S.LetRec bindings e ->
-          let locals = map fst bindings ++ locals
+          let locals' = map fst bindings ++ locals
               bs = map (\(x, e) -> (x, exp' e locals)) bindings
-              e' = exp' e locals
+              e' = exp' e locals'
           in X.LetX X.LetRec bs e'
         S.Lambda xs e -> X.LambdaX (X.Lambda xs (exp' e (xs ++ locals)))
   in exp e

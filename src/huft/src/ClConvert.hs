@@ -48,8 +48,6 @@ closedExp captured e =
         closure :: X.Lambda -> C.Closure
         closure (X.Lambda xs body) =
             let freevars = S.toList $ S.difference (free body) (S.fromList xs)
-            -- maybe S.toList $ S.difference (free body) (S.fromList xs) ?
-                cons x y = C.PrimCall P.cons [x, y]
             in C.Closure xs (closedExp freevars body)
                             (map (\x -> case indexOf x captured of
                                 Just i -> C.Captured i
@@ -75,7 +73,7 @@ closedExp captured e =
                 unLambda (X.LambdaX lambda) = lambda
                 unLambda _ = error "parser failed to insist on a lambda"
                 bindings = map (\(n, e) -> (n, closure (unLambda e))) bs
-              in C.LetRec bindings (C.Local "aa")
+              in C.LetRec bindings (exp e)
             (X.LambdaX (X.Lambda xs e)) -> C.ClosureX (closure (X.Lambda xs e))
     in exp e
 
