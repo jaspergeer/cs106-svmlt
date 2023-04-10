@@ -85,7 +85,14 @@ instruction_info instructions[] = {
   { "null?", IsNull, parseR2, "$rX := null? $rY" },
   { "nil?", IsNil, parseR2, "$rX := nil? $rY" },
 
+  // closures (module 10)
+
+  { "mkclosure", MkClosure, parseR2U8, "$rX := closure[$rY,Z]"},
+  { "getclslot", GetClSlot, parseR2U8, "rX := rY.Z" },
+  { "setclslot", SetClSlot, parseR2U8, "rX.Z := rY" },
+  
   { "halt", Return, parseR0, "halt" }
+  
   };
 
 int number_of_instructions = sizeof(instructions) / sizeof(instructions[0]);

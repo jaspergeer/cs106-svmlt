@@ -78,6 +78,15 @@ def e = S.Exp (exp e)
                                   foldr (\e l -> cons (exp e) l) (S.Literal S.EmptyList) (map K.Name captured)] 
                                   -- change captured because the KNF representation is [a] rather than [Exp a], 
                                   -- use the former to be consistent with modele 10 handout
+                K.LetRec bindings body -> 
+                    let
+                        mkclosure = S.Apply (S.Var "mkclosure")
+                        cons x y = S.Apply (S.Var "cons") [x, y]
+                        bindings' = map (\(f, K.Closure formals body captured) -> 
+                            (f, mkclosure [S.Lambda ("$closure" : formals) (exp body),
+                                           foldr (\e l -> cons (exp e) l) (S.Literal S.EmptyList) (map K.Name captured)])) bindings
+                        body' = exp body
+                    in S.LetX S.LetRec bindings' body'
 
 -- What will happen if the offset of the VMOPL is not a string in getglobal case:
 -- Ans: impossible, should have some error message for debugging,

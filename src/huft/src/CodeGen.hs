@@ -26,6 +26,9 @@ s e tail = e : tail
 l :: [a] -> HughesList a
 l es tail = es ++ tail
 
+hconcat :: [HughesList a] -> HughesList a
+hconcat = foldr (.) empty
+
 -- I am very proud of this
 (<.>) :: (Applicative f) => f (b -> c) -> f (a -> b) -> f (a -> c)
 x <.> y = (.) <$> x <*> y
@@ -131,7 +134,30 @@ toReturn' e = case e of
   -- not sure?
   K.Captured i -> toReg' 0 e <.> return (s $ U.regs "return" [0])
   K.ClosureX (K.Closure args body captured) -> toReg' 0 e <.> return (s $ U.regs "return" [0])
-
+  K.LetRec bindings body -> do
+    body' <- toReg' 0 body
+    return $ letrec bindings . body' . s (U.regs "return" [0])
 
 codeGen :: [K.Exp Reg] -> [Instruction]
 codeGen es = foldr (.) empty (evalState (mapM forEffect' es) 0) []
+
+letrec :: [(Reg, K.Closure Reg)] -> HughesList Instruction
+letrec bindings = 
+  let alloc (f_i, K.Closure formals body captures) = s (U.mkclosure f_i f_i (length captures))
+      init  (f_i, K.Closure formals body captures) = l (mapi (\i r -> U.setclslot f_i i r) captures)
+  in hconcat (map alloc bindings) . hconcat (map init bindings)
+
+
+
+-- fun letrec gen (bindings, body) =
+--    let val _ = letrec : (reg K.exp ‑> instruction hughes_list)
+--                      ‑> (reg * reg K.closure) list * reg K.exp
+--                      ‑> instruction hughes_list
+--       (* one helper function to allocate and another to initialize *)
+--       fun alloc (f_i, closure as (funcode as (formals, body), captures)) = ...
+--       fun init  (f_i, closure as (funcode as (formals, body), captures)) = ...
+--   in  hconcat (map alloc bindings) o hconcat (map init bindings) o gen body
+--   end
+-- and toReg' ...
+-- and forEffect' ...
+-- and toReturn' ...

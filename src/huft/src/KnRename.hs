@@ -38,4 +38,10 @@ mapx f e =
     K.Captured n -> return (K.Captured n)
     K.ClosureX (K.Closure formals body captured) -> 
       K.ClosureX <$> (K.Closure <$> mapM f formals <*> mx body <*> mapM f captured) 
+    K.LetRec bindings body -> 
+      K.LetRec <$> mapM (\(n, K.Closure formals body captured) -> 
+                          (,) <$> f n <*> 
+                          (K.Closure <$> mapM f formals <*> mx body <*> mapM f captured))
+                        bindings 
+               <*> mx body
       -- there's probably a better way to write this

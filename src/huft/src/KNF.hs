@@ -16,6 +16,7 @@ data Exp a = Literal Literal
            | Name a
            | If a (Exp a) (Exp a)
            | Let a (Exp a) (Exp a)
+           | LetRec [(a, Closure a)] (Exp a)
            | Seq (Exp a) (Exp a)
            | Assign a (Exp a)
            | While a (Exp a) (Exp a)
