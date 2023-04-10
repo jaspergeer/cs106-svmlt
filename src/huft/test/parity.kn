@@ -1,0 +1,34 @@
+(let ([$r0 (lambda ($r1)
+         (letrec ([$r3 (mkclosure
+                     (lambda ($closure $r1)
+                        (let ([$r2 (let ([$r2 0])
+                                 (= $r1 $r2))])
+                           (if $r2
+                              #f
+                              (let ([$r2 even?])
+                                 (let ([$r3 (let ([$r3 1])
+                                          (- $r1 $r3))])
+                                    ($r2 $r3))))))
+                     '())]
+                  [$r2 (mkclosure
+                     (lambda ($closure $r1)
+                        (let ([$r2 (let ([$r2 0])
+                                 (= $r1 $r2))])
+                           (if $r2
+                              #t
+                              (let ([$r2 odd?])
+                                 (let ([$r3 (let ([$r3 1])
+                                          (- $r1 $r3))])
+                                    ($r2 $r3))))))
+                     '())])
+            (let ([$r4 (let ([$r4 $r3])
+                     (let ([$r5 $r1])
+                        ($r4 $r5)))])
+               (if $r4 'odd 'even))))])
+   (set parity $r0))
+(begin (let ([$r0 (let ([$r0 parity])
+                (let ([$r1 0])
+                   ($r0 $r1)))])
+      (check $r0 '(parity 0)))
+   (let ([$r0 'even])
+      (expect $r0 ''even)))
