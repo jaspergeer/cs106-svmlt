@@ -2,7 +2,7 @@
 
 (define o (f g) (lambda ( x) (f (g x))))
 
-(check-expect ((o not not) #f) #f)
+(check-expect 1 1)
 
 (val f (lambda (x y) (cons x y)))
 

@@ -84,3 +84,29 @@ setglobal name reg = effectLit P.setglobal reg name
 -- Just use that opcode with the internal regs function.
 
 copyreg dest src = i $ O.Regs "copy" [dest, src]
+
+
+-- module 10: add support for closures
+
+-- val mkclosure : reg ‑> reg ‑> int ‑> instruction
+--   (* x := new closure with k slots; x‑>f := y; *)
+-- val setclslot : reg ‑> int ‑> reg ‑> instruction
+--   (* x.k := y *)
+-- val getclslot : reg ‑> reg ‑> int ‑> instruction
+--   (* x := y.k *)
+
+-- val captured : reg ‑> int ‑> instruction
+-- Implement the first three by using A.OBJECT_CODE with the O.REGINT form of object code. Implement captured by using getclslot with the closure in register 0.
+
+mkclosure :: Reg -> Reg -> Int -> Instruction
+mkclosure rX rY n = i $ O.RegsInt "mkclosure" [rX, rY] n
+
+setclslot :: Reg -> Int -> Reg -> Instruction
+setclslot rX n rY = i $ O.RegsInt "setclslot" [rX, rY] n
+
+getclslot :: Reg -> Reg -> Int -> Instruction
+getclslot rX rY n = i $ O.RegsInt "getclslot" [rX, rY] n
+
+captured :: Reg -> Int -> Instruction
+captured rA n = getclslot rA 0 n
+
