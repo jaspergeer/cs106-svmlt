@@ -144,7 +144,7 @@ toReturn' e = let
 codeGen :: [K.Exp Reg] -> [Instruction]
 codeGen es = foldr (.) empty (evalState (mapM forEffect' es) 0) []
 
-letrec :: (K.Exp Reg -> U.UniqueLabelState (HughesList Instruction)) ->[(Reg, K.Closure Reg)] -> K.Exp Reg -> U.UniqueLabelState (HughesList Instruction)
+letrec :: (K.Exp Reg -> U.UniqueLabelState (HughesList Instruction)) -> [(Reg, K.Closure Reg)] -> K.Exp Reg -> U.UniqueLabelState (HughesList Instruction)
 letrec gen bindings body = 
   let alloc (f_i, K.Closure formals body captures) =
         toReg' f_i (K.FunCode formals body) <.> return (s (U.mkclosure f_i f_i (length captures)))
