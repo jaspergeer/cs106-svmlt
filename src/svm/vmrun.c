@@ -357,7 +357,6 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         struct VMFunction *f = AS_VMFUNCTION(vm, RY);
         VMNEW(struct VMClosure *, closure, vmsize_closure(uZ(instr)));
 
-        (void) f;
         closure->f = f;
         closure->nslots = uZ(instr);
         RX = mkClosureValue(closure);
