@@ -154,11 +154,14 @@ void vmrun(VMState vm, struct VMFunction* fun) {
 
         const char *funname = lastglobalset(vm, funreg, caller, stream_ptr);
         
+        struct VMClosure *closure = NULL;
         struct VMFunction *callee = NULL;
         if (isVMFunction(RY)) {
           callee = AS_VMFUNCTION(vm, RY);
         } else if (isVMClosure(RY)) {
-          callee = AS_CLOSURE(vm, RY)->f;
+          closure = AS_CLOSURE(vm, RY);
+          callee = closure->f;
+          print("arity %d\n", closure->arity);
         } else {
           if (funname) // need to improve error message
             runerror(vm, "Tried to call %v; maybe global '%s' is not defined?", RY, funname);
@@ -166,27 +169,36 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         }
         
         // arity check
-        if (arity != callee->arity)
+        if (arity > callee->arity)
           runerror(vm, "Called function %s with %d arguments but it requires %d.",
             funname, arity, callee->arity);
 
-        // register overflow check
-        if (reg0 + callee->nregs >= vm->registers + (NUM_REGISTERS - 1))
-          runerror(vm, "Register file overflow in Call.");
+        for (int i = 1; i <= arity; ++i) {
+          *(closure->argstack - (closure->arity--)) = reg0[funreg + i];
+        }
 
-        // stack overflow check
-        if (stack_ptr == vm->call_stack + (CALL_STACK_SIZE - 1))
-          runerror(vm, "Stack overflow.");
+        if (closure->arity == 0) {
+          memcpy(reg0 + funreg + 1, closure->argstack - callee->arity, callee->arity);
+          // register overflow check
+          if (reg0 + callee->nregs >= vm->registers + (NUM_REGISTERS - 1))
+            runerror(vm, "Register file overflow in Call.");
 
-        Activation *top = ++stack_ptr;
-        top->stream_ptr = stream_ptr;
-        top->reg0 = reg0;
-        top->dest_reg = reg0 + destreg;
-        top->fun = caller;
+          // stack overflow check
+          if (stack_ptr == vm->call_stack + (CALL_STACK_SIZE - 1))
+            runerror(vm, "Stack overflow.");
 
-        running = caller;
-        stream_ptr = callee->instructions - 1;
-        reg0 += funreg;
+          Activation *top = ++stack_ptr;
+          top->stream_ptr = stream_ptr;
+          top->reg0 = reg0;
+          top->dest_reg = reg0 + destreg;
+          top->fun = caller;
+
+          running = caller;
+          stream_ptr = callee->instructions - 1;
+          reg0 += funreg;
+          } else {
+            RX = mkClosureValue(closure);
+          }
       }
       break;
     case TailCall:
@@ -360,11 +372,14 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         } else if (isVMClosure(RY)) {
           f = AS_CLOSURE(vm, RY)->f;
         }
+        int arity = f->arity;
 
-        VMNEW(struct VMClosure *, closure, vmsize_closure(uZ(instr)));
+        VMNEW(struct VMClosure *, closure, vmsize_closure(uZ(instr), arity));
 
         closure->f = f;
         closure->nslots = uZ(instr);
+        closure->argstack = closure->captured + closure->nslots + arity;
+        closure->arity = arity;
         RX = mkClosureValue(closure);
         break;
       }
