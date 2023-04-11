@@ -148,7 +148,7 @@ letrec :: (K.Exp Reg -> U.UniqueLabelState (HughesList Instruction)) ->[(Reg, K.
 letrec gen bindings body = 
   let alloc (f_i, K.Closure formals body captures) =
         toReg' f_i (K.FunCode formals body) <.> return (s (U.mkclosure f_i f_i (length captures)))
-      init  (f_i, K.Closure formals body captures) = l (mapi (U.setclslot f_i) captures)
+      init (f_i, K.Closure formals body captures) = l (mapi (U.setclslot f_i) captures)
   in foldr (\b l -> alloc b <.> l) (return empty) bindings <.> return (hconcat (map init bindings)) <.> gen body
 
 
