@@ -198,13 +198,13 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         
         if (isVMFunction(RX)) {
           callee = AS_VMFUNCTION(vm, RX);
-        } else if (isVMClosure(RY)) {
-          callee = AS_CLOSURE(vm, RZ)->f;
+        } else if (isVMClosure(RX)) {
+          callee = AS_CLOSURE(vm, RX)->f;
         } else {
           const char *funname = lastglobalset(vm, funreg, running, stream_ptr);
           if (funname) // need to improve error message
             runerror(vm, "Tried to call %v; maybe global '%s' is not defined?", RX, funname);
-          runerror(vm, "Tried to call %v", RY);
+          runerror(vm, "Tried to call haha %v", RY);
         }
 
         if (reg0 + lastarg >= vm->registers + (NUM_REGISTERS - 1)) {
@@ -354,12 +354,19 @@ void vmrun(VMState vm, struct VMFunction* fun) {
 
     case MkClosure:
       {
-        struct VMFunction *f = AS_VMFUNCTION(vm, RY);
+        struct VMFunction *f = NULL;
+        if (isVMFunction(RY)) {
+          f = AS_VMFUNCTION(vm, RY);
+        } else if (isVMClosure(RY)) {
+          f = AS_CLOSURE(vm, RY)->f;
+        }
+
         VMNEW(struct VMClosure *, closure, vmsize_closure(uZ(instr)));
 
         closure->f = f;
         closure->nslots = uZ(instr);
         RX = mkClosureValue(closure);
+        break;
       }
 
     case SetClSlot:
