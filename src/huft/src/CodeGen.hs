@@ -144,18 +144,16 @@ toReturn' e = let
   K.ClosureX (K.Closure args body captured) -> toReg' 0 e <.> return (s $ returnx 0)
   K.LetRec bindings body -> do
     body' <- toReg' 0 body
-    return $ letrec bindings . body' . s (returnx 0)
+    letrec toReturn' bindings body <.> return (body' . s (returnx 0))
 
 codeGen :: [K.Exp Reg] -> [Instruction]
 codeGen es = foldr (.) empty (evalState (mapM forEffect' es) 0) []
 
-letrec :: [(Reg, K.Closure Reg)] -> HughesList Instruction
-letrec bindings = 
-  let alloc (f_i, K.Closure formals body captures) = do 
-                                              a <- (toReg' f_i (K.FunCode formals body))
-                                              return $a . s (U.mkclosure f_i f_i (length captures))
+letrec :: (K.Exp Reg -> U.UniqueLabelState (HughesList Instruction)) ->[(Reg, K.Closure Reg)] -> K.Exp Reg -> U.UniqueLabelState (HughesList Instruction)
+letrec gen bindings body = 
+  let alloc (f_i, K.Closure formals body captures) = s (U.mkclosure f_i f_i (length captures))
       init  (f_i, K.Closure formals body captures) = l (mapi (U.setclslot f_i) captures)
-  in hconcat undefined . hconcat (map init bindings)
+  in return (hconcat (map alloc bindings) . hconcat (map init bindings)) <.> gen body
 
 
 
