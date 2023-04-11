@@ -69,6 +69,9 @@ toReg' dest e = case e of
       return $ s (A.LoadFunc dest (length args) (b' [])) .
                s (U.mkclosure dest dest (length captured)) .
                l (mapi (\i r -> U.setclslot dest i r) captured)
+    K.LetRec bindings body -> do
+      body' <- toReg' dest body
+      return $ letrec bindings . body'
 
 -- Using A.mkclosure, allocate the closure into that register.
 -- Initialize the slots by emitting a sequence of instructions created using A.setclslot.
@@ -109,6 +112,9 @@ forEffect' e = case e of
   -- If a CLOSURE form is evaluated for side effect, it is simply discarded
   K.Captured i -> return empty
   K.ClosureX (K.Closure args body captured) -> return empty
+  K.LetRec bindings body -> do
+    body' <- forEffect' body
+    return $ letrec bindings . body'
 
 -- wont be implementing till module 8
 toReturn' :: K.Exp Reg -> U.UniqueLabelState (HughesList Instruction)
