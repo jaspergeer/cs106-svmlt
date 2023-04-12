@@ -10,7 +10,7 @@ static inline size_t vmsize_fun_payload(struct VMFunction *fun);
 
 static inline size_t vmsize_cons(void);
 
-static inline size_t vmsize_closure(int nslots, int arity);
+static inline size_t vmsize_closure(int nslots);
 static inline size_t vmsize_closure_payload(struct VMClosure *hof);
 
 static inline size_t vmsize_string(size_t nchars);
@@ -34,12 +34,12 @@ static inline size_t vmsize_fun_payload(struct VMFunction *fun) {
   return vmsize_fun(fun->size);
 }
 
-static inline size_t vmsize_closure(int nslots, int arity) {
+static inline size_t vmsize_closure(int nslots) {
   struct VMClosure *hof;
-  return sizeof(*hof) + (nslots + arity) * sizeof(hof->captured[0]);
+  return sizeof(*hof) + nslots * sizeof(hof->captured[0]);
 }
 static inline size_t vmsize_closure_payload(struct VMClosure *hof) {
-  return vmsize_closure(hof->nslots, 0);
+  return vmsize_closure(hof->nslots);
 }
 
 static inline size_t vmsize_string(size_t nchars) {

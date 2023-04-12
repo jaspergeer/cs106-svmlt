@@ -156,7 +156,6 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         
         struct VMClosure *closure = NULL;
         struct VMFunction *callee = NULL;
-
         if (isVMClosure(RY)) {
           closure = AS_CLOSURE(vm, RY);
           callee = closure->f;
@@ -419,7 +418,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
           arity = f->arity;
         }
         
-        VMNEW(struct VMClosure *, closure, vmsize_closure(uZ(instr), arity));
+        VMNEW(struct VMClosure *, closure, vmsize_closure(uZ(instr) + arity));
 
         closure->f = f;
         closure->nslots = uZ(instr) + arity;
