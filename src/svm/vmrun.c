@@ -37,6 +37,9 @@
 #define LIT LPool_get(literals, uYZ(instr))
 #define GLO LPool_get(literals, uYZ(instr))
 
+#define FIRST_ARG reg0[funreg + 1]
+#define ARGSTACK_BOTTOM &closure->captured[closure->nslots - callee->arity]
+
 #define CANDUMP 1
 
 static inline struct VMClosure *partial_apply(struct VMClosure *closure, Value *args, int nargs);
@@ -178,10 +181,10 @@ void vmrun(VMState vm, struct VMFunction* fun) {
           int ncaptured_args = (callee->arity - arity);
 
           // shift passed arguments into place
-          memmove(reg0 + funreg + callee->arity - arity + 1, reg0 + funreg + 1, arity * sizeof(struct Value));
+          memmove(&FIRST_ARG + callee->arity - arity, &FIRST_ARG, arity * sizeof(struct Value));
 
           // copy captured arguments into place
-          memcpy(reg0 + funreg + 1, closure->captured + (closure->nslots - callee->arity), ncaptured_args * sizeof(struct Value));
+          memcpy(&FIRST_ARG, ARGSTACK_BOTTOM, ncaptured_args * sizeof(struct Value));
 
           // new reg0 will store a clean version of this closure
           *(reg0 + funreg) = mkClosureValue(closure->base);
@@ -204,7 +207,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
           stream_ptr = callee->instructions - 1;
           reg0 += funreg;
           } else {
-            struct VMClosure *new_closure = partial_apply(closure, &reg0[funreg + 1], arity);
+            struct VMClosure *new_closure = partial_apply(closure, &FIRST_ARG, arity);
             RX = mkClosureValue(new_closure);
           }
       }
@@ -241,10 +244,10 @@ void vmrun(VMState vm, struct VMFunction* fun) {
           int ncaptured_args = (callee->arity - arity);
 
           // nmove passed args into place
-          memmove(reg0 + callee->arity - arity + 1, reg0 + funreg + 1, arity * sizeof(struct Value));
+          memmove(&reg0[1] + callee->arity - arity, &FIRST_ARG, arity * sizeof(struct Value));
 
           // copy captured args into place
-          memcpy(reg0 + 1, closure->captured + (closure->nslots - callee->arity), ncaptured_args * sizeof(struct Value));
+          memcpy(reg0 + 1, ARGSTACK_BOTTOM, ncaptured_args * sizeof(struct Value));
 
           stream_ptr = callee->instructions - 1;
         } else { // treat partial application as returning a closure
@@ -255,7 +258,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
           if (!top->dest_reg)
             runerror(vm, "Tried to return from loading activation");
 
-          struct VMClosure *new_closure = partial_apply(closure, &reg0[funreg + 1], arity);
+          struct VMClosure *new_closure = partial_apply(closure, &FIRST_ARG, arity);
 
           *(top->dest_reg) = mkClosureValue(new_closure);
           running = top->fun;
