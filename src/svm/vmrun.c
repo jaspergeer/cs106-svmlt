@@ -177,10 +177,13 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         if (closure->arity == arity) {
           int ncaptured_args = (callee->arity - arity);
 
+          // shift passed arguments into place
           memmove(reg0 + funreg + callee->arity - arity + 1, reg0 + funreg + 1, arity * sizeof(struct Value));
 
+          // copy captured arguments into place
           memcpy(reg0 + funreg + 1, closure->argstack - ncaptured_args - 1, ncaptured_args * sizeof(struct Value));
 
+          // new reg0 will store a clean version of this closure
           *(reg0 + funreg) = mkClosureValue(closure->base);
 
           // register overflow check
@@ -203,9 +206,9 @@ void vmrun(VMState vm, struct VMFunction* fun) {
           } else {
             VMNEW(struct VMClosure *, new_closure, sizeof(*closure));
             memcpy(new_closure, closure, sizeof(*closure));
-            for (int i = 1; i <= arity; ++i) {
-              *(new_closure->argstack - (new_closure->arity--)) = reg0[funreg + i];
-            }
+            
+            memcpy(new_closure->argstack - (new_closure->arity), reg0 + funreg + 1, arity);
+            new_closure->arity -= arity;
 
             RX = mkClosureValue(new_closure);
           }
@@ -237,12 +240,15 @@ void vmrun(VMState vm, struct VMFunction* fun) {
             funname, arity, closure->arity);
          
         if (closure->arity == arity) {
+          // reg0 should store the clean version of this closure
           *reg0 = mkClosureValue(closure->base);
 
           int ncaptured_args = (callee->arity - arity);
 
+          // nmove passed args into place
           memmove(reg0 + callee->arity - arity + 1, reg0 + funreg + 1, arity * sizeof(struct Value));
 
+          // copy captured args into place
           memcpy(reg0 + 1, closure->argstack - ncaptured_args - 1, ncaptured_args * sizeof(struct Value));
 
           stream_ptr = callee->instructions - 1;
@@ -254,11 +260,13 @@ void vmrun(VMState vm, struct VMFunction* fun) {
           if (!top->dest_reg)
             runerror(vm, "Tried to return from loading activation");
 
+          // allocate a new closure which is a copy of the old one
           VMNEW(struct VMClosure *, new_closure, sizeof(*closure));
           memcpy(new_closure, closure, sizeof(*closure));
-          for (int i = 1; i <= arity; ++i) {
-            *(new_closure->argstack - (new_closure->arity--)) = reg0[funreg + i];
-          }
+
+          // copy passed arguments into argstack
+          memcpy(new_closure->argstack - (new_closure->arity), reg0 + funreg + 1, arity);
+          new_closure->arity -= arity;
 
           *(top->dest_reg) = mkClosureValue(new_closure);
           running = top->fun;
