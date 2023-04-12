@@ -175,15 +175,13 @@ void vmrun(VMState vm, struct VMFunction* fun) {
 
 
         if (closure->arity == arity) {
-          *reg0 = mkClosureValue(closure->base);
-
           int ncaptured_args = (callee->arity - arity);
-          // print("captured: %d copy %d to reg %d\n", ncaptured_args, arity, funreg + callee->arity - arity + 1);
 
-          
           memmove(reg0 + funreg + callee->arity - arity + 1, reg0 + funreg + 1, arity * sizeof(struct Value));
 
           memcpy(reg0 + funreg + 1, closure->argstack - ncaptured_args - 1, ncaptured_args * sizeof(struct Value));
+
+          *(reg0 + funreg) = mkClosureValue(closure->base);
 
           // register overflow check
           if (reg0 + callee->nregs >= vm->registers + (NUM_REGISTERS - 1))

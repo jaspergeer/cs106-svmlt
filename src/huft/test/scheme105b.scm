@@ -203,21 +203,21 @@
 ;; ;;   (contig-sublist? xs (cons y ys)) == (or (is_prefix? xs (cons y ys))
 ;; ;;                                           (contig-sublist xs ys))
 
-(define contig-sublist? (xs ys)
-    (if (null? ys)
-        #f
-        (or (is_prefix? xs ys) (contig-sublist? xs (cdr ys)))))
+;; (define contig-sublist? (xs ys)
+;;     (if (null? ys)
+;;         #f
+;;         (or (is_prefix? xs ys) (contig-sublist? xs (cdr ys)))))
 
-        (check-assert (contig-sublist? '(a b) '(c a b)))
-        (check-assert (not (is_prefix? '(a b) '(c b a c))))
+;;         (check-assert (contig-sublist? '(a b) '(c a b)))
+;;         (check-assert (not (is_prefix? '(a b) '(c b a c))))
 
 ;; ;; my previous answer is incorrect, I choose the standard solution
 ;; ;; implementation that considers an empty list as a base case
 
-;; ;; (contig-sublist? '() zs) == #t
-;; ;; (contig-sublist? (cons y ys) '()) == #f
-;; ;; (contig-sublist? (cons y ys) (cons z zs)) == (|| (prefix? (cons y ys) (cons z zs)) 
-;; ;;                                                  (contig-sublist? (cons y ys) zs))
+;; (contig-sublist? '() zs) == #t
+;; (contig-sublist? (cons y ys) '()) == #f
+;; (contig-sublist? (cons y ys) (cons z zs)) == (|| (prefix? (cons y ys) (cons z zs)) 
+;;                                                  (contig-sublist? (cons y ys) zs))
 
 (define contig-sublist? (xs ys) 
     (if (is_prefix? xs ys)
@@ -292,8 +292,8 @@
         (define p1? (x) (= x 1))
         (check-expect (takewhile p1? '(1 0 1 0 11 0 1)) '(1))
 
-        ;; (check-expect (takewhile (lambda (x) (= (mod x 2) 0)) 
-        ;;                 '(2 4 6 7 8 10 12)) '(2 4 6))
+        (check-expect (takewhile (lambda (x) (= (mod x 2) 0)) 
+                        '(2 4 6 7 8 10 12)) '(2 4 6))
 
 
 
@@ -313,10 +313,10 @@
             (dropwhile p? (cdr xs))
             xs)))
 
-;;         ;; (check-expect (dropwhile (lambda (x) (= x 1)) 
-;;         ;;                          '(1 0 1 0 11 0 1)) '(0 1 0 11 0 1))
-;;         ;; (check-expect (dropwhile (lambda (x) (= (mod x 2) 0)) 
-;;         ;;                          '(2 4 6 7 8 10 12)) '(7 8 10 12))
+        (check-expect (dropwhile (lambda (x) (= x 1)) 
+                                 '(1 0 1 0 11 0 1)) '(0 1 0 11 0 1))
+        (check-expect (dropwhile (lambda (x) (= (mod x 2) 0)) 
+                                 '(2 4 6 7 8 10 12)) '(7 8 10 12))
 
 
 
@@ -395,19 +395,19 @@
 ;; laws:
 ;;   (unzip ps) = (cons (map car ps) (cons (map cadr ps) '())))
 
-;; (define unzip (ps)
-;;         (cons (map car ps) (cons (map cadr ps) '())))
+(define unzip (ps)
+        (cons (map car ps) (cons (map cadr ps) '())))
 
 ;; car and cadr got etaExpanded
 
-;; (define plus1 (x) (+ x 1))
+(define plus1 (x) (+ x 1))
 
-;; (define mapp (xs) (map plus1 xs))
+(define mapp (xs) (map plus1 xs))
 
-;; (define unzip (ps)
-;;         (cons (map car ps) (cons (map cadr ps) '())))
+(define unzip (ps)
+        (cons (map car ps) (cons (map cadr ps) '())))
 
-;;         (check-expect  (unzip '((1 a) (2 b) (3 c))) '((1 2 3) (a b c)))
+        (check-expect  (unzip '((1 a) (2 b) (3 c))) '((1 2 3) (a b c)))
 
 
 
@@ -458,12 +458,12 @@
 ;; (define rightmost-point (ps)
 ;;     (arg-max point-x ps))
 
-        ;; (check-expect (rightmost-point '([make-point 1 2] [make-point 3 4])) 
-        ;;                                 '[make-point 3 4])
-        ;; (check-expect (rightmost-point '([make-point 5 6] 
-        ;;                                  [make-point 1 2]
-        ;;                                  [make-point 3 4]
-        ;;                                  [make-point 5 7])) '[make-point 5 6])
+;;         (check-expect (rightmost-point '([make-point 1 2] [make-point 3 4])) 
+;;                                         '[make-point 3 4])
+;;         (check-expect (rightmost-point '([make-point 5 6] 
+;;                                          [make-point 1 2]
+;;                                          [make-point 3 4]
+;;                                          [make-point 5 7])) '[make-point 5 6])
 
 
 
