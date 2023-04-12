@@ -202,10 +202,12 @@ void vmrun(VMState vm, struct VMFunction* fun) {
           stream_ptr = callee->instructions - 1;
           reg0 += funreg;
           } else {
-            VMNEW(struct VMClosure *, new_closure, sizeof(*closure));
-            memcpy(new_closure, closure, sizeof(*closure));
+            // allocate a new closure which is a copy of the old one
+            VMNEW(struct VMClosure *, new_closure, vmsize_closure_payload(closure));
+            memcpy(new_closure, closure, vmsize_closure_payload(closure));
 
-            memcpy(new_closure->captured + (new_closure->nslots - new_closure->arity), &reg0[funreg + 1], arity * sizeof(struct Value));
+            // copy passed args into closure argstack
+            memcpy(&new_closure->captured[new_closure->nslots - new_closure->arity], &reg0[funreg + 1], arity * sizeof(struct Value));
             new_closure->arity -= arity;
 
             RX = mkClosureValue(new_closure);
@@ -249,7 +251,6 @@ void vmrun(VMState vm, struct VMFunction* fun) {
           // copy captured args into place
           memcpy(reg0 + 1, closure->captured + (closure->nslots - callee->arity), ncaptured_args * sizeof(struct Value));
 
-
           stream_ptr = callee->instructions - 1;
         } else {
           if (stack_ptr < vm->call_stack)
@@ -260,11 +261,11 @@ void vmrun(VMState vm, struct VMFunction* fun) {
             runerror(vm, "Tried to return from loading activation");
 
           // allocate a new closure which is a copy of the old one
-          VMNEW(struct VMClosure *, new_closure, sizeof(*closure));
-          memcpy(new_closure, closure, sizeof(*closure));
+          VMNEW(struct VMClosure *, new_closure, vmsize_closure_payload(closure));
+          memcpy(new_closure, closure, vmsize_closure_payload(closure));
 
-          // copy passed arguments into argstack
-          memcpy(new_closure->captured + (new_closure->nslots - new_closure->arity), reg0 + funreg + 1, sizeof(struct Value) * arity);
+          // copy passed args onto new closure argstack
+          memcpy(&new_closure->captured[new_closure->nslots - new_closure->arity], &reg0[funreg + 1], arity * sizeof(struct Value));
           new_closure->arity -= arity;
 
           *(top->dest_reg) = mkClosureValue(new_closure);
