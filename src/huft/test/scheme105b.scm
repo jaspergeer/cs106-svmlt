@@ -427,17 +427,17 @@
 
 ;; (max* xs) finds the maximum of a non-empty list of integers
 
-;; (define max* (xs)
-;;     (foldl max (car xs) xs))
+(define max* (xs)
+    (foldl max (car xs) xs))
 
-;; (define arg-max (f xs)
-;;         (car (filter (lambda (x) (= (f x) (max* (map f xs)))) xs)))
+(define arg-max (f xs)
+        (car (filter (lambda (x) (= (f x) (max* (map f xs)))) xs)))
 
-;;         (check-expect (arg-max car '((105 PL) (160 Algorithms) (170 Theory)))
-;;                       '(170 Theory))
-;;         (check-expect (arg-max (lambda (a) (* a a)) '(5 4 3 2 1)) 5)
-;;         (check-expect (arg-max car '((105 PL) (170 Algorithms) (170 Theory)))
-;;                       '(170 Algorithms))
+        (check-expect (arg-max car '((105 PL) (160 Algorithms) (170 Theory)))
+                      '(170 Theory))
+        (check-expect (arg-max (lambda (a) (* a a)) '(5 4 3 2 1)) 5)
+        (check-expect (arg-max car '((105 PL) (170 Algorithms) (170 Theory)))
+                      '(170 Algorithms))
 
 
 

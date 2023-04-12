@@ -53,9 +53,7 @@ toReg' dest e = case e of
     K.VMOPGLO prim@(P.SetsRegister _) _ lit -> return $ s $ U.setRegLit dest prim lit -- the [r1] list disappears here, is that right?
     K.VMOPGLO {} -> forEffect' e
     K.FunCall funreg args -> return $ s $ U.call dest funreg args
-    K.FunCode args body -> do
-        b' <- toReturn' body
-        return $ s $ A.LoadFunc dest (length args) (b' [])
+    K.FunCode args body -> toReg' dest (K.ClosureX (K.Closure args body []))
     -- control flow forms
     K.If x e1 e2 -> makeIf (toReg' dest) x e1 e2
     K.While x e1 e2 -> forEffect' (K.While x e1 e2) <.> toReg' dest (K.Literal $ O.Bool False)

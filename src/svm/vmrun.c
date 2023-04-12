@@ -156,12 +156,11 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         
         struct VMClosure *closure = NULL;
         struct VMFunction *callee = NULL;
-        if (isVMFunction(RY)) {
-          callee = AS_VMFUNCTION(vm, RY);
-        } else if (isVMClosure(RY)) {
+
+        if (isVMClosure(RY)) {
           closure = AS_CLOSURE(vm, RY);
           callee = closure->f;
-          print("arity %d\n", closure->arity);
+          // print("arity %d\n", closure->arity);
         } else {
           if (funname) // need to improve error message
             runerror(vm, "Tried to call %v; maybe global '%s' is not defined?", RY, funname);
@@ -169,16 +168,23 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         }
         
         // arity check
-        if (arity > callee->arity)
+        if (arity > closure->arity)
           runerror(vm, "Called function %s with %d arguments but it requires %d.",
-            funname, arity, callee->arity);
+            funname, arity, closure->arity);
 
-        for (int i = 1; i <= arity; ++i) {
-          *(closure->argstack - (closure->arity--)) = reg0[funreg + i];
-        }
 
-        if (closure->arity == 0) {
-          memcpy(reg0 + funreg + 1, closure->argstack - callee->arity, callee->arity);
+
+        if (closure->arity == arity) {
+          *reg0 = mkClosureValue(closure->base);
+
+          int ncaptured_args = (callee->arity - arity);
+          // print("captured: %d copy %d to reg %d\n", ncaptured_args, arity, funreg + callee->arity - arity + 1);
+
+          
+          memmove(reg0 + funreg + callee->arity - arity + 1, reg0 + funreg + 1, arity * sizeof(struct Value));
+
+          memcpy(reg0 + funreg + 1, closure->argstack - ncaptured_args - 1, ncaptured_args * sizeof(struct Value));
+
           // register overflow check
           if (reg0 + callee->nregs >= vm->registers + (NUM_REGISTERS - 1))
             runerror(vm, "Register file overflow in Call.");
@@ -197,7 +203,13 @@ void vmrun(VMState vm, struct VMFunction* fun) {
           stream_ptr = callee->instructions - 1;
           reg0 += funreg;
           } else {
-            RX = mkClosureValue(closure);
+            VMNEW(struct VMClosure *, new_closure, sizeof(*closure));
+            memcpy(new_closure, closure, sizeof(*closure));
+            for (int i = 1; i <= arity; ++i) {
+              *(new_closure->argstack - (new_closure->arity--)) = reg0[funreg + i];
+            }
+
+            RX = mkClosureValue(new_closure);
           }
       }
       break;
@@ -205,31 +217,56 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       {      
         uint8_t funreg = uX(instr);
         uint8_t lastarg = uY(instr);
+        uint8_t arity = lastarg - funreg;
 
+        const char *funname = lastglobalset(vm, funreg, running, stream_ptr);
+
+        struct VMClosure *closure = NULL;
         struct VMFunction *callee = NULL;
-        
-        if (isVMFunction(RX)) {
-          callee = AS_VMFUNCTION(vm, RX);
-        } else if (isVMClosure(RX)) {
-          callee = AS_CLOSURE(vm, RX)->f;
+        if (isVMClosure(RX)) {
+          closure = AS_CLOSURE(vm, RX);
+          callee = closure->f;
         } else {
-          const char *funname = lastglobalset(vm, funreg, running, stream_ptr);
+          
           if (funname) // need to improve error message
             runerror(vm, "Tried to call %v; maybe global '%s' is not defined?", RX, funname);
-          runerror(vm, "Tried to call haha %v", RY);
+          runerror(vm, "Tried to call %v", RX);
         }
 
-        if (reg0 + lastarg >= vm->registers + (NUM_REGISTERS - 1)) {
-          runerror(vm, "Register file overflow");
-        }
+        // arity check
+        if (arity > closure->arity)
+          runerror(vm, "Called function %s with %d arguments but it requires %d.",
+            funname, arity, closure->arity);
+         
+        if (closure->arity == arity) {
+          *reg0 = mkClosureValue(closure->base);
 
-        // reg file overflow, inherently wrong check
-        // if (reg0 + funreg > vm->registers + 256) {
-        //   runerror(vm, "Register file overflow");
-        // }
+          int ncaptured_args = (callee->arity - arity);
 
-        stream_ptr = callee->instructions - 1;
-        memmove(reg0, reg0 + funreg, (lastarg - funreg + 1) * sizeof(Value));        
+          memmove(reg0 + callee->arity - arity + 1, reg0 + funreg + 1, arity * sizeof(struct Value));
+
+          memcpy(reg0 + 1, closure->argstack - ncaptured_args - 1, ncaptured_args * sizeof(struct Value));
+
+          stream_ptr = callee->instructions - 1;
+        } else {
+          if (stack_ptr < vm->call_stack)
+            return;
+
+          Activation *top = stack_ptr--;
+          if (!top->dest_reg)
+            runerror(vm, "Tried to return from loading activation");
+
+          VMNEW(struct VMClosure *, new_closure, sizeof(*closure));
+          memcpy(new_closure, closure, sizeof(*closure));
+          for (int i = 1; i <= arity; ++i) {
+            *(new_closure->argstack - (new_closure->arity--)) = reg0[funreg + i];
+          }
+
+          *(top->dest_reg) = mkClosureValue(new_closure);
+          running = top->fun;
+          stream_ptr = top->stream_ptr;
+          reg0 = top->reg0;
+        }     
       }
       break;
 
@@ -366,20 +403,23 @@ void vmrun(VMState vm, struct VMFunction* fun) {
 
     case MkClosure:
       {
+        int arity = 0;
         struct VMFunction *f = NULL;
         if (isVMFunction(RY)) {
           f = AS_VMFUNCTION(vm, RY);
+          arity = f->arity;
         } else if (isVMClosure(RY)) {
           f = AS_CLOSURE(vm, RY)->f;
+          arity = f->arity;
         }
-        int arity = f->arity;
-
+        
         VMNEW(struct VMClosure *, closure, vmsize_closure(uZ(instr), arity));
 
         closure->f = f;
         closure->nslots = uZ(instr);
         closure->argstack = closure->captured + closure->nslots + arity;
         closure->arity = arity;
+        closure->base = closure;
         RX = mkClosureValue(closure);
         break;
       }

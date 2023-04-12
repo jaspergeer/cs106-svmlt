@@ -124,13 +124,16 @@ static void fprintfunname(FILE *fp, VMState vm, Value v);
 static void fprintfunname(FILE *fp, VMState vm, Value v) {
   switch (v.tag) {
     case VMFunction:
+      break;
     case VMClosure:
       (void) vm;
       // You need here a loop through all your globals, searching
       // for an `i` such that `identical(global number i, v)` holds.
       // If you find one, print " ($NAME)" where $NAME is
       // the name of global number `i`.z
-      fprintf(fp, " (disassembler incomplete: see %s, line %d)", __FILE__, __LINE__);
+      struct VMClosure *c = AS_CLOSURE(vm, v);
+      fprintf(fp, "closure with arity: %d", c->arity);
+      // fprintf(fp, " (disassembler incomplete: see %s, line %d)", __FILE__, __LINE__);
     default:
       break;
   }

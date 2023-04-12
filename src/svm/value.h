@@ -141,6 +141,7 @@ struct VMFunction {
 
 struct VMClosure {
   struct VMFunction *f;
+  struct VMClosure *base;
   int arity;
   struct Value *argstack;
   int nslots;
