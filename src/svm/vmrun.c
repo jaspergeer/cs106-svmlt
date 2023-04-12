@@ -160,7 +160,6 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         if (isVMClosure(RY)) {
           closure = AS_CLOSURE(vm, RY);
           callee = closure->f;
-          // print("arity %d\n", closure->arity);
         } else {
           if (funname) // need to improve error message
             runerror(vm, "Tried to call %v; maybe global '%s' is not defined?", RY, funname);
@@ -181,7 +180,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
           memmove(reg0 + funreg + callee->arity - arity + 1, reg0 + funreg + 1, arity * sizeof(struct Value));
 
           // copy captured arguments into place
-          memcpy(reg0 + funreg + 1, closure->argstack - ncaptured_args - 1, ncaptured_args * sizeof(struct Value));
+          memcpy(reg0 + funreg + 1, closure->captured + (closure->nslots - callee->arity), ncaptured_args * sizeof(struct Value));
 
           // new reg0 will store a clean version of this closure
           *(reg0 + funreg) = mkClosureValue(closure->base);
@@ -206,8 +205,8 @@ void vmrun(VMState vm, struct VMFunction* fun) {
           } else {
             VMNEW(struct VMClosure *, new_closure, sizeof(*closure));
             memcpy(new_closure, closure, sizeof(*closure));
-            
-            memcpy(new_closure->argstack - (new_closure->arity), reg0 + funreg + 1, arity);
+
+            memcpy(new_closure->captured + (new_closure->nslots - new_closure->arity), &reg0[funreg + 1], arity * sizeof(struct Value));
             new_closure->arity -= arity;
 
             RX = mkClosureValue(new_closure);
@@ -249,7 +248,8 @@ void vmrun(VMState vm, struct VMFunction* fun) {
           memmove(reg0 + callee->arity - arity + 1, reg0 + funreg + 1, arity * sizeof(struct Value));
 
           // copy captured args into place
-          memcpy(reg0 + 1, closure->argstack - ncaptured_args - 1, ncaptured_args * sizeof(struct Value));
+          memcpy(reg0 + 1, closure->captured + (closure->nslots - callee->arity), ncaptured_args * sizeof(struct Value));
+
 
           stream_ptr = callee->instructions - 1;
         } else {
@@ -265,7 +265,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
           memcpy(new_closure, closure, sizeof(*closure));
 
           // copy passed arguments into argstack
-          memcpy(new_closure->argstack - (new_closure->arity), reg0 + funreg + 1, arity);
+          memcpy(new_closure->captured + (new_closure->nslots - new_closure->arity), reg0 + funreg + 1, sizeof(struct Value) * arity);
           new_closure->arity -= arity;
 
           *(top->dest_reg) = mkClosureValue(new_closure);
@@ -422,8 +422,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         VMNEW(struct VMClosure *, closure, vmsize_closure(uZ(instr), arity));
 
         closure->f = f;
-        closure->nslots = uZ(instr);
-        closure->argstack = closure->captured + closure->nslots + arity;
+        closure->nslots = uZ(instr) + arity;
         closure->arity = arity;
         closure->base = closure;
         RX = mkClosureValue(closure);
