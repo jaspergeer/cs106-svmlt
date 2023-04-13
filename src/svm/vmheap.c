@@ -18,8 +18,6 @@
 #include "vmstate.h"
 #include "vtable.h"
 
-#define NOVALGRIND
-
 #ifndef NOVALGRIND
 
   #include <valgrind/memcheck.h>
@@ -615,35 +613,47 @@ static void scan_forwarded_payload(Value v) {
   }
 }
 
+// Scan an activation record. In file vmheap.c, implement function scan_activation. 
+// Ideally an activation contains exactly one reference to a heap-allocated payload, 
+// which should be a reference to the function whose activation it is.  
+// That reference needs to be forwarded. If you encounter anything else, 
+// check with a member of the course staff.
 
 static void scan_activation(Activation *p) {
-  assert(p);
-  assert(0 && "you have to implement this one");
+  p->fun = forward_function(p->fun);
 }
 
 static void scan_vmstate(struct VMState *vm) {
-  assert(vm);
-  assert(0 && "you have to implement this one");
-  // see book chapter page 265 about roots
-
   // roots: all registers that can affect future computation
   //    (these hold local variables and formal paramters as on page 265)
   //    (hint: don't scan high-numbered registers that can't
   //     affect future computations because they aren't used)
-
-  // root: any value that may be awaiting the `expect` primitive
-
-  // roots: all literal slots that are in use
+  for (int i = 0; i < vm->reg0 - vm->registers + 256; ++i) {
+    // ?
+    scan_value(&vm->registers[i]);
+  }
 
   // roots: all global-variable slots that are in use
+  for (int i = 0; i < vm->num_globals; ++i) {
+    scan_value(&vm->globals[i]);
+  }
+
+  // root: any value that may be awaiting the `expect` primitive
+  scan_value(&vm->awaiting_expect);
+
+  // roots: all literal slots that are in use
+  Value *literals = LPool_getlits(vm->literals);
+  for (int i = 0; i < LPool_nlits(vm->literals); ++i) {
+    scan_value(&literals[i]);
+  }
 
   // roots: each function on the call stack
-  (void) scan_activation; // likely to be useful here
+  for (Activation *p = vm->call_stack; p; p++) {
+    scan_activation(p);
+  }
 
   // root: the currently running function (which might not be on the call stack)
-
-  // root: any other field of `struct VMState` that could lead to a `Value`
-
+  vm->running = forward_function(vm->running);
 }
 
 extern void gc(struct VMState *vm) {

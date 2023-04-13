@@ -60,3 +60,7 @@ void LPool_free(L *pool) {
 int LPool_nlits(L pool) {
   return pool->nlits;
 }
+
+Value *LPool_getlits(L pool) {
+  return pool->literals;
+}
