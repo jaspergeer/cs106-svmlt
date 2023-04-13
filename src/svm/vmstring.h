@@ -15,10 +15,12 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "gcmeta.h"
 // subject to change
 
 typedef struct VMString {
   // that part of a string that is represented on the heap
+  GCMETA(VMString)
   size_t length; // number of bytes not counting a secret trailing '\0'
   uint32_t hash; // if is zero and string is long, not hashed yet
   struct VMString *next_interned; // for interning table
@@ -73,6 +75,11 @@ void Vmstring_puts(StringBuffer p, VMString s);
 
 VMString Vmstring_of_buffer(StringBuffer *bp);
   // interns the contents of the buffer and frees its memory
+
+
+//// garbage collection
+
+void VMString_drop_dead_strings(void);
 
 
 //// hashing

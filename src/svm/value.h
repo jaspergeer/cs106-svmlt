@@ -9,6 +9,7 @@
 #include <stdbool.h>
 
 #include "iformat.h"
+#include "gcmeta.h"
 
 //// Each value is identified by one of the following tags ////
 
@@ -122,6 +123,7 @@ extern bool eqtests  (Value v1, Value v2); // for check-expect
 // when you're ready to do cons,car,cdr (from module 1 onward):
 
 struct VMBlock {
+  GCMETA(VMBlock)
   int nslots;
   struct Value slots[];
 };
@@ -130,6 +132,7 @@ struct VMBlock {
 // when you implement first-order functions (module 7 and onward):
 
 struct VMFunction {
+  GCMETA(VMFunction)
   // Note: as yet, lacks GC support
   int arity; // number of args expected
   int size;  // number of instructions
@@ -140,6 +143,7 @@ struct VMFunction {
 // when you implement higher-order functions (module 10 and onward):
 
 struct VMClosure {
+  GCMETA(VMClosure)
   struct VMFunction *f;
   int nslots;
   struct Value captured[];
@@ -152,6 +156,7 @@ typedef int (*CFunction_Code)(VMState state, void *env, Value *reg0, int nactual
     // result == number of things returned
 
 struct CFunction { // a closure
+  GCMETA(CFunction)
   void *env; // environment
   CFunction_Code code;
   int arity;        // number of arguments expected

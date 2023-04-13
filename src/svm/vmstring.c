@@ -86,6 +86,26 @@ uint32_t Vmstring_hashlong(VMString hs) {
 
 static struct stringtable tb; // the table
 
+static VMString keep_live(VMString s) {
+  while (s && s->forwarded == NULL) { // dead
+    // fprintf(stderr, "String '%s' dies\n", s->bytes);
+    s = s->next_interned;
+  }
+
+  if (s) {
+    // fprintf(stderr, "String '%s' lives!\n", s->bytes);
+    // fprintf(stderr, "  It points to %s\n", s->next_interned ? s->next_interned->bytes : "nothing");
+    s->forwarded->next_interned = keep_live(s->next_interned);
+    return s->forwarded;
+  } else {
+    return NULL;
+  }
+}
+
+void VMString_drop_dead_strings(void) {
+  for (int i = 0; i < tb.nbuckets; i++)
+    tb.buckets[i] = keep_live(tb.buckets[i]);
+}
 
 static void resize(int newsize) {
   if (newsize > tb.nbuckets) {  /* grow table if needed */
@@ -134,6 +154,7 @@ static VMString allocstring(size_t len, uint32_t hash) {
   hs->length = len;
   hs->hash = hash;
   hs->next_interned = NULL;
+  GCINIT(*hs);
   bytes(hs)[len] = '\0';
   return hs;
 }
