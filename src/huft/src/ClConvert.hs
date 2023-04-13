@@ -52,7 +52,7 @@ closedExp captured e =
                             (map (\x -> case indexOf x captured of
                                 Just i -> C.Captured i
                                 Nothing -> C.Local x) freevars)
-
+                -- captured' = map (\x -> closedExp captured (X.Local x))) freevars
         exp :: X.Exp -> C.Exp
         exp e = case e of
             (X.Literal lit) -> literal lit
@@ -60,7 +60,9 @@ closedExp captured e =
                 (Just i) -> C.Captured i
                 Nothing -> C.Local x
             (X.Global x) -> C.Global x
-            (X.SetLocal x e) -> C.SetLocal x (exp e)
+            (X.SetLocal x e) -> case indexOf x captured of
+                (Just i) -> error $ "captured variable " ++ show x ++ " cannot be set"
+                Nothing -> C.SetLocal x (exp e)
             (X.SetGlobal x e) -> C.SetGlobal x (exp e)
             (X.IfX e1 e2 e3) -> C.IfX (exp e1) (exp e2) (exp e3)
             (X.WhileX e1 e2) -> C.WhileX (exp e1) (exp e2)
