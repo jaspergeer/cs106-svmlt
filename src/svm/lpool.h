@@ -13,5 +13,6 @@ Value LPool_get(L pool, uint16_t key);
 uint16_t LPool_put(L pool, Value v);
 void LPool_free(L *pool);
 int LPool_nlits(L pool);
+Value *LPool_getlits(L pool);
 
 #endif

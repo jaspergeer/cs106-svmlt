@@ -4,7 +4,7 @@
 #include "value.h"
 
 typedef struct {
-  Instruction *stream_ptr;
+  uint32_t pc;
   Value *dest_reg;
   Value *reg0;
   struct VMFunction *fun;

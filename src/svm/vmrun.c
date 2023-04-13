@@ -40,6 +40,7 @@
 #define CANDUMP 1
 
 #define VMSAVE \
+  vm->running = running; \
   vm->reg0 = reg0; \
   vm->stack_ptr = stack_ptr; \
   vm->pc = stream_ptr - running->instructions;
@@ -47,22 +48,28 @@
 #define VMLOAD \
   reg0 = vm->reg0; \
   stack_ptr = vm->stack_ptr; \
+  running = vm->running; \
   stream_ptr = running->instructions + vm->pc;
+  
 
 void vmrun(VMState vm, struct VMFunction* fun) {
-  Instruction *stream_ptr = fun->instructions;
   LPool_T literals = vm->literals;
   Value *globals = vm->globals;
-  Activation *stack_ptr = vm->stack_ptr;
-  struct VMFunction *running = fun;
 
+  Value *reg0;  
+  Instruction *stream_ptr;
+  Activation *stack_ptr;
+  struct VMFunction *running;
+
+  vm->running = fun;
+
+  VMLOAD;
+  
   // for debugging
   const char *dump_decode = svmdebug_value("decode");
   const char *dump_call   = svmdebug_value("call");
   (void) dump_call;
   
-
-  Value *reg0 = vm->reg0; 
   // invariant is vm->registers always points to the start of the registers?
   for (;;) {
     uint32_t instr = *stream_ptr;
@@ -89,7 +96,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
 
         *(top->dest_reg) = RX;
         running = top->fun;
-        stream_ptr = top->stream_ptr;
+        stream_ptr = running->instructions + top->pc;
         reg0 = top->reg0;
       }
       break;
@@ -189,7 +196,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
           runerror(vm, "Stack overflow.");
 
         Activation *top = ++stack_ptr;
-        top->stream_ptr = stream_ptr;
+        top->pc = stream_ptr - running->instructions;
         top->reg0 = reg0;
         top->dest_reg = reg0 + destreg;
         top->fun = caller;
