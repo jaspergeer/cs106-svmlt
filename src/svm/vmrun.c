@@ -178,8 +178,8 @@ void vmrun(VMState vm, struct VMFunction* fun) {
           callee = AS_CLOSURE(vm, RY)->f;
         } else {
           if (funname) // need to improve error message
-            runerror(vm, "Tried to call %v; maybe global '%s' is not defined?", RY, funname);
-          runerror(vm, "Tried to call %v", RY);
+            runerror(vm, "Tried to call non-function; maybe global '%s' is not defined?", funname);
+          runerror(vm, "Tried to call non-function");
         }
         
         // arity check
@@ -220,8 +220,8 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         } else {
           const char *funname = lastglobalset(vm, funreg, running, stream_ptr);
           if (funname) // need to improve error message
-            runerror(vm, "Tried to call %v; maybe global '%s' is not defined?", RX, funname);
-          runerror(vm, "Tried to call haha %v", RY);
+            runerror(vm, "Tried to call non-function; maybe global '%s' is not defined?", funname);
+          runerror(vm, "Tried to call non-function");
         }
 
         if (reg0 + lastarg >= vm->registers + (NUM_REGISTERS - 1)) {
