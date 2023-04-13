@@ -39,6 +39,16 @@
 
 #define CANDUMP 1
 
+#define VMSAVE \
+  vm->reg0 = reg0; \
+  vm->stack_ptr = stack_ptr; \
+  vm->pc = stream_ptr - running->instructions;
+
+#define VMLOAD \
+  reg0 = vm->reg0; \
+  stack_ptr = vm->stack_ptr; \
+  stream_ptr = running->instructions + vm->pc;
+
 void vmrun(VMState vm, struct VMFunction* fun) {
   Instruction *stream_ptr = fun->instructions;
   LPool_T literals = vm->literals;
@@ -52,7 +62,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
   (void) dump_call;
   
 
-  Value *reg0 = vm->registers; 
+  Value *reg0 = vm->reg0; 
   // invariant is vm->registers always points to the start of the registers?
   for (;;) {
     uint32_t instr = *stream_ptr;

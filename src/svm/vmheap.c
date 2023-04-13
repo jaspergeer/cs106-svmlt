@@ -18,6 +18,8 @@
 #include "vmstate.h"
 #include "vtable.h"
 
+#define NOVALGRIND
+
 #ifndef NOVALGRIND
 
   #include <valgrind/memcheck.h>
@@ -403,7 +405,7 @@ static inline void scan_value   (Value *vp);
 static inline void scan_forwarded_payload (Value v);
   // scans the value's payload, which must already have been forwarded
 
-static void scan_activation(struct Activation *);
+static void scan_activation(Activation *p);
 static void scan_vmstate(struct VMState *vm);
   // These functions scan an object, forwarding any payload
   // pointers that the object contains.  When scanning is complete,
@@ -614,7 +616,7 @@ static void scan_forwarded_payload(Value v) {
 }
 
 
-static void scan_activation(struct Activation *p) {
+static void scan_activation(Activation *p) {
   assert(p);
   assert(0 && "you have to implement this one");
 }

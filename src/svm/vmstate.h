@@ -37,6 +37,7 @@ typedef struct VMState* VMState;
 struct VMState {
   // registers
   Value registers[NUM_REGISTERS];
+  Value *reg0;
 
   // literal pool
   LPool_T literals;

@@ -34,6 +34,7 @@ VMState newstate(void) {
   for (int i = 0; i < 256; ++i) {
     vm->registers[i] = nilValue;
   }
+  vm->reg0 = vm->registers;
   return vm;
 }
 
