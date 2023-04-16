@@ -405,6 +405,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         }
 
         VMNEW(struct VMClosure *, closure, vmsize_closure(uZ(instr)));
+        closure->forwarded = NULL;
 
         closure->f = f;
         closure->nslots = uZ(instr);

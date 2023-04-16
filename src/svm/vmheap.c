@@ -635,8 +635,8 @@ static void scan_vmstate(struct VMState *vm) {
 
   // roots: all global-variable slots that are in use
   for (int i = 0; i < vm->num_globals; ++i) {
-    print("i = %d\n", i);
-    print("value at %d is %v\n", i, &vm->globals[i]);
+    // print("i = %d\n", i);
+    // print("value at %d is %v\n", i, &vm->globals[i]);
     scan_value(&vm->globals[i]);
   }
 
@@ -651,7 +651,7 @@ static void scan_vmstate(struct VMState *vm) {
   }
 
   // roots: each function on the call stack
-  for (Activation *p = vm->call_stack; p; p++) {
+  for (Activation *p = vm->stack_ptr; p >= vm->call_stack; --p) {
     scan_activation(p);
   }
 
@@ -729,14 +729,6 @@ extern void gc(struct VMState *vm) {
   gc_needed = false;
   gc_in_progress = false;
   ++total.collections;
-
-  // functions that will be used:
-  (void) scan_vmstate;   // in step 3
-  (void) scan_value;     // in step 4
-  (void) VMString_drop_dead_strings; // in step 5
-  (void) make_available; // in step 6
-  (void) target_gamma;   // in step 7
-  (void) growheap;       // in step 7
 
   if (svmdebug_value("gcstats") && strchr(svmdebug_value("gcstats"), '+')) {
     fprintf(stderr, "Heap contains %d pages of which %d are live (ratio %.2f)\n",
