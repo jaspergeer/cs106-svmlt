@@ -91,6 +91,7 @@ instruction_info instructions[] = {
   { "getclslot", GetClSlot, parseR2U8, "rX := rY.Z" },
   { "setclslot", SetClSlot, parseR2U8, "rX.Z := rY" },
   
+  { "gc", GC, parseR0, "gc" },
   { "halt", Return, parseR0, "halt" }
   
   };

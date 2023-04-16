@@ -658,8 +658,6 @@ static void scan_vmstate(struct VMState *vm) {
 
 extern void gc(struct VMState *vm) {
   assert(vm);
-  assert(0 && "gc left as exercise");
-
   /* Narrative sketch of the algorithm (see page 266):
 
       1. Capture the list of allocated pages from `current`,
@@ -692,6 +690,42 @@ extern void gc(struct VMState *vm) {
          print statistics as suggested by exercise 2 on page 299.
 
    */
+
+  // 1
+  Page fromspace = current;
+  take_available_page();
+
+  // 2
+  gc_in_progress = true;
+
+  // 3
+  int heap_size = count.current.pages + count.available.pages;
+  availability_floor = heap_size / 2 + (heap_size % 2 != 0);
+
+  // 4
+  scan_vmstate(vm);
+
+  // 5
+  while(!VStack_isempty(gray)) {
+    Value v = VStack_pop(gray);
+    scan_value(&v);
+  }
+
+  // 6
+  VMString_drop_dead_strings();
+
+  // 7
+  make_available(fromspace);
+
+  // 8
+  double gamma = heap_size / count.current.pages;
+  while (gamma < target_gamma(vm)) {
+    growheap(gamma, count.current.pages);
+  }
+
+  gc_needed = false;
+  gc_in_progress = false;
+  ++total.collections;
 
   // functions that will be used:
   (void) scan_vmstate;   // in step 3

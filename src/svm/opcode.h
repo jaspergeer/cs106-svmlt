@@ -12,6 +12,7 @@
 
 typedef enum opcode {
     Return,
+    GC,
 
     Zero, // R1
     Hash, // R2

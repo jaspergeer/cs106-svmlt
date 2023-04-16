@@ -82,7 +82,8 @@ opcodesR2U8 =
   []
 
 opcodesR0 =
-  [ "halt" ]
+  [ "halt"
+  , "gc" ]
 
 opcodes = concat
   [ opcodesR3

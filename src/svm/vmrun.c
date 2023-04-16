@@ -95,10 +95,16 @@ void vmrun(VMState vm, struct VMFunction* fun) {
           runerror(vm, "Tried to return from loading activation");
 
         *(top->dest_reg) = RX;
-        running = top->fun;
+        running = GCVALIDATE(top->fun);
         stream_ptr = running->instructions + top->pc;
         reg0 = top->reg0;
       }
+      break;
+    
+    case GC:
+      VMSAVE;
+      gc(vm);
+      VMLOAD;
       break;
 
     case Hash:
