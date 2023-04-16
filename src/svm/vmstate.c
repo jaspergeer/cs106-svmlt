@@ -64,6 +64,7 @@ int global_slot(VMState state, Value global) {
     slot = state->num_globals++;
     assert(slot < GLOBALS_SIZE);
     state->global_names[slot] = name;
+    state->globals[slot] = nilValue;
     return slot;
 }
 
