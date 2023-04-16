@@ -201,7 +201,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         top->dest_reg = reg0 + destreg;
         top->fun = caller;
 
-        running = caller;
+        running = callee;
         stream_ptr = callee->instructions - 1;
         reg0 += funreg;
       }
@@ -232,7 +232,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         // if (reg0 + funreg > vm->registers + 256) {
         //   runerror(vm, "Register file overflow");
         // }
-
+        running = callee;
         stream_ptr = callee->instructions - 1;
         memmove(reg0, reg0 + funreg, (lastarg - funreg + 1) * sizeof(Value));        
       }
