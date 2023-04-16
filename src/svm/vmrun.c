@@ -39,18 +39,26 @@
 
 #define CANDUMP 1
 
-#define VMSAVE \
+#define VMSAVE() \
+{ \
   vm->running = running; \
   vm->reg0 = reg0; \
   vm->stack_ptr = stack_ptr; \
-  vm->pc = stream_ptr - running->instructions;
+  vm->pc = stream_ptr - running->instructions; \
+} \
 
-#define VMLOAD \
+#define VMLOAD() \
+{ \
   reg0 = vm->reg0; \
   stack_ptr = vm->stack_ptr; \
   running = vm->running; \
-  stream_ptr = running->instructions + vm->pc;
-  
+  stream_ptr = running->instructions + vm->pc; \
+} 
+
+#define GC() \
+    VMSAVE(); \
+    gc(vm); \
+    VMLOAD();
 
 void vmrun(VMState vm, struct VMFunction* fun) {
   LPool_T literals = vm->literals;
@@ -63,7 +71,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
 
   vm->running = fun;
 
-  VMLOAD;
+  VMLOAD();
   
   // for debugging
   const char *dump_decode = svmdebug_value("decode");
@@ -72,6 +80,11 @@ void vmrun(VMState vm, struct VMFunction* fun) {
   
   // invariant is vm->registers always points to the start of the registers?
   for (;;) {
+    if (gc_needed) {
+      GC();
+      gc_needed = false;
+    }
+
     uint32_t instr = *stream_ptr;
 
     if (CANDUMP && dump_decode) {
@@ -102,9 +115,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       break;
     
     case GC:
-      VMSAVE;
-      gc(vm);
-      VMLOAD;
+      GC();
       break;
 
     case Hash:
@@ -162,7 +173,12 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         ++stream_ptr;
       break;
     case Jump:
-      stream_ptr += iXYZ(instr);
+      {
+        int offset = iXYZ(instr);
+        stream_ptr += iXYZ(instr);
+        if (offset < 0)
+          gc_needed = true;
+      }
       break;
     
     // Function Calls
@@ -211,6 +227,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         stream_ptr = callee->instructions - 1;
         reg0 += funreg;
       }
+      gc_needed = true;
       break;
     case TailCall:
       {      
@@ -242,6 +259,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         stream_ptr = callee->instructions - 1;
         memmove(reg0, reg0 + funreg, (lastarg - funreg + 1) * sizeof(Value));        
       }
+      gc_needed = true;
       break;
 
     // Load/Store
@@ -258,9 +276,11 @@ void vmrun(VMState vm, struct VMFunction* fun) {
     // Check-Expect
     case Check:
       check(vm, AS_CSTRING(vm, LIT), RX);
+      vm->awaiting_expect = RX;
       break;
     case Expect:
       expect(vm, AS_CSTRING(vm, LIT), RX);
+      vm->awaiting_expect = nilValue;
       break;
     case CheckAssert:
       check_assert(AS_CSTRING(vm, LIT), RX);

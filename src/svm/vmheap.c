@@ -635,11 +635,14 @@ static void scan_vmstate(struct VMState *vm) {
 
   // roots: all global-variable slots that are in use
   for (int i = 0; i < vm->num_globals; ++i) {
+    print("i = %d\n", i);
+    print("value at %d is %v\n", i, &vm->globals[i]);
     scan_value(&vm->globals[i]);
   }
 
   // root: any value that may be awaiting the `expect` primitive
   scan_value(&vm->awaiting_expect);
+  
 
   // roots: all literal slots that are in use
   Value *literals = LPool_getlits(vm->literals);

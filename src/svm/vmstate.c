@@ -31,6 +31,7 @@ VMState newstate(void) {
   vm->num_globals = 0;
   vm->literals = LPool_new();
   vm->stack_ptr = vm->call_stack - 1;
+  vm->awaiting_expect = nilValue;
   for (int i = 0; i < 256; ++i) {
     vm->registers[i] = nilValue;
   }
