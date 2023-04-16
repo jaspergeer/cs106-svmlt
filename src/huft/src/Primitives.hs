@@ -61,6 +61,7 @@ primitives =
       HasEffect (Base ":=" 2),
       SetsRegister (Base "popen" 1),
       SetsRegister (Base "dload" 1),
+      HasEffect (Base "gc" 0),
       checkAssert
       ]
 

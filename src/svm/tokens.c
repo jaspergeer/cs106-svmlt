@@ -201,7 +201,7 @@ Tokens tokens(const char *s) {
     if (t == q && t > p) {          // the token is all digits
         if (errno == ERANGE) {
             assert(0); // overflow
-        } else if (l >= 0 && l <= UINT32_MAX) {
+        } else if (l >= INT32_MIN && l <= UINT32_MAX) {
             head = mkInt ((uint32_t) l);
         } else {
             head = mkDouble((double) l);

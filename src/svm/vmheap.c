@@ -635,11 +635,14 @@ static void scan_vmstate(struct VMState *vm) {
 
   // roots: all global-variable slots that are in use
   for (int i = 0; i < vm->num_globals; ++i) {
+    print("i = %d\n", i);
+    print("value at %d is %v\n", i, &vm->globals[i]);
     scan_value(&vm->globals[i]);
   }
 
   // root: any value that may be awaiting the `expect` primitive
   scan_value(&vm->awaiting_expect);
+  
 
   // roots: all literal slots that are in use
   Value *literals = LPool_getlits(vm->literals);
@@ -658,8 +661,6 @@ static void scan_vmstate(struct VMState *vm) {
 
 extern void gc(struct VMState *vm) {
   assert(vm);
-  assert(0 && "gc left as exercise");
-
   /* Narrative sketch of the algorithm (see page 266):
 
       1. Capture the list of allocated pages from `current`,
@@ -692,6 +693,42 @@ extern void gc(struct VMState *vm) {
          print statistics as suggested by exercise 2 on page 299.
 
    */
+
+  // 1
+  Page fromspace = current;
+  take_available_page();
+
+  // 2
+  gc_in_progress = true;
+
+  // 3
+  int heap_size = count.current.pages + count.available.pages;
+  availability_floor = heap_size / 2 + (heap_size % 2 != 0);
+
+  // 4
+  scan_vmstate(vm);
+
+  // 5
+  while(!VStack_isempty(gray)) {
+    Value v = VStack_pop(gray);
+    scan_value(&v);
+  }
+
+  // 6
+  VMString_drop_dead_strings();
+
+  // 7
+  make_available(fromspace);
+
+  // 8
+  double gamma = heap_size / count.current.pages;
+  while (gamma < target_gamma(vm)) {
+    growheap(gamma, count.current.pages);
+  }
+
+  gc_needed = false;
+  gc_in_progress = false;
+  ++total.collections;
 
   // functions that will be used:
   (void) scan_vmstate;   // in step 3
