@@ -81,6 +81,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
   // invariant is vm->registers always points to the start of the registers?
   for (;;) {
     if (gc_needed) {
+      // fprintf(stderr, "vmrun");
       GC();
       gc_needed = false;
     }
