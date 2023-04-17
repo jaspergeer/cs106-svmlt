@@ -80,11 +80,11 @@ void vmrun(VMState vm, struct VMFunction* fun) {
   
   // invariant is vm->registers always points to the start of the registers?
   for (;;) {
-    if (gc_needed) {
-      // fprintf(stderr, "vmrun");
-      GC();
-      gc_needed = false;
-    }
+    // if (gc_needed) {
+    //   // fprintf(stderr, "vmrun");
+    //   GC();
+    //   gc_needed = false;
+    // }
 
     uint32_t instr = *stream_ptr;
 
@@ -176,15 +176,18 @@ void vmrun(VMState vm, struct VMFunction* fun) {
     case Jump:
       {
         int offset = iXYZ(instr);
+        if (offset < 0 && gc_needed)
+          GC();
         stream_ptr += iXYZ(instr);
-        if (offset < 0)
-          gc_needed = true;
+
       }
       break;
     
     // Function Calls
     case Call:
       {
+        if (gc_needed)
+          GC();
         uint8_t destreg = uX(instr);
         uint8_t funreg = uY(instr);
         uint8_t lastarg = uZ(instr);
@@ -228,10 +231,11 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         stream_ptr = callee->instructions - 1;
         reg0 += funreg;
       }
-      gc_needed = true;
       break;
     case TailCall:
-      {      
+      {
+        if (gc_needed)
+          GC();
         uint8_t funreg = uX(instr);
         uint8_t lastarg = uY(instr);
 

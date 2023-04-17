@@ -695,14 +695,25 @@ extern void gc(struct VMState *vm) {
    */
 
   // 1
+  // post condition of current: should be the old to space with
+  // the copied payloads
   Page fromspace = current;
+  int fromspace_pages = count.current.pages;
+
+  current = NULL;
+  /* why can you access count here */
+  count.current.pages = 0;
+  count.current.objects = 0;
+  count.current.bytes_requested = 0;
+
+
   take_available_page();
 
   // 2
   gc_in_progress = true;
 
   // 3
-  int heap_size = count.current.pages + count.available.pages;
+  int heap_size = fromspace_pages + count.available.pages;
   availability_floor = heap_size / 2 + (heap_size % 2 != 0);
 
   // 4
@@ -742,6 +753,11 @@ extern void gc(struct VMState *vm) {
             -1, -1, -1, -1);  // you fill in here
     fprintf(stderr, "Survival rate is %.1f%% of objects and %.1f%% of bytes\n",
             -1.0, -1.0);  // you fill in here
+  }
+
+  // clean the registers file?
+  for (int i = vm->reg0 - vm->registers + vm->running->nregs; i < NUM_REGISTERS; ++i) {
+    vm->registers[i] = nilValue;
   }
   
 }
