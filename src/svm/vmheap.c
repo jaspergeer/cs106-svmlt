@@ -40,7 +40,7 @@
 #define GCDEBUG 0  // for extra checks, set to 1
 
 
-#define SMALLHEAP   /* triggers frequent collections (helps debugging) */
+#define SMALLHEAP 1 /* triggers frequent collections (helps debugging) */
 
 
 /********************************* HEAP PAGES ********************************/
@@ -628,7 +628,7 @@ static void scan_vmstate(struct VMState *vm) {
   //    (these hold local variables and formal paramters as on page 265)
   //    (hint: don't scan high-numbered registers that can't
   //     affect future computations because they aren't used)
-  for (int i = 0; i < vm->reg0 - vm->registers + 256; ++i) {
+  for (int i = 0; i < vm->reg0 - vm->registers + vm->running->nregs; ++i) {
     // ?
     scan_value(&vm->registers[i]);
   }
@@ -673,7 +673,7 @@ extern void gc(struct VMState *vm) {
       3. Set `availability_floor` to be half the total number of pages
          on the VM heap (rounded up).
 
-      4. Color all the roots gray using `scan_vmstate`.
+      4. Color all the roots gray using `scan_vmstate`.ls
 
       5. While the gray stack is not empty, pop a value and scan it.
 
@@ -711,23 +711,27 @@ extern void gc(struct VMState *vm) {
   // 5
   while(!VStack_isempty(gray)) {
     Value v = VStack_pop(gray);
-    scan_value(&v);
+    // scan_value(&v);
+    scan_forwarded_payload(v);
   }
 
   // 6
   VMString_drop_dead_strings();
 
   // 7
-  make_available(fromspace);
+  int reclaimed = make_available(fromspace);
+  (void) reclaimed;
 
   // 8
   double gamma = heap_size / count.current.pages;
-  while (gamma < target_gamma(vm)) {
-    growheap(gamma, count.current.pages);
-  }
+  growheap(gamma, count.current.pages);
+  // while (gamma < target_gamma(vm)) {
+  //   growheap(gamma, count.current.pages);
+  // }
 
   gc_needed = false;
   gc_in_progress = false;
+
   ++total.collections;
 
   if (svmdebug_value("gcstats") && strchr(svmdebug_value("gcstats"), '+')) {
