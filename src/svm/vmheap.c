@@ -695,17 +695,21 @@ extern void gc(struct VMState *vm) {
    */
 
   // 1
-  // post condition of current: should be the old to space with
-  // the copied payloads
   Page fromspace = current;
+  
+  // for gc stats
   int fromspace_pages = count.current.pages;
+  int fromspace_objects = count.current.objects;
+  int fromspace_bytes = count.current.bytes_requested;
 
+  // postcondition of current: should be the old to-space with
+  // the copied payloads
   current = NULL;
-  /* why can you access count here */
+
+  // mostly for gc stats
   count.current.pages = 0;
   count.current.objects = 0;
   count.current.bytes_requested = 0;
-
 
   take_available_page();
 
@@ -713,6 +717,8 @@ extern void gc(struct VMState *vm) {
   gc_in_progress = true;
 
   // 3
+  // before scanning happens, the fromspace_pages is the size of the new
+  // to-space, and count.available.pages is the new from-space
   int heap_size = fromspace_pages + count.available.pages;
   availability_floor = heap_size / 2 + (heap_size % 2 != 0);
 
@@ -734,25 +740,24 @@ extern void gc(struct VMState *vm) {
   (void) reclaimed;
 
   // 8
-  double gamma = heap_size / count.current.pages;
-  growheap(gamma, count.current.pages);
-  // while (gamma < target_gamma(vm)) {
-  //   growheap(gamma, count.current.pages);
-  // }
+  growheap(target_gamma(vm), count.current.pages);
 
   gc_needed = false;
   gc_in_progress = false;
 
   ++total.collections;
 
+  double object_survival_rate = ((double) count.current.objects) / fromspace_objects * 100;
+  double byte_survival_rate = ((double) count.current.bytes_requested) / fromspace_bytes * 100;
+
   if (svmdebug_value("gcstats") && strchr(svmdebug_value("gcstats"), '+')) {
     fprintf(stderr, "Heap contains %d pages of which %d are live (ratio %.2f)\n",
             count.available.pages + count.current.pages, count.current.pages,
             (double)(count.available.pages + count.current.pages) / (double) count.current.pages);
     fprint(stderr, "%d of %d objects holding %, of %, requested bytes survived\n",
-            -1, -1, -1, -1);  // you fill in here
+            count.current.objects, fromspace_objects, count.current.bytes_requested, fromspace_bytes);  // you fill in here
     fprintf(stderr, "Survival rate is %.1f%% of objects and %.1f%% of bytes\n",
-            -1.0, -1.0);  // you fill in here
+            object_survival_rate, byte_survival_rate);  // you fill in here
   }
 
   // clean the registers file?
@@ -763,10 +768,16 @@ extern void gc(struct VMState *vm) {
 }
 
 static void growheap(double gamma, int nlive) {
-  (void) gamma;
-  (void) nlive;
-  // eventually you'll add code here to enlarge the heap
-  // and to update `availability_floor`
+  double target = gamma * nlive;
+  bool grew = false;
+  while ((double) count.available.pages < target) {
+    acquire_available_page();
+    grew = true;
+  }
+
+  if (grew && svmdebug_value("growheap"))
+  fprintf(stderr, "Grew heap to %d pages\n",
+                  count.current.pages + count.available.pages);
 }
 
 
@@ -899,7 +910,11 @@ void xsearch(const char *what, void *p) {
 
 static Value global_gamma_value(VMState vm) {
   // WITHOUT allocating, return the value of the global variable &gamma
-  assert(0 && vm && "Need to find the value of &gamma (nil if not set)");  
+  Name gammaname = strtoname("&gamma");
+  for (int i = 0; i < vm->num_globals; ++i) {
+    if (vm->global_names[i] == gammaname)
+      return vm->globals[i];
+  }
   return nilValue;
 }
 
