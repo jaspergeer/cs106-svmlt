@@ -528,7 +528,8 @@ static inline void scan_block(struct VMBlock *p) {
 
 static inline void scan_closure(struct VMClosure *p) {
   p->f = forward_function(p->f); 
-  int n = p->nslots;
+  p->base = forward_closure(p->base);
+  int n = p->nslots - p->arity;
   for (int i = 0; i < n; i++)
     scan_value(&p->captured[i]);
 }
