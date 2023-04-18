@@ -40,7 +40,7 @@
 #define GCDEBUG 0  // for extra checks, set to 1
 
 
-#define SMALLHEAP 1 /* triggers frequent collections (helps debugging) */
+#define SMALLHEAP /* triggers frequent collections (helps debugging) */
 
 
 /********************************* HEAP PAGES ********************************/

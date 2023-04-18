@@ -53,12 +53,14 @@
   stack_ptr = vm->stack_ptr; \
   running = vm->running; \
   stream_ptr = running->instructions + vm->pc; \
-} 
+}
 
 #define GC() \
-    VMSAVE(); \
-    gc(vm); \
-    VMLOAD();
+{ \
+  VMSAVE(); \
+  gc(vm); \
+  VMLOAD(); \
+}
 
 void vmrun(VMState vm, struct VMFunction* fun) {
   LPool_T literals = vm->literals;
@@ -72,7 +74,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
   vm->running = fun;
 
   VMLOAD();
-  
+
   // for debugging
   const char *dump_decode = svmdebug_value("decode");
   const char *dump_call   = svmdebug_value("call");
@@ -175,11 +177,11 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       break;
     case Jump:
       {
-        int offset = iXYZ(instr);
-        if (offset < 0 && gc_needed)
+        int32_t offset = iXYZ(instr);
+        if (offset < 0 && gc_needed) {
           GC();
-        stream_ptr += iXYZ(instr);
-
+        }
+        stream_ptr += offset ;
       }
       break;
     
@@ -264,7 +266,6 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         stream_ptr = callee->instructions - 1;
         memmove(reg0, reg0 + funreg, (lastarg - funreg + 1) * sizeof(Value));        
       }
-      gc_needed = true;
       break;
 
     // Load/Store
