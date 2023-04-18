@@ -3,12 +3,20 @@
 N=3
 medians=
 
+case $1 in
+  -[0-9]*) N="$(expr 0 - "$1")" ; shift ;;
+esac
+
+
 M=$(expr $N + 1)
 M=$(expr $M / 2)
 
 output=$(mktemp)
 
 predefvo=$(mktemp)
+
+trap "rm -f $output $predefvo" 0 1 2 3 6 9  # not sure if /bin/sh supports...
+
 vscheme -predef | uft ho-vo > $predefvo
 
 

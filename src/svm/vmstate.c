@@ -31,9 +31,11 @@ VMState newstate(void) {
   vm->num_globals = 0;
   vm->literals = LPool_new();
   vm->stack_ptr = vm->call_stack - 1;
+  vm->awaiting_expect = nilValue;
   for (int i = 0; i < 256; ++i) {
     vm->registers[i] = nilValue;
   }
+  vm->reg0 = vm->registers;
   return vm;
 }
 
@@ -49,17 +51,20 @@ int literal_count(VMState state) {
   return LPool_nlits(state->literals);
 }
 
+#include "print.h"
+
 int global_slot(VMState state, Value global) {
     // (void) AsCString
     Name name = strtoname(AS_CSTRING(state, global));
     int slot;
-    for (slot = 0; slot < state->num_globals; slot++) {
+    for (slot = 0; slot < state->num_globals; ++slot) {
       if (state->global_names[slot] == name)
         return slot;
     }
     slot = state->num_globals++;
     assert(slot < GLOBALS_SIZE);
     state->global_names[slot] = name;
+    state->globals[slot] = nilValue;
     return slot;
 }
 

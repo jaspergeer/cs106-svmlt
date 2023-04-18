@@ -17,6 +17,9 @@ MAINS += svm svm-loader-instructions
 MAINS += svm-dis
 
 
+UNITS += gcdebug vstack
+
+
 OBJ := $(UNITS:%=$(BUILD)/%.o)
 MOBJ := $(MAINS:%=$(BUILD)/%.o)
 
@@ -80,7 +83,7 @@ $(BIN)/svm-dis: $(OBJ) $(BUILD)/svm-dis.o
 
 
 $(BUILD)/%.o: %.c
-	gcc $(CFLAGS) -MMD -MF $(BUILD)/$*.d -o $@ -c -Wall -Werror -std=c11 $<
+	gcc $(CFLAGS) -MMD -MF $(BUILD)/$*.d -o $@ -c -Wall -Werror -Wno-unused-function -std=c11 $<
 
 
 -include $(DEPS)

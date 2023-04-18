@@ -1,0 +1,749 @@
+.load module 172
+.load 0 function 1 3
+car 2 1
+car 0 2
+return 0
+setglobal 0 string 4 99 97 97 114
+.load 0 function 1 3
+cdr 2 1
+car 0 2
+return 0
+setglobal 0 string 4 99 97 100 114
+.load 0 function 1 3
+car 2 1
+cdr 0 2
+return 0
+setglobal 0 string 4 99 100 97 114
+.load 0 function 1 3
+cdr 2 1
+cdr 0 2
+return 0
+setglobal 0 string 4 99 100 100 114
+.load 0 function 1 5
+getglobal 2 string 4 99 97 97 114
+copy 3 1
+call 2 2 3
+car 0 2
+return 0
+setglobal 0 string 5 99 97 97 97 114
+.load 0 function 1 5
+getglobal 2 string 4 99 97 100 114
+copy 3 1
+call 2 2 3
+car 0 2
+return 0
+setglobal 0 string 5 99 97 97 100 114
+.load 0 function 1 5
+getglobal 2 string 4 99 100 97 114
+copy 3 1
+call 2 2 3
+car 0 2
+return 0
+setglobal 0 string 5 99 97 100 97 114
+.load 0 function 1 5
+getglobal 2 string 4 99 100 100 114
+copy 3 1
+call 2 2 3
+car 0 2
+return 0
+setglobal 0 string 5 99 97 100 100 114
+.load 0 function 1 5
+getglobal 2 string 4 99 97 97 114
+copy 3 1
+call 2 2 3
+cdr 0 2
+return 0
+setglobal 0 string 5 99 100 97 97 114
+.load 0 function 1 5
+getglobal 2 string 4 99 97 100 114
+copy 3 1
+call 2 2 3
+cdr 0 2
+return 0
+setglobal 0 string 5 99 100 97 100 114
+.load 0 function 1 5
+getglobal 2 string 4 99 100 97 114
+copy 3 1
+call 2 2 3
+cdr 0 2
+return 0
+setglobal 0 string 5 99 100 100 97 114
+.load 0 function 1 5
+getglobal 2 string 4 99 100 100 114
+copy 3 1
+call 2 2 3
+cdr 0 2
+return 0
+setglobal 0 string 5 99 100 100 100 114
+.load 0 function 1 5
+getglobal 2 string 5 99 97 97 97 114
+copy 3 1
+call 2 2 3
+car 0 2
+return 0
+setglobal 0 string 6 99 97 97 97 97 114
+.load 0 function 1 5
+getglobal 2 string 5 99 97 97 100 114
+copy 3 1
+call 2 2 3
+car 0 2
+return 0
+setglobal 0 string 6 99 97 97 97 100 114
+.load 0 function 1 5
+getglobal 2 string 5 99 97 100 97 114
+copy 3 1
+call 2 2 3
+car 0 2
+return 0
+setglobal 0 string 6 99 97 97 100 97 114
+.load 0 function 1 5
+getglobal 2 string 5 99 97 100 100 114
+copy 3 1
+call 2 2 3
+car 0 2
+return 0
+setglobal 0 string 6 99 97 97 100 100 114
+.load 0 function 1 5
+getglobal 2 string 5 99 100 97 97 114
+copy 3 1
+call 2 2 3
+car 0 2
+return 0
+setglobal 0 string 6 99 97 100 97 97 114
+.load 0 function 1 5
+getglobal 2 string 5 99 100 97 100 114
+copy 3 1
+call 2 2 3
+car 0 2
+return 0
+setglobal 0 string 6 99 97 100 97 100 114
+.load 0 function 1 5
+getglobal 2 string 5 99 100 100 97 114
+copy 3 1
+call 2 2 3
+car 0 2
+return 0
+setglobal 0 string 6 99 97 100 100 97 114
+.load 0 function 1 5
+getglobal 2 string 5 99 100 100 100 114
+copy 3 1
+call 2 2 3
+car 0 2
+return 0
+setglobal 0 string 6 99 97 100 100 100 114
+.load 0 function 1 5
+getglobal 2 string 5 99 97 97 97 114
+copy 3 1
+call 2 2 3
+cdr 0 2
+return 0
+setglobal 0 string 6 99 100 97 97 97 114
+.load 0 function 1 5
+getglobal 2 string 5 99 97 97 100 114
+copy 3 1
+call 2 2 3
+cdr 0 2
+return 0
+setglobal 0 string 6 99 100 97 97 100 114
+.load 0 function 1 5
+getglobal 2 string 5 99 97 100 97 114
+copy 3 1
+call 2 2 3
+cdr 0 2
+return 0
+setglobal 0 string 6 99 100 97 100 97 114
+.load 0 function 1 5
+getglobal 2 string 5 99 97 100 100 114
+copy 3 1
+call 2 2 3
+cdr 0 2
+return 0
+setglobal 0 string 6 99 100 97 100 100 114
+.load 0 function 1 5
+getglobal 2 string 5 99 100 97 97 114
+copy 3 1
+call 2 2 3
+cdr 0 2
+return 0
+setglobal 0 string 6 99 100 100 97 97 114
+.load 0 function 1 5
+getglobal 2 string 5 99 100 97 100 114
+copy 3 1
+call 2 2 3
+cdr 0 2
+return 0
+setglobal 0 string 6 99 100 100 97 100 114
+.load 0 function 1 5
+getglobal 2 string 5 99 100 100 97 114
+copy 3 1
+call 2 2 3
+cdr 0 2
+return 0
+setglobal 0 string 6 99 100 100 100 97 114
+.load 0 function 1 5
+getglobal 2 string 5 99 100 100 100 114
+copy 3 1
+call 2 2 3
+cdr 0 2
+return 0
+setglobal 0 string 6 99 100 100 100 100 114
+.load 0 function 1 3
+loadliteral 2 emptylist
+cons 0 1 2
+return 0
+setglobal 0 string 5 108 105 115 116 49
+.load 0 function 2 5
+getglobal 3 string 5 108 105 115 116 49
+copy 4 2
+call 3 3 4
+cons 0 1 3
+return 0
+setglobal 0 string 5 108 105 115 116 50
+.load 0 function 3 6
+getglobal 4 string 5 108 105 115 116 50
+copy 5 2
+copy 6 3
+call 4 4 6
+cons 0 1 4
+return 0
+setglobal 0 string 5 108 105 115 116 51
+.load 0 function 2 11
+null? 3 1
+cskip 3
+jump 7
+car 3 1
+getglobal 4 string 6 97 112 112 101 110 100
+cdr 5 1
+copy 6 2
+call 4 4 6
+cons 0 3 4
+return 0
+return 2
+setglobal 0 string 6 97 112 112 101 110 100
+.load 0 function 2 9
+null? 3 1
+cskip 3
+jump 5
+getglobal 3 string 6 114 101 118 97 112 112
+cdr 4 1
+car 5 1
+cons 5 5 2
+tailcall 3 5
+return 2
+setglobal 0 string 6 114 101 118 97 112 112
+.load 0 function 1 4
+getglobal 2 string 6 114 101 118 97 112 112
+copy 3 1
+loadliteral 4 emptylist
+tailcall 2 4
+setglobal 0 string 7 114 101 118 101 114 115 101
+.load 0 function 2 11
+loadliteral 3 0
+= 3 1 3
+cskip 3
+jump 5
+getglobal 3 string 3 110 116 104
+loadliteral 4 1
+- 4 1 4
+cdr 5 2
+tailcall 3 5
+car 0 2
+return 0
+setglobal 0 string 3 110 116 104
+.load 0 function 2 5
+getglobal 3 string 3 110 116 104
+loadliteral 4 1
++ 4 1 4
+copy 5 2
+tailcall 3 5
+setglobal 0 string 11 67 65 80 84 85 82 69 68 45 73 78
+.load 0 function 2 4
+cskip 1
+jump 1
+return 1
+return 2
+setglobal 0 string 3 97 110 100
+.load 0 function 2 4
+cskip 1
+jump 1
+return 2
+return 1
+setglobal 0 string 2 111 114
+.load 0 function 1 6
+cskip 1
+jump 2
+loadliteral 0 true
+return 0
+loadliteral 0 false
+return 0
+setglobal 0 string 3 110 111 116
+.load 0 function 1 8
+symbol? 2 1
+number? 3 1
+boolean? 4 1
+null? 5 1
+or 4 4 5
+or 3 3 4
+or 0 2 3
+return 0
+setglobal 0 string 5 97 116 111 109 63
+.load 0 function 2 24
+getglobal 3 string 5 97 116 111 109 63
+copy 4 1
+call 3 3 4
+cskip 3
+jump 17
+getglobal 3 string 5 97 116 111 109 63
+copy 4 2
+call 3 3 4
+cskip 3
+jump 10
+getglobal 3 string 6 101 113 117 97 108 63
+car 4 1
+car 5 2
+call 3 3 5
+getglobal 4 string 6 101 113 117 97 108 63
+cdr 5 1
+cdr 6 2
+call 4 4 6
+and 0 3 4
+return 0
+loadliteral 0 false
+return 0
+= 0 1 2
+return 0
+setglobal 0 string 6 101 113 117 97 108 63
+.load 0 function 2 4
+getglobal 3 string 5 108 105 115 116 50
+copy 4 1
+copy 5 2
+tailcall 3 5
+setglobal 0 string 15 109 97 107 101 45 97 108 105 115 116 45 112 97 105 114
+.load 0 function 1 2
+car 0 1
+return 0
+setglobal 0 string 14 97 108 105 115 116 45 112 97 105 114 45 107 101 121
+.load 0 function 1 3
+getglobal 2 string 4 99 97 100 114
+copy 3 1
+tailcall 2 3
+setglobal 0 string 20 97 108 105 115 116 45 112 97 105 114 45 97 116 116 114 105 98 117 116 101
+.load 0 function 1 3
+getglobal 2 string 14 97 108 105 115 116 45 112 97 105 114 45 107 101 121
+car 3 1
+tailcall 2 3
+setglobal 0 string 15 97 108 105 115 116 45 102 105 114 115 116 45 107 101 121
+.load 0 function 1 3
+getglobal 2 string 20 97 108 105 115 116 45 112 97 105 114 45 97 116 116 114 105 98 117 116 101
+car 3 1
+tailcall 2 3
+setglobal 0 string 21 97 108 105 115 116 45 102 105 114 115 116 45 97 116 116 114 105 98 117 116 101
+.load 0 function 3 32
+null? 4 3
+cskip 4
+jump 23
+getglobal 4 string 6 101 113 117 97 108 63
+copy 5 1
+getglobal 6 string 15 97 108 105 115 116 45 102 105 114 115 116 45 107 101 121
+copy 7 3
+call 6 6 7
+call 4 4 6
+cskip 4
+jump 8
+car 4 3
+getglobal 5 string 4 98 105 110 100
+copy 6 1
+copy 7 2
+cdr 8 3
+call 5 5 8
+cons 0 4 5
+return 0
+getglobal 4 string 15 109 97 107 101 45 97 108 105 115 116 45 112 97 105 114
+copy 5 1
+copy 6 2
+call 4 4 6
+cdr 5 3
+cons 0 4 5
+return 0
+getglobal 4 string 5 108 105 115 116 49
+getglobal 5 string 15 109 97 107 101 45 97 108 105 115 116 45 112 97 105 114
+copy 6 1
+copy 7 2
+call 5 5 7
+tailcall 4 5
+setglobal 0 string 4 98 105 110 100
+.load 0 function 2 20
+null? 3 2
+cskip 3
+jump 15
+getglobal 3 string 6 101 113 117 97 108 63
+copy 4 1
+getglobal 5 string 15 97 108 105 115 116 45 102 105 114 115 116 45 107 101 121
+copy 6 2
+call 5 5 6
+call 3 3 5
+cskip 3
+jump 4
+getglobal 3 string 4 102 105 110 100
+copy 4 1
+cdr 5 2
+tailcall 3 5
+getglobal 3 string 21 97 108 105 115 116 45 102 105 114 115 116 45 97 116 116 114 105 98 117 116 101
+copy 4 2
+tailcall 3 4
+loadliteral 0 emptylist
+return 0
+setglobal 0 string 4 102 105 110 100
+.load 0 function 2 5
+.load 0 function 1 5
+getclslot 2 0 0
+getclslot 3 0 1
+copy 4 1
+call 3 3 4
+tailcall 2 3
+mkclosure 0 0 2
+setclslot 0 1 0
+setclslot 0 2 1
+return 0
+setglobal 0 string 1 111
+.load 0 function 1 4
+.load 0 function 1 6
+getclslot 2 0 0
+.load 0 function 1 4
+getclslot 2 0 0
+getclslot 3 0 1
+copy 4 1
+tailcall 2 4
+mkclosure 0 0 2
+setclslot 0 2 0
+setclslot 0 1 1
+return 0
+mkclosure 0 0 1
+setclslot 0 1 0
+return 0
+setglobal 0 string 5 99 117 114 114 121
+.load 0 function 1 4
+.load 0 function 2 5
+getclslot 3 0 0
+copy 4 1
+call 3 3 4
+copy 4 2
+tailcall 3 4
+mkclosure 0 0 1
+setclslot 0 1 0
+return 0
+setglobal 0 string 7 117 110 99 117 114 114 121
+.load 0 function 2 21
+null? 3 2
+cskip 3
+jump 16
+copy 3 1
+car 4 2
+call 3 3 4
+cskip 3
+jump 4
+getglobal 3 string 6 102 105 108 116 101 114
+copy 4 1
+cdr 5 2
+tailcall 3 5
+car 3 2
+getglobal 4 string 6 102 105 108 116 101 114
+copy 5 1
+cdr 6 2
+call 4 4 6
+cons 0 3 4
+return 0
+loadliteral 0 emptylist
+return 0
+setglobal 0 string 6 102 105 108 116 101 114
+.load 0 function 2 14
+null? 3 2
+cskip 3
+jump 9
+copy 3 1
+car 4 2
+call 3 3 4
+getglobal 4 string 3 109 97 112
+copy 5 1
+cdr 6 2
+call 4 4 6
+cons 0 3 4
+return 0
+loadliteral 0 emptylist
+return 0
+setglobal 0 string 3 109 97 112
+.load 0 function 2 12
+null? 3 2
+cskip 3
+jump 7
+copy 3 1
+car 4 2
+call 3 3 4
+getglobal 3 string 3 97 112 112
+copy 4 1
+cdr 5 2
+tailcall 3 5
+loadliteral 0 false
+return 0
+setglobal 0 string 3 97 112 112
+.load 0 function 2 16
+null? 3 2
+cskip 3
+jump 11
+copy 3 1
+car 4 2
+call 3 3 4
+cskip 3
+jump 4
+getglobal 3 string 7 101 120 105 115 116 115 63
+copy 4 1
+cdr 5 2
+tailcall 3 5
+loadliteral 0 true
+return 0
+loadliteral 0 false
+return 0
+setglobal 0 string 7 101 120 105 115 116 115 63
+.load 0 function 2 16
+null? 3 2
+cskip 3
+jump 11
+copy 3 1
+car 4 2
+call 3 3 4
+cskip 3
+jump 2
+loadliteral 0 false
+return 0
+getglobal 3 string 4 97 108 108 63
+copy 4 1
+cdr 5 2
+tailcall 3 5
+loadliteral 0 true
+return 0
+setglobal 0 string 4 97 108 108 63
+.load 0 function 3 12
+null? 4 3
+cskip 4
+jump 8
+copy 4 1
+car 5 3
+getglobal 6 string 5 102 111 108 100 114
+copy 7 1
+copy 8 2
+cdr 9 3
+call 6 6 9
+tailcall 4 6
+return 2
+setglobal 0 string 5 102 111 108 100 114
+.load 0 function 3 12
+null? 4 3
+cskip 4
+jump 8
+getglobal 4 string 5 102 111 108 100 108
+copy 5 1
+copy 6 1
+car 7 3
+copy 8 2
+call 6 6 8
+cdr 7 3
+tailcall 4 7
+return 2
+setglobal 0 string 5 102 111 108 100 108
+loadliteral 0 10
+setglobal 0 string 7 110 101 119 108 105 110 101
+loadliteral 0 40
+setglobal 0 string 10 108 101 102 116 45 114 111 117 110 100
+loadliteral 0 32
+setglobal 0 string 5 115 112 97 99 101
+loadliteral 0 41
+setglobal 0 string 11 114 105 103 104 116 45 114 111 117 110 100
+loadliteral 0 59
+setglobal 0 string 9 115 101 109 105 99 111 108 111 110
+loadliteral 0 123
+setglobal 0 string 10 108 101 102 116 45 99 117 114 108 121
+loadliteral 0 39
+setglobal 0 string 9 113 117 111 116 101 109 97 114 107
+loadliteral 0 125
+setglobal 0 string 11 114 105 103 104 116 45 99 117 114 108 121
+loadliteral 0 91
+setglobal 0 string 11 108 101 102 116 45 115 113 117 97 114 101
+loadliteral 0 93
+setglobal 0 string 12 114 105 103 104 116 45 115 113 117 97 114 101
+.load 0 function 2 3
+> 3 1 2
+not 0 3
+return 0
+setglobal 0 string 2 60 61
+.load 0 function 2 3
+< 3 1 2
+not 0 3
+return 0
+setglobal 0 string 2 62 61
+.load 0 function 2 3
+= 3 1 2
+not 0 3
+return 0
+setglobal 0 string 2 33 61
+.load 0 function 2 5
+> 3 1 2
+cskip 3
+jump 1
+return 2
+return 1
+setglobal 0 string 3 109 97 120
+.load 0 function 2 5
+< 3 1 2
+cskip 3
+jump 1
+return 2
+return 1
+setglobal 0 string 3 109 105 110
+.load 0 function 1 3
+loadliteral 2 0
+- 0 2 1
+return 0
+setglobal 0 string 7 110 101 103 97 116 101 100
+.load 0 function 2 4
+idiv 3 1 2
+* 3 2 3
+- 0 1 3
+return 0
+setglobal 0 string 3 109 111 100
+.load 0 function 2 9
+loadliteral 3 0
+= 3 2 3
+cskip 3
+jump 4
+getglobal 3 string 3 103 99 100
+copy 4 2
+mod 5 1 2
+tailcall 3 5
+return 1
+setglobal 0 string 3 103 99 100
+.load 0 function 2 13
+loadliteral 3 0
+= 3 1 3
+cskip 3
+jump 7
+getglobal 3 string 3 103 99 100
+copy 4 1
+copy 5 2
+call 3 3 5
+idiv 3 2 3
+* 0 1 3
+return 0
+loadliteral 0 0
+return 0
+setglobal 0 string 3 108 99 109
+.load 0 function 4 7
+getglobal 5 string 5 108 105 115 116 51
+copy 6 2
+copy 7 3
+copy 8 4
+call 5 5 8
+cons 0 1 5
+return 0
+setglobal 0 string 5 108 105 115 116 52
+.load 0 function 5 8
+getglobal 6 string 5 108 105 115 116 52
+copy 7 2
+copy 8 3
+copy 9 4
+copy 10 5
+call 6 6 10
+cons 0 1 6
+return 0
+setglobal 0 string 5 108 105 115 116 53
+.load 0 function 6 9
+getglobal 7 string 5 108 105 115 116 53
+copy 8 2
+copy 9 3
+copy 10 4
+copy 11 5
+copy 12 6
+call 7 7 12
+cons 0 1 7
+return 0
+setglobal 0 string 5 108 105 115 116 54
+.load 0 function 7 10
+getglobal 8 string 5 108 105 115 116 54
+copy 9 2
+copy 10 3
+copy 11 4
+copy 12 5
+copy 13 6
+copy 14 7
+call 8 8 14
+cons 0 1 8
+return 0
+setglobal 0 string 5 108 105 115 116 55
+.load 0 function 8 11
+getglobal 9 string 5 108 105 115 116 55
+copy 10 2
+copy 11 3
+copy 12 4
+copy 13 5
+copy 14 6
+copy 15 7
+copy 16 8
+call 9 9 16
+cons 0 1 9
+return 0
+setglobal 0 string 5 108 105 115 116 56
+.load 0 function 2 18
+null? 3 2
+cskip 3
+jump 13
+car 3 2
+cdr 4 2
+getglobal 5 string 6 101 113 117 97 108 63
+copy 6 1
+car 7 3
+call 5 5 7
+cskip 5
+jump 4
+getglobal 5 string 5 97 115 115 111 99
+copy 6 1
+copy 7 4
+tailcall 5 7
+return 3
+loadliteral 0 false
+return 0
+setglobal 0 string 5 97 115 115 111 99
+.load 0 function 0 4
+getglobal 1 string 3 110 105 108
+loadliteral 2 emptylist
+cons 0 1 2
+return 0
+setglobal 0 string 9 84 97 98 108 101 46 110 101 119
+.load 0 function 2 10
+getglobal 3 string 5 97 115 115 111 99
+copy 4 2
+cdr 5 1
+call 3 3 5
+cskip 3
+jump 2
+getglobal 0 string 3 110 105 108
+return 0
+cdr 0 3
+return 0
+setglobal 0 string 9 84 97 98 108 101 46 103 101 116
+.load 0 function 3 16
+getglobal 4 string 5 97 115 115 111 99
+copy 5 2
+cdr 6 1
+call 4 4 6
+cskip 4
+jump 6
+getglobal 5 string 8 115 101 116 45 99 100 114 33
+copy 6 1
+cons 7 2 3
+cdr 8 1
+cons 7 7 8
+tailcall 5 7
+getglobal 5 string 8 115 101 116 45 99 100 114 33
+copy 6 4
+copy 7 3
+tailcall 5 7
+setglobal 0 string 9 84 97 98 108 101 46 112 117 116

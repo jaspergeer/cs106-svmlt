@@ -128,6 +128,7 @@ static struct VMFunction *loadfun(VMState vm, int arity, int count, FILE *vofile
     fun->instructions[i] = get_instruction(vm, vofile, &maxregs);
   
   fun->nregs = maxregs + 1;
+  fun->forwarded = NULL;
 
   return fun;
 }

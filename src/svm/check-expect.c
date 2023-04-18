@@ -28,26 +28,24 @@ static char *copy(const char *s) {
   return t;
 }
 
-static Value checkv;
 
 void check(struct VMState *vm, const char *source, Value v) {
-  (void) vm; // state not used yet
   assert(checks == NULL);
   checks = copy(source);
-  checkv = v;
+  vm->awaiting_expect = v;
 }
 
 void expect(struct VMState *vm, const char *source, Value expectv) {
   (void)source;
-  (void) vm; // state not used yet
   ntests++;
   assert(checks != NULL);
-  if (eqtests (checkv, expectv)) {
+  if (eqtests (vm->awaiting_expect, expectv)) {
     npassed++;
   } else {
     fprint(stderr, "Check-expect failed: expected %s to evaluate to %v, "
-           "but it's %v.\n", checks, expectv, checkv);
+           "but it's %v.\n", checks, expectv, vm->awaiting_expect);
   }
+  vm->awaiting_expect = nilValue;
   free(checks);
   checks = NULL;
 }

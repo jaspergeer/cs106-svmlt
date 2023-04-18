@@ -149,6 +149,7 @@ letrec gen bindings body =
       init (f_i, K.Closure formals body captures) = l (mapi (U.setclslot f_i) captures)
   in foldr (\b l -> alloc b <.> l) (return empty) bindings <.> return (hconcat (map init bindings)) <.> gen body
 
+-- for mapi, you might want to use ZipWith (that have access to an infinite list)
 
 -- fun letrec gen (bindings, body) =
 --    let val _ = letrec : (reg K.exp ‑> instruction hughes_list)

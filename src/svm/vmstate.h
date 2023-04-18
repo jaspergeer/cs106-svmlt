@@ -37,22 +37,25 @@ typedef struct VMState* VMState;
 struct VMState {
   // registers
   Value registers[NUM_REGISTERS];
+  Value *reg0; /* points to reg0 of running */
 
   // literal pool
   LPool_T literals;
 
   // global variable table
-  // STable_T vartoid;
   int num_globals;
   struct Name* global_names[GLOBALS_SIZE];
   Value globals[GLOBALS_SIZE];
 
   // program counter
   uint32_t pc; // assumes that the first instruction is at address 0x0
+  struct VMFunction *running;
 
   // call stack
   Activation call_stack[CALL_STACK_SIZE];
   Activation *stack_ptr; // points to youngest activation
+
+  Value awaiting_expect;
 };
 
 VMState newstate(void);       // allocate and initialize (to empty)

@@ -14,6 +14,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+#include "vmstate.h"
 
 //// initialization and finalization
 
@@ -27,8 +28,25 @@ extern void heap_shutdown(void);
 extern void *vmalloc_raw(size_t);
 extern void *vmcalloc_raw(size_t, size_t);
 
-#define VMNEW(TYPE,  P, N) TYPE P = vmalloc_raw(N)
-#define VMNEWC(TYPE, P, N) TYPE P = vmcalloc_raw(1, N)
+#define VMNEW(TYPE,  P, N) TYPE P = vmalloc_raw(N); GCINIT(*P)
+#define VMNEWC(TYPE, P, N) TYPE P = vmcalloc_raw(1, N); GCINIT(*P)
+
+//// Module 11: GC interface
+
+extern bool gc_needed;
+  // signal from the heap that a GC is needed.  VM main loop will
+  // call GC only in a safe state.
+
+typedef struct VMState *VMState;
+extern void gc(VMState vm);
+  // recover all heap-allocated payloads reachable from this state,
+  // and return any unused memory to the heap
+
+extern void heapsearch(const char *what, void *p); 
+  // For debugging: print a message to stderr saying
+  // what part of the heap `p` is found in (if any).
+  // The string `what` identifies `p` in the message.
+
 
 extern bool vmalloc_islarge(size_t);
   // tells string client when not to intern

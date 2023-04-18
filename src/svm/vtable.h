@@ -25,5 +25,14 @@ extern void  VTable_put   (T vtable, Value key, Value value);
 extern Value VTable_get   (T vtable, Value key);
 extern void  VTable_remove(T vtable, Value key); // equivalent to putting nilValue
 
+extern T VTable_copy(T);  // copy everything to freshly allocated memory
+extern void VTable_internal_values(T vtable, void visit(Value *));
+  // Apply `visit` to every value in the table.
+  // It is an *unchecked* run-time error for `visit` to mutate `vtable`
+  // or to change what any value hashes to.  
+
+extern T* VTable_forwarded_ptr(T vtable);
+  // return the address of `vtable`'s internal forwarding pointer
+
 #undef T
 #endif

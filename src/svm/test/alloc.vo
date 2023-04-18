@@ -1,0 +1,23 @@
+.load module 10
+.load 0 function 1 12
+loadliteral 2 false
+jump 5
+loadliteral 3 string 1 97
+loadliteral 4 string 1 98
+cons 2 3 4
+loadliteral 3 1
+- 1 1 3
+loadliteral 3 0
+> 3 1 3
+cskip 3
+jump -9
+return 2
+setglobal 0 string 8 97 108 108 111 99 97 116 101
+getglobal 0 string 8 97 108 108 111 99 97 116 101
+loadliteral 1 1000
+call 0 0 1
+check 0 string 15 40 97 108 108 111 99 97 116 101 32 49 48 48 48 41
+loadliteral 0 string 1 97
+loadliteral 1 string 1 98
+cons 0 0 1
+expect 0 string 12 40 99 111 110 115 32 39 97 32 39 98 41
