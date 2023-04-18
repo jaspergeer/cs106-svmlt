@@ -68,8 +68,10 @@ static void tailcall(uint8_t funreg, uint8_t arity, VMState vm);
 }
 
 #define CHFUNCTION(f) \
+{ \
   running = f; \
-  code = f->instructions;
+  code = running->instructions; \
+}
 
 void vmrun(VMState vm, struct VMFunction* fun) {
   LPool_T literals = vm->literals;
@@ -110,9 +112,17 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         return;
       
       if (stack_ptr->nsuspended > 0) {
-        if (!stack_ptr->dest_reg)
-          runerror(vm, "Suspended arguments remaining at end of loading activation");
+        *reg0 = RX;
+        int nsuspended = stack_ptr->nsuspended;
+        memcpy(reg0 + 1, stack_ptr->suspended, nsuspended * sizeof(struct Value));
+
+        free(stack_ptr->suspended);
+        stack_ptr->suspended = NULL;
+        stack_ptr->nsuspended = 0;
         
+        VMSAVE();
+        tailcall(0, nsuspended, vm);
+        VMLOAD();
       } else {
         Activation *top = stack_ptr--;
         if (!top->dest_reg)
@@ -218,12 +228,6 @@ void vmrun(VMState vm, struct VMFunction* fun) {
             runerror(vm, "Tried to call non-function");
           }
           
-          // arity check
-          if (arity > closure->arity) {
-            runerror(vm, "Called function %s with %d arguments but it requires %d.",
-              funname, arity, closure->arity);
-          }
-
           Value *arg0 = &reg0[funreg + 1];
           Value *callee_arg0 = &reg0[funreg + 1];
 
@@ -529,18 +533,33 @@ static void tailcall(uint8_t funreg, uint8_t arity, VMState vm) {
   } else { // treat partial application as returning a closure
     if (stack_ptr < vm->call_stack)
       return;
-
-    Activation *top = stack_ptr--;
-    if (!top->dest_reg)
+  
+    if (!stack_ptr->dest_reg)
       runerror(vm, "Tried to return from loading activation");
 
     struct VMClosure *new_closure = partial_apply(closure, arg0, arity);
 
-    *(top->dest_reg) = mkClosureValue(new_closure);
-    CHFUNCTION(top->fun);
-    pc = top->pc;
-    reg0 = top->reg0;
+    if (stack_ptr->nsuspended > 0) {
+      *reg0 = mkClosureValue(new_closure);
+      int nsuspended = stack_ptr->nsuspended;
+      memcpy(reg0 + 1, stack_ptr->suspended, nsuspended * sizeof(struct Value));
+
+      free(stack_ptr->suspended);
+      stack_ptr->suspended = NULL;
+      stack_ptr->nsuspended = 0;
+
+      VMSAVE();
+      tailcall(0, nsuspended, vm);
+      VMLOAD();
+    } else {
+      
+      *(stack_ptr->dest_reg) = mkClosureValue(new_closure);
+      CHFUNCTION(stack_ptr->fun);
+      pc = stack_ptr->pc;
+      reg0 = stack_ptr->reg0;
+      stack_ptr--;
+    }
   }
 
-    VMSAVE();
+  VMSAVE();
 }

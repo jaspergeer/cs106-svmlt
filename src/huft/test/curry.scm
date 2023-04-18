@@ -28,3 +28,9 @@
 (define tailcall (x) (manyargs 1 2 3 4 5 x))
 
 (check-expect ((tailcall 6) 7 8 9) 45)
+
+;; extra args
+
+(define needmore (x y) (* (+ x y)))
+
+(check-expect (needmore 1 2 3) 9)
