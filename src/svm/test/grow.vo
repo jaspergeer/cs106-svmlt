@@ -1,0 +1,57 @@
+.load module 34
+.load 0 function 1 10
+loadliteral 2 emptylist
+jump 3
+cons 2 1 2
+loadliteral 3 1
+- 1 1 3
+loadliteral 3 0
+> 3 1 3
+cskip 3
+jump -7
+return 2
+setglobal 0 string 4 105 111 116 97
+getglobal 0 string 4 105 111 116 97
+loadliteral 1 8
+call 0 0 1
+check 0 string 8 40 105 111 116 97 32 56 41
+loadliteral 0 1
+loadliteral 1 2
+loadliteral 2 3
+loadliteral 3 4
+loadliteral 4 5
+loadliteral 5 6
+loadliteral 6 7
+loadliteral 7 8
+loadliteral 8 emptylist
+cons 7 7 8
+cons 6 6 7
+cons 5 5 6
+cons 4 4 5
+cons 3 3 4
+cons 2 2 3
+cons 1 1 2
+cons 0 0 1
+expect 0 string 18 39 40 49 32 50 32 51 32 52 32 53 32 54 32 55 32 56 41
+.load 0 function 1 12
+loadliteral 2 false
+jump 5
+getglobal 3 string 4 105 111 116 97
+copy 4 1
+call 2 3 4
+loadliteral 3 1
+- 1 1 3
+loadliteral 3 0
+> 3 1 3
+cskip 3
+jump -9
+return 2
+setglobal 0 string 8 97 108 108 111 99 97 116 101
+getglobal 0 string 8 97 108 108 111 99 97 116 101
+loadliteral 1 1000
+call 0 0 1
+check 0 string 15 40 97 108 108 111 99 97 116 101 32 49 48 48 48 41
+loadliteral 0 1
+loadliteral 1 emptylist
+cons 0 0 1
+expect 0 string 4 39 40 49 41

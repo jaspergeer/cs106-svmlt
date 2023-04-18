@@ -53,12 +53,14 @@
   stack_ptr = vm->stack_ptr; \
   running = vm->running; \
   stream_ptr = running->instructions + vm->pc; \
-} 
+}
 
 #define GC() \
-    VMSAVE(); \
-    gc(vm); \
-    VMLOAD();
+{ \
+  VMSAVE(); \
+  gc(vm); \
+  VMLOAD(); \
+}
 
 void vmrun(VMState vm, struct VMFunction* fun) {
   LPool_T literals = vm->literals;
@@ -72,7 +74,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
   vm->running = fun;
 
   VMLOAD();
-  
+
   // for debugging
   const char *dump_decode = svmdebug_value("decode");
   const char *dump_call   = svmdebug_value("call");
@@ -80,11 +82,11 @@ void vmrun(VMState vm, struct VMFunction* fun) {
   
   // invariant is vm->registers always points to the start of the registers?
   for (;;) {
-    if (gc_needed) {
-      // fprintf(stderr, "vmrun");
-      GC();
-      gc_needed = false;
-    }
+    // if (gc_needed) {
+    //   // fprintf(stderr, "vmrun");
+    //   GC();
+    //   gc_needed = false;
+    // }
 
     uint32_t instr = *stream_ptr;
 
@@ -175,16 +177,19 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       break;
     case Jump:
       {
-        int offset = iXYZ(instr);
-        stream_ptr += iXYZ(instr);
-        if (offset < 0)
-          gc_needed = true;
+        int32_t offset = iXYZ(instr);
+        if (offset < 0 && gc_needed) {
+          GC();
+        }
+        stream_ptr += offset ;
       }
       break;
     
     // Function Calls
     case Call:
       {
+        if (gc_needed)
+          GC();
         uint8_t destreg = uX(instr);
         uint8_t funreg = uY(instr);
         uint8_t lastarg = uZ(instr);
@@ -228,10 +233,11 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         stream_ptr = callee->instructions - 1;
         reg0 += funreg;
       }
-      gc_needed = true;
       break;
     case TailCall:
-      {      
+      {
+        if (gc_needed)
+          GC();
         uint8_t funreg = uX(instr);
         uint8_t lastarg = uY(instr);
 
@@ -260,7 +266,6 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         stream_ptr = callee->instructions - 1;
         memmove(reg0, reg0 + funreg, (lastarg - funreg + 1) * sizeof(Value));        
       }
-      gc_needed = true;
       break;
 
     // Load/Store
