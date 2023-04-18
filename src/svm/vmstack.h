@@ -8,6 +8,8 @@ typedef struct {
   Value *dest_reg;
   Value *reg0;
   struct VMFunction *fun;
+  Value *suspended; // array of values on C HEAP!
+  uint8_t nsuspended;
 } Activation;
 
 #endif

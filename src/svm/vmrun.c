@@ -37,13 +37,12 @@
 #define LIT LPool_get(literals, uYZ(instr))
 #define GLO LPool_get(literals, uYZ(instr))
 
-#define FIRST_ARG reg0[funreg + 1]
 #define ARGSTACK_BOTTOM &closure->captured[closure->nslots - callee->arity]
 
 #define CANDUMP 1
 
 static inline struct VMClosure *partial_apply(struct VMClosure *closure, Value *args, int nargs);
-static void call(uint8_t destreg, uint8_t funreg, uint8_t arity, VMState vm);
+static void tailcall(uint8_t funreg, uint8_t arity, VMState vm);
 #define VMSAVE() \
 { \
   vm->running = running; \
@@ -109,8 +108,12 @@ void vmrun(VMState vm, struct VMFunction* fun) {
     case Return:
       if (stack_ptr < vm->call_stack)
         return;
-
-      {
+      
+      if (stack_ptr->nsuspended > 0) {
+        if (!stack_ptr->dest_reg)
+          runerror(vm, "Suspended arguments remaining at end of loading activation");
+        
+      } else {
         Activation *top = stack_ptr--;
         if (!top->dest_reg)
           runerror(vm, "Tried to return from loading activation");
@@ -200,9 +203,77 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         uint8_t lastarg = uZ(instr);
         uint8_t arity = lastarg - funreg;
 
-        VMSAVE();
-        call(destreg, funreg, arity, vm);
-        VMLOAD();
+        struct VMFunction *caller = running;
+
+          const char *funname = lastglobalset(vm, funreg, caller, code + pc);
+          
+          struct VMClosure *closure = NULL;
+          struct VMFunction *callee = NULL;
+          if (isVMClosure(reg0[funreg])) {
+            closure = AS_CLOSURE(vm, reg0[funreg]);
+            callee = closure->f;
+          } else {
+            if (funname) // need to improve error message
+              runerror(vm, "Tried to call non-function; maybe global '%s' is not defined?", funname);
+            runerror(vm, "Tried to call non-function");
+          }
+          
+          // arity check
+          if (arity > closure->arity) {
+            runerror(vm, "Called function %s with %d arguments but it requires %d.",
+              funname, arity, closure->arity);
+          }
+
+          Value *arg0 = &reg0[funreg + 1];
+          Value *callee_arg0 = &reg0[funreg + 1];
+
+          if (closure->arity <= arity) {
+            int nsuspended = 0;
+            Value *suspended = NULL;
+            // capture extra arguments
+            if (arity > closure->arity) {
+              nsuspended = arity - closure->arity;
+              suspended = malloc(nsuspended * sizeof(struct Value));
+              memcpy(suspended, arg0 + closure->arity, nsuspended * sizeof(struct Value));
+              arity = closure->arity;
+            }
+
+            int ncaptured_args = (callee->arity - arity);
+
+            // shift passed arguments into place
+            memmove(callee_arg0 + callee->arity - arity, arg0, arity * sizeof(struct Value));
+
+            // copy captured arguments into place
+            memcpy(callee_arg0, ARGSTACK_BOTTOM, ncaptured_args * sizeof(struct Value));
+
+            // new reg0 will store a clean version of this closure
+            *(reg0 + funreg) = mkClosureValue(closure->base);
+
+            // register overflow check
+            if (reg0 + callee->nregs >= vm->registers + (NUM_REGISTERS - 1))
+              runerror(vm, "Register file overflow in Call.");
+
+            // stack overflow check
+            if (stack_ptr == vm->call_stack + (CALL_STACK_SIZE - 1))
+              runerror(vm, "Stack overflow.");
+
+            Activation *top = ++stack_ptr;
+            top->pc = pc;
+            top->reg0 = reg0;
+            top->dest_reg = reg0 + destreg;
+            top->fun = caller;
+
+            // suspend extra args in activation
+            top->suspended = suspended;
+            top->nsuspended = nsuspended;
+
+            CHFUNCTION(callee);
+            pc = -1;
+            reg0 += funreg;
+          } else {
+            struct VMClosure *new_closure = partial_apply(closure, arg0, arity);
+            reg0[destreg] = mkClosureValue(new_closure);
+          }
       }
       break;
     case TailCall:
@@ -213,53 +284,9 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         uint8_t lastarg = uY(instr);
         uint8_t arity = lastarg - funreg;
 
-        const char *funname = lastglobalset(vm, funreg, running, code + pc);
-
-        struct VMClosure *closure = NULL;
-        struct VMFunction *callee = NULL;
-        if (isVMClosure(RX)) {
-          closure = AS_CLOSURE(vm, RX);
-          callee = closure->f;
-        } else {
-          if (funname) // need to improve error message
-            runerror(vm, "Tried to call non-function; maybe global '%s' is not defined?", funname);
-          runerror(vm, "Tried to call non-function");
-        }
-
-        // arity check
-        if (arity > closure->arity)
-          runerror(vm, "Called function %s with %d arguments but it requires %d.",
-            funname, arity, closure->arity);
-         
-        if (closure->arity == arity) {
-          // reg0 should store the clean version of this closure
-          *reg0 = mkClosureValue(closure->base);
-
-          int ncaptured_args = (callee->arity - arity);
-
-          // nmove passed args into place
-          memmove(&reg0[1] + callee->arity - arity, &FIRST_ARG, arity * sizeof(struct Value));
-
-          // copy captured args into place
-          memcpy(reg0 + 1, ARGSTACK_BOTTOM, ncaptured_args * sizeof(struct Value));
-
-          CHFUNCTION(callee);
-          pc = -1;
-        } else { // treat partial application as returning a closure
-          if (stack_ptr < vm->call_stack)
-            return;
-
-          Activation *top = stack_ptr--;
-          if (!top->dest_reg)
-            runerror(vm, "Tried to return from loading activation");
-
-          struct VMClosure *new_closure = partial_apply(closure, &FIRST_ARG, arity);
-
-          *(top->dest_reg) = mkClosureValue(new_closure);
-          CHFUNCTION(top->fun);
-          pc = top->pc;
-          reg0 = top->reg0;
-        }     
+        VMSAVE();
+        tailcall(funreg, arity, vm);
+        VMLOAD();
       }
       break;
 
@@ -446,7 +473,7 @@ static inline struct VMClosure *partial_apply(struct VMClosure *closure, Value *
   return new_closure;
 }
 
-static void call(uint8_t destreg, uint8_t funreg, uint8_t arity, VMState vm) {
+static void tailcall(uint8_t funreg, uint8_t arity, VMState vm) {
   Value *reg0;  
   uint32_t pc;
   Activation *stack_ptr;
@@ -455,61 +482,65 @@ static void call(uint8_t destreg, uint8_t funreg, uint8_t arity, VMState vm) {
 
   VMLOAD();
 
-        struct VMFunction *caller = running;
+  const char *funname = lastglobalset(vm, funreg, running, code + pc);
 
-        const char *funname = lastglobalset(vm, funreg, caller, code + pc);
-        
-        struct VMClosure *closure = NULL;
-        struct VMFunction *callee = NULL;
-        if (isVMClosure(reg0[funreg])) {
-          closure = AS_CLOSURE(vm, reg0[funreg]);
-          callee = closure->f;
-        } else {
-          if (funname) // need to improve error message
-            runerror(vm, "Tried to call non-function; maybe global '%s' is not defined?", funname);
-          runerror(vm, "Tried to call non-function");
-        }
-        
-        // arity check
-        if (arity > closure->arity) {
-          runerror(vm, "Called function %s with %d arguments but it requires %d.",
-            funname, arity, closure->arity);
-        }
+  struct VMClosure *closure = NULL;
+  struct VMFunction *callee = NULL;
+  if (isVMClosure(reg0[funreg])) {
+    closure = AS_CLOSURE(vm, reg0[funreg]);
+    callee = closure->f;
+  } else {
+    if (funname) // need to improve error message
+      runerror(vm, "Tried to call non-function; maybe global '%s' is not defined?", funname);
+    runerror(vm, "Tried to call non-function");
+  }
 
+  Value *arg0 = &reg0[funreg + 1];
 
+  if (closure->arity <= arity) {
+    int nsuspended = 0;
+    Value *suspended = NULL;
+     // capture extra arguments
+    if (arity > closure->arity) {
+      nsuspended = arity - closure->arity;
+      suspended = malloc(nsuspended * sizeof(struct Value));
+      memcpy(suspended, arg0 + closure->arity, nsuspended * sizeof(struct Value));
+      arity = closure->arity;
+    }
 
-        if (closure->arity == arity) {
-          int ncaptured_args = (callee->arity - arity);
+    // reg0 should store the clean version of this closure
+    *reg0 = mkClosureValue(closure->base);
 
-          // shift passed arguments into place
-          memmove(&FIRST_ARG + callee->arity - arity, &FIRST_ARG, arity * sizeof(struct Value));
+    int ncaptured_args = (callee->arity - arity);
 
-          // copy captured arguments into place
-          memcpy(&FIRST_ARG, ARGSTACK_BOTTOM, ncaptured_args * sizeof(struct Value));
+    // nmove passed args into place
+    memmove(&reg0[1] + callee->arity - arity, arg0, arity * sizeof(struct Value));
 
-          // new reg0 will store a clean version of this closure
-          *(reg0 + funreg) = mkClosureValue(closure->base);
+    // copy captured args into place
+    Value *argstack_bottom = &closure->captured[closure->nslots - callee->arity];
+    memcpy(reg0 + 1, argstack_bottom, ncaptured_args * sizeof(struct Value));
 
-          // register overflow check
-          if (reg0 + callee->nregs >= vm->registers + (NUM_REGISTERS - 1))
-            runerror(vm, "Register file overflow in Call.");
+    // suspend extra args in activation
+    stack_ptr->suspended = suspended;
+    stack_ptr->nsuspended = nsuspended;
 
-          // stack overflow check
-          if (stack_ptr == vm->call_stack + (CALL_STACK_SIZE - 1))
-            runerror(vm, "Stack overflow.");
+    CHFUNCTION(callee);
+    pc = -1;
+  } else { // treat partial application as returning a closure
+    if (stack_ptr < vm->call_stack)
+      return;
 
-          Activation *top = ++stack_ptr;
-          top->pc = pc;
-          top->reg0 = reg0;
-          top->dest_reg = reg0 + destreg;
-          top->fun = caller;
+    Activation *top = stack_ptr--;
+    if (!top->dest_reg)
+      runerror(vm, "Tried to return from loading activation");
 
-          CHFUNCTION(callee);
-          pc = -1;
-          reg0 += funreg;
-          } else {
-            struct VMClosure *new_closure = partial_apply(closure, &FIRST_ARG, arity);
-            reg0[destreg] = mkClosureValue(new_closure);
-          }
-          VMSAVE();
+    struct VMClosure *new_closure = partial_apply(closure, arg0, arity);
+
+    *(top->dest_reg) = mkClosureValue(new_closure);
+    CHFUNCTION(top->fun);
+    pc = top->pc;
+    reg0 = top->reg0;
+  }
+
+    VMSAVE();
 }
