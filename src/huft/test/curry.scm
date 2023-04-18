@@ -31,6 +31,11 @@
 
 ;; extra args
 
-(define needmore (x y) (* (+ x y)))
+(define needmore1 (x y) (* (+ x y)))
 
-(check-expect (needmore 1 2 3) 9)
+(check-expect (needmore1 1 2 3) 9)
+
+(define needmore2 (x)
+  ((lambda (a b c d) (+ a (* b (/ c d)))) x))
+
+(check-expect (needmore2 1 2 3 4) (+ 1 (* 2 (/ 3 4))))

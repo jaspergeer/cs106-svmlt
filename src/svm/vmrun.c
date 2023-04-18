@@ -42,7 +42,7 @@
 #define CANDUMP 1
 
 static inline struct VMClosure *partial_apply(struct VMClosure *closure, Value *args, int nargs);
-static void tailcall(uint8_t funreg, uint8_t arity, VMState vm);
+static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm);
 #define VMSAVE() \
 { \
   vm->running = running; \
@@ -111,14 +111,13 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       if (stack_ptr < vm->call_stack)
         return;
       
-      if (stack_ptr->nsuspended > 0) {
+      int nsuspended = stack_ptr->suspended ? stack_ptr->suspended->nslots : 0;
+      if (nsuspended > 0) {
         *reg0 = RX;
-        int nsuspended = stack_ptr->nsuspended;
-        memcpy(reg0 + 1, stack_ptr->suspended, nsuspended * sizeof(struct Value));
 
-        free(stack_ptr->suspended);
+        memcpy(reg0 + 1, stack_ptr->suspended->slots, nsuspended * sizeof(struct Value));
+
         stack_ptr->suspended = NULL;
-        stack_ptr->nsuspended = 0;
         
         VMSAVE();
         tailcall(0, nsuspended, vm);
@@ -233,12 +232,13 @@ void vmrun(VMState vm, struct VMFunction* fun) {
 
           if (closure->arity <= arity) {
             int nsuspended = 0;
-            Value *suspended = NULL;
+            struct VMBlock *suspended = NULL;
             // capture extra arguments
             if (arity > closure->arity) {
               nsuspended = arity - closure->arity;
-              suspended = malloc(nsuspended * sizeof(struct Value));
-              memcpy(suspended, arg0 + closure->arity, nsuspended * sizeof(struct Value));
+              VMNEW(,suspended, vmsize_block(nsuspended));
+              suspended->nslots = nsuspended;
+              memcpy(suspended->slots, arg0 + closure->arity, nsuspended * sizeof(struct Value));
               arity = closure->arity;
             }
 
@@ -269,7 +269,6 @@ void vmrun(VMState vm, struct VMFunction* fun) {
 
             // suspend extra args in activation
             top->suspended = suspended;
-            top->nsuspended = nsuspended;
 
             CHFUNCTION(callee);
             pc = -1;
@@ -477,7 +476,7 @@ static inline struct VMClosure *partial_apply(struct VMClosure *closure, Value *
   return new_closure;
 }
 
-static void tailcall(uint8_t funreg, uint8_t arity, VMState vm) {
+static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm) {
   Value *reg0;  
   uint32_t pc;
   Activation *stack_ptr;
@@ -503,12 +502,14 @@ static void tailcall(uint8_t funreg, uint8_t arity, VMState vm) {
 
   if (closure->arity <= arity) {
     int nsuspended = 0;
-    Value *suspended = NULL;
-     // capture extra arguments
+    struct VMBlock *suspended = NULL;
+
+    // capture extra arguments
     if (arity > closure->arity) {
       nsuspended = arity - closure->arity;
-      suspended = malloc(nsuspended * sizeof(struct Value));
-      memcpy(suspended, arg0 + closure->arity, nsuspended * sizeof(struct Value));
+      VMNEW(,suspended, vmsize_block(nsuspended));
+      suspended->nslots = nsuspended;
+      memcpy(suspended->slots, arg0 + closure->arity, nsuspended * sizeof(struct Value));
       arity = closure->arity;
     }
 
@@ -526,7 +527,6 @@ static void tailcall(uint8_t funreg, uint8_t arity, VMState vm) {
 
     // suspend extra args in activation
     stack_ptr->suspended = suspended;
-    stack_ptr->nsuspended = nsuspended;
 
     CHFUNCTION(callee);
     pc = -1;
@@ -539,20 +539,18 @@ static void tailcall(uint8_t funreg, uint8_t arity, VMState vm) {
 
     struct VMClosure *new_closure = partial_apply(closure, arg0, arity);
 
-    if (stack_ptr->nsuspended > 0) {
+    int nsuspended = stack_ptr->suspended ? stack_ptr->suspended->nslots : 0;
+    if (nsuspended > 0) {
       *reg0 = mkClosureValue(new_closure);
-      int nsuspended = stack_ptr->nsuspended;
-      memcpy(reg0 + 1, stack_ptr->suspended, nsuspended * sizeof(struct Value));
+      
+      memcpy(reg0 + 1, stack_ptr->suspended->slots, nsuspended * sizeof(struct Value));
 
-      free(stack_ptr->suspended);
       stack_ptr->suspended = NULL;
-      stack_ptr->nsuspended = 0;
 
       VMSAVE();
       tailcall(0, nsuspended, vm);
       VMLOAD();
     } else {
-      
       *(stack_ptr->dest_reg) = mkClosureValue(new_closure);
       CHFUNCTION(stack_ptr->fun);
       pc = stack_ptr->pc;

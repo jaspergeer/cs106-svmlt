@@ -622,8 +622,8 @@ static void scan_forwarded_payload(Value v) {
 
 static void scan_activation(Activation *p) {
   p->fun = forward_function(p->fun);
-  for (int i = 0; i < p->nsuspended; ++i)
-    scan_value(&p->suspended[i]);
+  scan_block(p->suspended);
+  p->suspended = forward_block(p->suspended);
 }
 
 static void scan_vmstate(struct VMState *vm) {
@@ -731,7 +731,6 @@ extern void gc(struct VMState *vm) {
   // 5
   while(!VStack_isempty(gray)) {
     Value v = VStack_pop(gray);
-    // scan_value(&v);
     scan_forwarded_payload(v);
   }
 
