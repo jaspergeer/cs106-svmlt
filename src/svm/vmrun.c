@@ -43,20 +43,22 @@
 #define CANDUMP 1
 
 static inline struct VMClosure *partial_apply(struct VMClosure *closure, Value *args, int nargs);
+static void call(uint8_t destreg, uint8_t funreg, uint8_t arity, VMState vm);
 #define VMSAVE() \
 { \
   vm->running = running; \
   vm->reg0 = reg0; \
   vm->stack_ptr = stack_ptr; \
-  vm->pc = stream_ptr - running->instructions; \
-} \
+  vm->pc = pc; \
+}
 
 #define VMLOAD() \
 { \
   reg0 = vm->reg0; \
   stack_ptr = vm->stack_ptr; \
   running = vm->running; \
-  stream_ptr = running->instructions + vm->pc; \
+  code = running->instructions; \
+  pc = vm->pc; \
 }
 
 #define GC() \
@@ -66,14 +68,19 @@ static inline struct VMClosure *partial_apply(struct VMClosure *closure, Value *
   VMLOAD(); \
 }
 
+#define CHFUNCTION(f) \
+  running = f; \
+  code = f->instructions;
+
 void vmrun(VMState vm, struct VMFunction* fun) {
   LPool_T literals = vm->literals;
   Value *globals = vm->globals;
 
-  Value *reg0;  
-  Instruction *stream_ptr;
+  Value *reg0;
+  uint32_t pc;
   Activation *stack_ptr;
   struct VMFunction *running;
+  Instruction *code;
 
   vm->running = fun;
 
@@ -86,13 +93,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
   
   // invariant is vm->registers always points to the start of the registers?
   for (;;) {
-    // if (gc_needed) {
-    //   // fprintf(stderr, "vmrun");
-    //   GC();
-    //   gc_needed = false;
-    // }
-
-    uint32_t instr = *stream_ptr;
+    uint32_t instr = *(code + pc);
 
     if (CANDUMP && dump_decode) {
       idump(stderr, vm, vm->pc, instr, reg0 - &vm->registers[0],
@@ -115,8 +116,8 @@ void vmrun(VMState vm, struct VMFunction* fun) {
           runerror(vm, "Tried to return from loading activation");
 
         *(top->dest_reg) = RX;
-        running = GCVALIDATE(top->fun);
-        stream_ptr = running->instructions + top->pc;
+        CHFUNCTION(GCVALIDATE(top->fun));
+        pc = top->pc;
         reg0 = top->reg0;
       }
       break;
@@ -177,7 +178,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
     // Branching
     case CondSkip:
       if (!AS_BOOLEAN(vm, RX))
-        ++stream_ptr;
+        ++pc;
       break;
     case Jump:
       {
@@ -185,7 +186,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         if (offset < 0 && gc_needed) {
           GC();
         }
-        stream_ptr += offset ;
+        pc += offset ;
       }
       break;
     
@@ -199,63 +200,9 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         uint8_t lastarg = uZ(instr);
         uint8_t arity = lastarg - funreg;
 
-        struct VMFunction *caller = running;
-
-        const char *funname = lastglobalset(vm, funreg, caller, stream_ptr);
-        
-        struct VMClosure *closure = NULL;
-        struct VMFunction *callee = NULL;
-        if (isVMClosure(RY)) {
-          closure = AS_CLOSURE(vm, RY);
-          callee = closure->f;
-        } else {
-          if (funname) // need to improve error message
-            runerror(vm, "Tried to call non-function; maybe global '%s' is not defined?", funname);
-          runerror(vm, "Tried to call non-function");
-        }
-        
-        // arity check
-        if (arity > closure->arity) {
-          runerror(vm, "Called function %s with %d arguments but it requires %d.",
-            funname, arity, closure->arity);
-        }
-
-
-
-        if (closure->arity == arity) {
-          int ncaptured_args = (callee->arity - arity);
-
-          // shift passed arguments into place
-          memmove(&FIRST_ARG + callee->arity - arity, &FIRST_ARG, arity * sizeof(struct Value));
-
-          // copy captured arguments into place
-          memcpy(&FIRST_ARG, ARGSTACK_BOTTOM, ncaptured_args * sizeof(struct Value));
-
-          // new reg0 will store a clean version of this closure
-          *(reg0 + funreg) = mkClosureValue(closure->base);
-
-          // register overflow check
-          if (reg0 + callee->nregs >= vm->registers + (NUM_REGISTERS - 1))
-            runerror(vm, "Register file overflow in Call.");
-
-          // stack overflow check
-          if (stack_ptr == vm->call_stack + (CALL_STACK_SIZE - 1))
-            runerror(vm, "Stack overflow.");
-
-          Activation *top = ++stack_ptr;
-          top->pc = stream_ptr - running->instructions;
-          top->reg0 = reg0;
-          top->dest_reg = reg0 + destreg;
-          top->fun = caller;
-
-          running = callee;
-          stream_ptr = running->instructions - 1;
-          reg0 += funreg;
-          } else {
-            struct VMClosure *new_closure = partial_apply(closure, &FIRST_ARG, arity);
-            RX = mkClosureValue(new_closure);
-          }
-        
+        VMSAVE();
+        call(destreg, funreg, arity, vm);
+        VMLOAD();
       }
       break;
     case TailCall:
@@ -266,7 +213,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         uint8_t lastarg = uY(instr);
         uint8_t arity = lastarg - funreg;
 
-        const char *funname = lastglobalset(vm, funreg, running, stream_ptr);
+        const char *funname = lastglobalset(vm, funreg, running, code + pc);
 
         struct VMClosure *closure = NULL;
         struct VMFunction *callee = NULL;
@@ -296,8 +243,8 @@ void vmrun(VMState vm, struct VMFunction* fun) {
           // copy captured args into place
           memcpy(reg0 + 1, ARGSTACK_BOTTOM, ncaptured_args * sizeof(struct Value));
 
-          running = callee;
-          stream_ptr = running->instructions - 1;
+          CHFUNCTION(callee);
+          pc = -1;
         } else { // treat partial application as returning a closure
           if (stack_ptr < vm->call_stack)
             return;
@@ -309,8 +256,8 @@ void vmrun(VMState vm, struct VMFunction* fun) {
           struct VMClosure *new_closure = partial_apply(closure, &FIRST_ARG, arity);
 
           *(top->dest_reg) = mkClosureValue(new_closure);
-          running = top->fun;
-          stream_ptr = top->pc + running->instructions;
+          CHFUNCTION(top->fun);
+          pc = top->pc;
           reg0 = top->reg0;
         }     
       }
@@ -480,7 +427,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         break;
 
     }
-    ++stream_ptr;
+    ++pc;
   }
   return;
 }
@@ -497,4 +444,72 @@ static inline struct VMClosure *partial_apply(struct VMClosure *closure, Value *
   new_closure->arity -= nargs;
 
   return new_closure;
+}
+
+static void call(uint8_t destreg, uint8_t funreg, uint8_t arity, VMState vm) {
+  Value *reg0;  
+  uint32_t pc;
+  Activation *stack_ptr;
+  struct VMFunction *running;
+  Instruction *code;
+
+  VMLOAD();
+
+        struct VMFunction *caller = running;
+
+        const char *funname = lastglobalset(vm, funreg, caller, code + pc);
+        
+        struct VMClosure *closure = NULL;
+        struct VMFunction *callee = NULL;
+        if (isVMClosure(reg0[funreg])) {
+          closure = AS_CLOSURE(vm, reg0[funreg]);
+          callee = closure->f;
+        } else {
+          if (funname) // need to improve error message
+            runerror(vm, "Tried to call non-function; maybe global '%s' is not defined?", funname);
+          runerror(vm, "Tried to call non-function");
+        }
+        
+        // arity check
+        if (arity > closure->arity) {
+          runerror(vm, "Called function %s with %d arguments but it requires %d.",
+            funname, arity, closure->arity);
+        }
+
+
+
+        if (closure->arity == arity) {
+          int ncaptured_args = (callee->arity - arity);
+
+          // shift passed arguments into place
+          memmove(&FIRST_ARG + callee->arity - arity, &FIRST_ARG, arity * sizeof(struct Value));
+
+          // copy captured arguments into place
+          memcpy(&FIRST_ARG, ARGSTACK_BOTTOM, ncaptured_args * sizeof(struct Value));
+
+          // new reg0 will store a clean version of this closure
+          *(reg0 + funreg) = mkClosureValue(closure->base);
+
+          // register overflow check
+          if (reg0 + callee->nregs >= vm->registers + (NUM_REGISTERS - 1))
+            runerror(vm, "Register file overflow in Call.");
+
+          // stack overflow check
+          if (stack_ptr == vm->call_stack + (CALL_STACK_SIZE - 1))
+            runerror(vm, "Stack overflow.");
+
+          Activation *top = ++stack_ptr;
+          top->pc = pc;
+          top->reg0 = reg0;
+          top->dest_reg = reg0 + destreg;
+          top->fun = caller;
+
+          CHFUNCTION(callee);
+          pc = -1;
+          reg0 += funreg;
+          } else {
+            struct VMClosure *new_closure = partial_apply(closure, &FIRST_ARG, arity);
+            reg0[destreg] = mkClosureValue(new_closure);
+          }
+          VMSAVE();
 }
