@@ -708,6 +708,8 @@ extern void gc(struct VMState *vm) {
 
   // postcondition of current: should be the old to-space with
   // the copied payloads
+  // now nothing points to current page, at the end of gc, all live objects
+  // points to current page
   current = NULL;
 
   // mostly for gc stats
@@ -723,8 +725,13 @@ extern void gc(struct VMState *vm) {
   // 3
   // before scanning happens, the fromspace_pages is the size of the new
   // to-space, and count.available.pages is the new from-space
-  int heap_size = fromspace_pages + count.available.pages;
+  int heap_size = fromspace_pages + count.available.pages; 
+  // count.current.pages might be one, we might wanna add it
   availability_floor = heap_size / 2 + (heap_size % 2 != 0);
+
+  // white objects are from -> from
+  // grey objects are to -> from
+  // black objects are to -> to
 
   // 4
   scan_vmstate(vm);
@@ -799,7 +806,7 @@ static void acquire_available_page(void) {
   Page p = malloc(PAGESIZE);
   assert(p);
   VALGRIND_CREATE_MEMPOOL(p, 0, 0);
-  VALGRIND_CREATE_BLOCK(p, PAGESIZE, "managed page");
+  VALGRIND_CREATE_BLOCK(p, PAGESIZE, "fmanaged page");
   p->link = available;
   available = p;
   count.available.pages++;

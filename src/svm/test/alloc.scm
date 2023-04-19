@@ -1,4 +1,6 @@
 ; file alloc.scm
+
+(set &gamma 2)
 (define allocate (N)
   (let ([x #f])
     (begin

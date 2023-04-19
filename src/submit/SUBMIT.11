@@ -6,46 +6,49 @@ What person or group is submitting this homework?
 
 What work are you proud of?
 
-  - getting it right (at least with our tests)
+  - no valgrind errors, and getting everything right (as far as we know)
 
 What code would you like help improving?  Are there bugs you'd like
 help finding during code review?
 
-  -  
+  - GC, scan_vmstate, VMLOAD, VMSAVE
 
 What code, if any, would you especially like the course staff to
 review?  Why?
 
-  -
+  - gc
 
 In this course, all code may be shared freely.  Aside from code that
 is distributed with the assignment, does your submission contain any
 other code that you got from someone else?  If so, what code is it
 (file names and line numbers please) and who supplied it?
 
-  - 
+  - no
 
 In response to last week's code review, have you made any material
 changes?  What were they?  By file name and line number, where are
 they found in the code?  If you remember, who helped you during code
 review?
 
-  - 
+  - ClConvert.hs, we catch the setlocal case upstream
 
 
 We have a plenary code review tomorrow.  Are you willing to present
 (as a group, if applicable)?
 
-  - 
+  - YES
 
 Supposing you are not selected to present at tomorrow's plenary code
 review, what code would you like to see presented?  What would you
 learn the most from?
 
-  - 
+  - gc, the analysis of scan_value/scan_forwarded_payload (and how
+    to use them to justify scan_vmstate, and when popping grey object
+    off the stack)
 
 Again supposing you are not selected to present, are you willing to
 serve on the review panel? (Or if there are more than one of you, who
 is willing to serve?)
 
-  - 
+  - Alex, Jasper
+  

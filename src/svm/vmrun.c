@@ -47,20 +47,20 @@
   vm->pc = stream_ptr - running->instructions; \
 } \
 
-#define VMLOAD() \
+#define VMLOAD() do \
 { \
   reg0 = vm->reg0; \
   stack_ptr = vm->stack_ptr; \
   running = vm->running; \
   stream_ptr = running->instructions + vm->pc; \
-}
+} while (0)
 
-#define GC() \
+#define GC() do \
 { \
   VMSAVE(); \
   gc(vm); \
   VMLOAD(); \
-}
+} while (0)
 
 void vmrun(VMState vm, struct VMFunction* fun) {
   LPool_T literals = vm->literals;
