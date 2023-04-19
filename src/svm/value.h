@@ -147,6 +147,7 @@ struct VMClosure {
   struct VMFunction *f;
   struct VMClosure *base;
   int arity;
+  struct VMBlock *args;
   int nslots;
   struct Value captured[];
 };
