@@ -14,7 +14,6 @@ MAINS=uft
 .PHONY: mosml
 
 mosml: $(BIN)/uft
-	@: do nothing, and say nothing about doing nothing
 
 .PHONY: clean
 
@@ -26,20 +25,11 @@ clean:
 .PHONY: all
 
 all: $(BIN)/huft
-	@: do nothing, and say nothing about doing nothing
 
 msg='$1'
 
-mlton: $(BIN)/uft.opt
-
-$(BIN)/uft.opt: $(MLBS) $(SRCS)
-	mlton -output $@ -verbose 1 main.mlb
-
-%.mlb: %.cm
-	cm2mlb $^ > $@ || rm -f $@
-
-$(BIN)/uft: $(SRCS) $(CMS)
-	$(TOP)/bin/mosml-compile-cm -o $@ main.cm
+$(BIN)/uft: $(SRCS)
+	cd ../huft && cabal build huft && ln -sf `cabal list-bin huft` ../../bin/uft
 
 millet.cm: $(CMS)
 	expand-cm main.cm > $@
