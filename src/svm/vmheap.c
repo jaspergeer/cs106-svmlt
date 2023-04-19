@@ -628,9 +628,13 @@ static void scan_vmstate(struct VMState *vm) {
   //    (these hold local variables and formal paramters as on page 265)
   //    (hint: don't scan high-numbered registers that can't
   //     affect future computations because they aren't used)
-  for (int i = 0; i < vm->reg0 - vm->registers + vm->running->nregs; ++i) {
-    // ?
+
+  int nlive = vm->reg0 - vm->registers + vm->running->nregs;
+
+  for (int i = 0; i < nlive; ++i) {
     scan_value(&vm->registers[i]);
+  
+  memset(vm->reg0 + vm->running->nregs, 0, nlive * sizeof(struct Value));
   }
 
   // roots: all global-variable slots that are in use
@@ -728,7 +732,6 @@ extern void gc(struct VMState *vm) {
   // 5
   while(!VStack_isempty(gray)) {
     Value v = VStack_pop(gray);
-    // scan_value(&v);
     scan_forwarded_payload(v);
   }
 
@@ -747,8 +750,8 @@ extern void gc(struct VMState *vm) {
 
   ++total.collections;
 
-  double object_survival_rate = ((double) count.current.objects) / fromspace_objects * 100;
-  double byte_survival_rate = ((double) count.current.bytes_requested) / fromspace_bytes * 100;
+  double object_survival_percent = ((double) count.current.objects) / fromspace_objects * 100;
+  double byte_survival_percent = ((double) count.current.bytes_requested) / fromspace_bytes * 100;
 
   if (svmdebug_value("gcstats") && strchr(svmdebug_value("gcstats"), '+')) {
     fprintf(stderr, "Heap contains %d pages of which %d are live (ratio %.2f)\n",
@@ -757,12 +760,7 @@ extern void gc(struct VMState *vm) {
     fprint(stderr, "%d of %d objects holding %, of %, requested bytes survived\n",
             count.current.objects, fromspace_objects, count.current.bytes_requested, fromspace_bytes);  // you fill in here
     fprintf(stderr, "Survival rate is %.1f%% of objects and %.1f%% of bytes\n",
-            object_survival_rate, byte_survival_rate);  // you fill in here
-  }
-
-  // clean the registers file?
-  for (int i = vm->reg0 - vm->registers + vm->running->nregs; i < NUM_REGISTERS; ++i) {
-    vm->registers[i] = nilValue;
+            object_survival_percent, byte_survival_percent);  // you fill in here
   }
   
 }
