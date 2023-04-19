@@ -1,4 +1,7 @@
 ; file grow.scm
+
+; (set &gamma 90)
+
 (define iota (N)
   (let ([ns '()])
     (begin
