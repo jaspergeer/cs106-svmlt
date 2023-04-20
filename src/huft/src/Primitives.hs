@@ -21,7 +21,7 @@ unary = [ "boolean?", "null?", "number?", "pair?", "function?", "nil?"
         ]
 
 sideEffecty   = [ "print", "printu", "println" ] -- arity 1
-errory         = [ "error" ]  -- arity 1 never returns
+errory         = [ "err" ]  -- arity 1 never returns
 halty          = [ "halt" ]
 checky         = [ "check", "expect" ] -- arity 2: one is literal
 

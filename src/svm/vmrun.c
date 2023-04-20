@@ -39,37 +39,122 @@
 
 #define CANDUMP 1
 
+static inline struct VMClosure *partial_apply(struct VMClosure *closure, Value *args, int nargs);
+static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm);
 #define VMSAVE() \
 { \
   vm->running = running; \
   vm->reg0 = reg0; \
   vm->stack_ptr = stack_ptr; \
-  vm->pc = stream_ptr - running->instructions; \
-} \
+  vm->pc = pc; \
+}
 
-#define VMLOAD() do \
+#define VMLOAD() \
 { \
   reg0 = vm->reg0; \
   stack_ptr = vm->stack_ptr; \
   running = vm->running; \
-  stream_ptr = running->instructions + vm->pc; \
-} while (0)
+  code = running->instructions; \
+  pc = vm->pc; \
+}
 
-#define GC() do \
+#define GC() \
 { \
   VMSAVE(); \
   gc(vm); \
   VMLOAD(); \
 } while (0)
 
+#define CHRUNNING(f) \
+{ \
+  running = f; \
+  code = running->instructions; \
+}
+
+#define CHECK_SET_CALLABLE(v, callee) \
+  if (isVMClosure(v)) { \
+    callee = AS_CLOSURE(vm, v); \
+  } else { \
+    if (funname) \
+      runerror(vm, "Tried to call non-function; maybe global '%s' is not defined?", funname); \
+    runerror(vm, "Tried to call non-function"); \
+  }
+
+#define CALLSTACK_PUSH(fun, destreg, suspended) \
+{ \
+  if (stack_ptr == vm->call_stack + (CALL_STACK_SIZE - 1)) \
+              runerror(vm, "Stack overflow."); \
+  Activation *top = ++stack_ptr; \
+  top->pc = pc; \
+  top->reg0 = reg0; \
+  top->dest_reg = reg0 + destreg; \
+  top->fun = caller; \
+  top->suspended = suspended; \
+}
+
+#define CALLSTACK_POP(return_value) \
+{ \
+  Activation *top = stack_ptr--; \
+  if (!top->dest_reg) \
+    runerror(vm, "Tried to return from loading activation"); \
+  *(top->dest_reg) = return_value; \
+  CHRUNNING(GCVALIDATE(top->fun)); \
+  pc = top->pc; \
+  reg0 = top->reg0; \
+}
+
+#define SETUP_CALL(funreg, arity, shift, callee, suspended) \
+{ \
+  int nargs = arity; \
+  suspended = NULL; \
+  int nsuspended = 0; \
+  Value *arg0 = &reg0[funreg + 1]; \
+  Value *callee_arg0 = &reg0[shift + 1]; \
+  /* suspend extra arguments */ \
+  if (nargs > callee->arity) { \
+    nsuspended = nargs - callee->arity; \
+    VMNEW(,suspended, vmsize_block(nsuspended)); \
+    suspended->nslots = nsuspended; \
+    memcpy(suspended->slots, arg0 + callee->arity, nsuspended * sizeof(struct Value)); \
+    nargs = callee->arity; \
+  } \
+  \
+  /* shift passed arguments into place */ \
+  memmove(callee_arg0 + callee->f->arity - nargs, arg0, nargs * sizeof(struct Value)); \
+  \
+  /* copy captured arguments into place */ \
+  if (callee->args) \
+    memcpy(callee_arg0, callee->args->slots, callee->args->nslots * sizeof(struct Value)); \
+  \
+  /* new reg0 stores clean version of this closure */ \
+  *(reg0 + shift) = mkClosureValue(callee->base); \
+  \
+  /* register overflow check */ \
+  if (reg0 + callee->f->nregs >= vm->registers + (NUM_REGISTERS - 1)) \
+    runerror(vm, "Register file overflow in Call."); \
+}
+
+#define RESUME_APPLY(callee) \
+{ \
+  assert(stack_ptr->suspended); \
+  int nsuspended = stack_ptr->suspended->nslots; \
+  *reg0 = callee; \
+  memcpy(reg0 + 1, stack_ptr->suspended->slots, nsuspended * sizeof(struct Value)); \
+  stack_ptr->suspended = NULL; \
+  VMSAVE(); \
+  tailcall(0, nsuspended, vm); \
+  VMLOAD(); \
+}
+
 void vmrun(VMState vm, struct VMFunction* fun) {
   LPool_T literals = vm->literals;
   Value *globals = vm->globals;
 
-  Value *reg0;  
-  Instruction *stream_ptr;
+  Value *reg0;
+  uint32_t pc;
   Activation *stack_ptr;
   struct VMFunction *running;
+  Instruction *code;
 
   vm->running = fun;
 
@@ -82,13 +167,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
   
   // invariant is vm->registers always points to the start of the registers?
   for (;;) {
-    // if (gc_needed) {
-    //   // fprintf(stderr, "vmrun");
-    //   GC();
-    //   gc_needed = false;
-    // }
-
-    uint32_t instr = *stream_ptr;
+    uint32_t instr = *(code + pc);
 
     if (CANDUMP && dump_decode) {
       idump(stderr, vm, vm->pc, instr, reg0 - &vm->registers[0],
@@ -104,16 +183,12 @@ void vmrun(VMState vm, struct VMFunction* fun) {
     case Return:
       if (stack_ptr < vm->call_stack)
         return;
-
-      {
-        Activation *top = stack_ptr--;
-        if (!top->dest_reg)
-          runerror(vm, "Tried to return from loading activation");
-
-        *(top->dest_reg) = RX;
-        running = GCVALIDATE(top->fun);
-        stream_ptr = running->instructions + top->pc;
-        reg0 = top->reg0;
+      
+      int nsuspended = stack_ptr->suspended ? stack_ptr->suspended->nslots : 0;
+      if (nsuspended > 0) {
+        RESUME_APPLY(RX);
+      } else {
+        CALLSTACK_POP(RX);
       }
       break;
     
@@ -173,7 +248,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
     // Branching
     case CondSkip:
       if (!AS_BOOLEAN(vm, RX))
-        ++stream_ptr;
+        ++pc;
       break;
     case Jump:
       {
@@ -181,7 +256,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         if (offset < 0 && gc_needed) {
           GC();
         }
-        stream_ptr += offset ;
+        pc += offset ;
       }
       break;
     
@@ -197,41 +272,27 @@ void vmrun(VMState vm, struct VMFunction* fun) {
 
         struct VMFunction *caller = running;
 
-        const char *funname = lastglobalset(vm, funreg, caller, stream_ptr);
+        const char *funname = lastglobalset(vm, funreg, caller, code + pc);
+      
+        struct VMClosure *callee = NULL;
+
+        CHECK_SET_CALLABLE(reg0[funreg], callee);
         
-        struct VMFunction *callee = NULL;
-        if (isVMFunction(RY)) {
-          callee = AS_VMFUNCTION(vm, RY);
-        } else if (isVMClosure(RY)) {
-          callee = AS_CLOSURE(vm, RY)->f;
+        if (arity >= callee->arity) {
+          struct VMBlock *suspended;
+
+          SETUP_CALL(funreg, arity, funreg, callee, suspended);
+
+          CALLSTACK_PUSH(fun, destreg, suspended);
+
+          CHRUNNING(callee->f);
+
+          pc = -1;
+          reg0 += funreg;
         } else {
-          if (funname) // need to improve error message
-            runerror(vm, "Tried to call non-function; maybe global '%s' is not defined?", funname);
-          runerror(vm, "Tried to call non-function");
+          struct VMClosure *new_closure = partial_apply(callee, &reg0[funreg + 1], arity);
+          reg0[destreg] = mkClosureValue(new_closure);
         }
-        
-        // arity check
-        if (arity != callee->arity)
-          runerror(vm, "Called function %s with %d arguments but it requires %d.",
-            funname, arity, callee->arity);
-
-        // register overflow check
-        if (reg0 + callee->nregs >= vm->registers + (NUM_REGISTERS - 1))
-          runerror(vm, "Register file overflow in Call.");
-
-        // stack overflow check
-        if (stack_ptr == vm->call_stack + (CALL_STACK_SIZE - 1))
-          runerror(vm, "Stack overflow.");
-
-        Activation *top = ++stack_ptr;
-        top->pc = stream_ptr - running->instructions;
-        top->reg0 = reg0;
-        top->dest_reg = reg0 + destreg;
-        top->fun = caller;
-
-        running = callee;
-        stream_ptr = callee->instructions - 1;
-        reg0 += funreg;
       }
       break;
     case TailCall:
@@ -240,31 +301,11 @@ void vmrun(VMState vm, struct VMFunction* fun) {
           GC();
         uint8_t funreg = uX(instr);
         uint8_t lastarg = uY(instr);
+        uint8_t arity = lastarg - funreg;
 
-        struct VMFunction *callee = NULL;
-        
-        if (isVMFunction(RX)) {
-          callee = AS_VMFUNCTION(vm, RX);
-        } else if (isVMClosure(RX)) {
-          callee = AS_CLOSURE(vm, RX)->f;
-        } else {
-          const char *funname = lastglobalset(vm, funreg, running, stream_ptr);
-          if (funname) // need to improve error message
-            runerror(vm, "Tried to call non-function; maybe global '%s' is not defined?", funname);
-          runerror(vm, "Tried to call non-function");
-        }
-
-        if (reg0 + lastarg >= vm->registers + (NUM_REGISTERS - 1)) {
-          runerror(vm, "Register file overflow");
-        }
-
-        // reg file overflow, inherently wrong check
-        // if (reg0 + funreg > vm->registers + 256) {
-        //   runerror(vm, "Register file overflow");
-        // }
-        running = callee;
-        stream_ptr = callee->instructions - 1;
-        memmove(reg0, reg0 + funreg, (lastarg - funreg + 1) * sizeof(Value));        
+        VMSAVE();
+        tailcall(funreg, arity, vm);
+        VMLOAD();
       }
       break;
 
@@ -409,12 +450,15 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         } else if (isVMClosure(RY)) {
           f = AS_CLOSURE(vm, RY)->f;
         }
-
+        
         VMNEW(struct VMClosure *, closure, vmsize_closure(uZ(instr)));
         closure->forwarded = NULL;
 
         closure->f = f;
         closure->nslots = uZ(instr);
+        closure->arity = f->arity;
+        closure->base = closure;
+        closure->args = NULL;
         RX = mkClosureValue(closure);
         break;
       }
@@ -427,7 +471,76 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         break;
 
     }
-    ++stream_ptr;
+    ++pc;
   }
   return;
+}
+
+// helpers
+
+static inline struct VMClosure *partial_apply(struct VMClosure *closure, Value *args, int nargs) {
+  // allocate a new closure which is a copy of the old one
+  VMNEW(struct VMClosure *, new_closure, vmsize_closure_payload(closure));
+  memcpy(new_closure, closure, vmsize_closure_payload(closure));
+
+  int ncaptured_args = closure->f->arity - closure->arity;
+
+  // new block to store captured args
+  VMNEW(, new_closure->args, vmsize_block(nargs + ncaptured_args));
+  new_closure->args->nslots = nargs + ncaptured_args;
+
+  // copy existing captured args into new block
+  if (closure->args)
+    memcpy(new_closure->args->slots, closure->args->slots, closure->args->nslots * sizeof(struct Value));
+
+  // copy passed args into new closure
+  memcpy(new_closure->args->slots + ncaptured_args, args, nargs * sizeof(struct Value));
+  new_closure->arity -= nargs;
+
+  return new_closure;
+}
+
+static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm) {
+  Value *reg0;
+  uint32_t pc;
+  Activation *stack_ptr;
+  struct VMFunction *running;
+  Instruction *code;
+
+  VMLOAD();
+
+  const char *funname = lastglobalset(vm, funreg, running, code + pc);
+
+  struct VMClosure *callee = NULL;
+
+  CHECK_SET_CALLABLE(reg0[funreg], callee);
+
+  Value *arg0 = &reg0[funreg + 1];
+
+  if (arity >= callee->arity) {
+    struct VMBlock *suspended;
+
+    SETUP_CALL(funreg, arity, 0, callee, suspended);
+
+    CHRUNNING(callee->f);
+
+    pc = -1;
+  } else {
+    if (stack_ptr < vm->call_stack)
+      return;
+  
+    if (!stack_ptr->dest_reg)
+      runerror(vm, "Tried to return from loading activation");
+
+    struct VMClosure *new_closure = partial_apply(callee, arg0, arity);
+
+    int nsuspended = stack_ptr->suspended ? stack_ptr->suspended->nslots : 0;
+    if (nsuspended > 0) {
+      RESUME_APPLY(mkClosureValue(new_closure));
+    } else {  // treat partial application as returning a closure
+      CALLSTACK_POP(mkClosureValue(new_closure));
+    }
+  }
+
+  VMSAVE();
 }

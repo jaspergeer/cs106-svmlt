@@ -65,7 +65,9 @@ exp' e locals =
         S.Begin es -> X.Begin (map exp es)
         S.Apply e es -> case e of
           S.Var x -> case referent x locals of
-            Primitive p -> X.PrimCall p (map exp es)
+            Primitive p -> if P.arity p == length es
+              then X.PrimCall p (map exp es)
+              else X.FunCall (etaExpand p) (map exp es)
             _ -> X.FunCall (exp e) (map exp es)
           _ -> X.FunCall (exp e) (map exp es)
         S.LetX S.Let bindings e ->

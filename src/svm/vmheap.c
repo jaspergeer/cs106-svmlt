@@ -528,8 +528,12 @@ static inline void scan_block(struct VMBlock *p) {
 
 static inline void scan_closure(struct VMClosure *p) {
   p->f = forward_function(p->f); 
-  int n = p->nslots;
-  for (int i = 0; i < n; i++)
+  p->base = forward_closure(p->base);
+  if (p->args) {
+    scan_block(p->args);
+    p->args = forward_block(p->args);
+  }
+  for (int i = 0; i < p->nslots; i++)
     scan_value(&p->captured[i]);
 }
 
@@ -621,6 +625,10 @@ static void scan_forwarded_payload(Value v) {
 
 static void scan_activation(Activation *p) {
   p->fun = forward_function(p->fun);
+  if (p->suspended) {
+    scan_block(p->suspended);
+    p->suspended = forward_block(p->suspended);
+  }
 }
 
 static void scan_vmstate(struct VMState *vm) {

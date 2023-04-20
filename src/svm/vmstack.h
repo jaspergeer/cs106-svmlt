@@ -8,6 +8,7 @@ typedef struct {
   Value *dest_reg;
   Value *reg0;
   struct VMFunction *fun;
+  struct VMBlock *suspended;
 } Activation;
 
 #endif
