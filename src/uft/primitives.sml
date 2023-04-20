@@ -47,6 +47,7 @@ structure Primitive :> sig
   val mkclosure    : primitive
   val setclslot    : primitive
   val getclslot    : primitive
+  val getblockslot : primitive
 end
   =
 struct
@@ -118,6 +119,7 @@ struct
   val mkclosure    = SETS_REGISTER { name = "mkclosure",    arity = 2 }
   val setclslot    = HAS_EFFECT    { name = "setclslot",    arity = 3 }
   val getclslot    = SETS_REGISTER { name = "getclslot",    arity = 2 }
+  val getblockslot = SETS_REGISTER { name = "getblockslot", arity = 2 }
 end
 
 

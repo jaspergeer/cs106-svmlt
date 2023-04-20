@@ -34,16 +34,27 @@ struct
 
   (**** Reader functions ****)
 
-  val schemeOfFile : instream -> VScheme.def list error =
-    lines                                   (* line list *)
-    >>>  SxParse.parse                      (* sx list error *)
-    >=>  Error.mapList VSchemeParsers.defs  (* def list list error *)
-    >>>  Error.map List.concat              (* def list error *)
+  fun sourceReader defParser =
+    lines                             (* line list *)
+    >>>  SxParse.parse                (* sx list error *)
+    >=>  Error.mapList defParser      (* def list list error *)
+    >>>  Error.map List.concat        (* def list error *)
     >>>  Error.map VSchemeTests.delay
+
+  val schemeOfFile : instream -> VScheme.def list error =
+    sourceReader VSchemeParsers.defs
     
   val schemexOfFile : instream -> UnambiguousVScheme.def list error =
     schemeOfFile >>>
     Error.map (map Disambiguate.disambiguate)
+
+  val eschemeOfFile : instream -> VScheme.def list error =
+    sourceReader EschemeParsers.defs
+
+  val eschemexOfFile : instream -> UnambiguousVScheme.def list error =
+    eschemeOfFile >>>
+    Error.map (map Disambiguate.disambiguate)
+
 
   val VS_of_file : instream -> AssemblyCode.instr list error =
     lines                    (* line list *)
@@ -67,13 +78,16 @@ struct
   fun HOX_of HOX  = schemexOfFile
     | HOX_of _    = raise Backward
 
-  fun HO_of HO   = schemexOfFile
+  fun HO_of HO   = schemexOfFile >=> Error.mapList Mutability.detect
     | HO_of HOX  = Impossible.unimp "imperative features (HOX to HO)"
     | HO_of _    = raise Backward
 
+  fun ES_of ES   = eschemexOfFile 
+    | ES_of _    = raise Backward
   fun CL_of CL     = CL_of FO   (* really *)
     | CL_of HO     = HO_of HO     >>> ! (map ClosureConvert.close)
     | CL_of HOX    = HO_of HOX    >>> ! (map ClosureConvert.close)
+    | CL_of ES     = ES_of ES     >>> ! (map ClosureConvert.close)
     | CL_of inLang = FO_of inLang >>> ! (map FOCLUtil.embed)
 
   fun VS_of VS   = VS_of_file
@@ -107,6 +121,7 @@ struct
        of VO => VO_of      inLang >>> ! (emitVO outfile)
         | VS => VS_of      inLang >>> ! (emitVS outfile)
         | HO => HO_of      inLang >>> ! (emitHO outfile)
+        | ES => ES_of      inLang >>> ! (emitHO outfile)
         | _  => raise NoTranslationTo outLang
     ) infile
     handle Backward => raise NotForward (inLang, outLang)

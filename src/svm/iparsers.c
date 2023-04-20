@@ -49,7 +49,6 @@ Instruction parseR0(VMState vm, Opcode opcode, Tokens operands, unsigned* maxreg
 
 Instruction parseR1U16(VMState vm, Opcode opcode, Tokens operands, unsigned* maxreg) {
   (void)vm;
-  (void)maxreg;
   uint8_t regX = tokens_get_byte(&operands, NULL);
   uint32_t immediate = tokens_get_int(&operands, NULL);
   assert(operands == NULL);
@@ -58,7 +57,16 @@ Instruction parseR1U16(VMState vm, Opcode opcode, Tokens operands, unsigned* max
   return eR1U16(opcode, regX, immediate);
 }
 
-Instruction parseR2U8(VMState vm, Opcode opcode, Tokens operands, unsigned* maxreg) {
+Instruction parseR1U8(VMState vm, Opcode opcode, Tokens operands, unsigned *maxreg) {
+  (void)vm;
+  uint8_t regX = tokens_get_byte(&operands, NULL);
+  uint8_t k    = tokens_get_byte(&operands, NULL);
+  assert(operands == NULL);
+  SEE(regX);
+  return eR1U8(opcode, regX, k);
+}
+
+Instruction parseR2U8(VMState vm, Opcode opcode, Tokens operands, unsigned *maxreg) {
   (void)vm;
   uint8_t regX = tokens_get_byte(&operands, NULL);
   uint8_t regY = tokens_get_byte(&operands, NULL);

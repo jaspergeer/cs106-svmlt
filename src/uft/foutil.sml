@@ -7,6 +7,7 @@
 structure FOUtil :> sig
   val project : UnambiguousVScheme.def -> FirstOrderScheme.def Error.error
   val embed : FirstOrderScheme.def -> VScheme.def
+  val embedExp : FirstOrderScheme.exp -> VScheme.exp
 end
   =
 struct
@@ -14,6 +15,9 @@ struct
 
   structure X = UnambiguousVScheme
   structure F = FirstOrderScheme
+  structure P  = Pattern
+  structure LU = ListUtil
+  structure SU = VSchemeUtils
 
   infix 3 <*>   val op <*> = Error.<*>
   infixr 4 <$>  val op <$> = Error.<$>
@@ -51,6 +55,8 @@ struct
       | exp (e as X.LETX (X.LETREC, _, _))  = reject "(letrec (...) ...)"
       | exp (e as X.LAMBDA (formals, _)) =
           reject (getOpt (whenSmall (expString e), lambdaOf formals))
+      | exp (X.CASE c) = F.CASE <$> Case.liftError (Case.map exp c)
+      | exp (X.CONSTRUCTED (con, es)) = curry F.CONSTRUCTED con <$> exps es
     and exps es = Error.list (map exp es)
     and bindings bs = Error.list (map (fn (x, e) => pair x <$> exp e) bs)
 
@@ -80,6 +86,8 @@ struct
       | exp (F.SETLOCAL (x, e))  = C.SET (x, exp e)
       | exp (F.SETGLOBAL (x, e)) = C.SET (x, exp e)
       | exp (F.WHILEX (c, body)) = C.WHILEX (exp c, exp body)
+      | exp (F.CONSTRUCTED (con, es)) = SU.constructed con (map exp es)
+      | exp (F.CASE c) = C.CASE (Case.map exp c)
     and binding (x, e) = (x, exp e)
 
     fun def (F.VAL (x, e)) = C.VAL (x, exp e)
@@ -90,6 +98,7 @@ struct
 
   in
     val embed = def
+    val embedExp = exp
   end
 
 end

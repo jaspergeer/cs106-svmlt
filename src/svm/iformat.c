@@ -25,6 +25,10 @@ Instruction eR1   (unsigned opcode, unsigned x) {
   return eR3(opcode, x, 0, 0);
 }
 
+Instruction eR1U8  (unsigned opcode, unsigned x, unsigned y) {
+  return eR3(opcode, x, y, 0);
+}
+
 Instruction eR0   (unsigned opcode) {
   return eR3(opcode, 0, 0, 0);
 }

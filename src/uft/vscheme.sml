@@ -4,6 +4,9 @@
 
 structure VScheme = struct
   type name = string
+
+  type pat = Pattern.pat
+
   datatype exp = LITERAL of value
                | VAR     of name
                | SET     of name * exp
@@ -13,6 +16,10 @@ structure VScheme = struct
                | APPLY   of exp * exp list
                | LETX    of let_kind * (name * exp) list * exp
                | LAMBDA  of lambda
+               | COND of (exp * exp) list  (* for embedding only *)
+               | VCON of Pattern.vcon
+               | CASE of exp Case.t
+
   and let_kind = LET | LETREC
   and    value = SYM       of name
                | INT       of int
@@ -46,6 +53,8 @@ structure UnambiguousVScheme = struct
                | PRIMCALL  of primitive * exp list
                | LETX      of let_kind * (name * exp) list * exp
                | LAMBDA    of lambda
+               | CASE        of exp Case.t
+               | CONSTRUCTED of exp Constructed.t
   and    value = SYM       of name
                | INT       of int
                | REAL      of real
@@ -78,6 +87,8 @@ structure UnambiguousVScheme = struct
     | whatIs (LETX (LET, bs, body))           = "LET"
     | whatIs (LETX (LETREC, bindings, body))  = "LETREC"
     | whatIs (LAMBDA (xs, e))                 = "LAMBDA"
+    | whatIs (CASE _) = "CASE"
+    | whatIs (CONSTRUCTED _) = "CONSTRUCTED"
 
 end
 
@@ -109,6 +120,13 @@ structure VSchemeUtils : sig
   val setnth : exp -> int -> exp -> exp
 
   val setcar : exp -> exp -> exp
+
+  val constructed : Pattern.vcon -> exp list -> exp
+  val block : exp list -> exp
+  val switchVcon : exp -> (VScheme.value * exp) list -> exp option -> exp
+  val withJoinPoints : exp list -> exp -> exp
+  val joinAt : int -> exp
+
 end
   =
 struct
@@ -129,4 +147,30 @@ struct
 
   fun setnth e 0 v = S.APPLY (S.VAR "set-car!", [e, v])
     | setnth e k v = setnth (cdr e) (k - 1) v
+
+  fun constructed con es = S.APPLY (S.VCON con, es)
+
+  fun switchVcon e choices default =
+    let fun vpat (S.SYM con) = Pattern.APPLY (con, [])
+          | vpat (S.INT k) = Pattern.INT k
+          | vpat _ = Impossible.impossible "bad value in SWITCH_VCON"
+        fun choice (value, e) = (vpat value, e)
+        val last = case default
+                    of NONE => []
+                     | SOME e => [(Pattern.WILDCARD, e)]
+    in  S.CASE (e, map choice choices @ last)
+    end
+
+  fun joinAt k = S.APPLY (S.VAR "$join", [S.LITERAL (S.INT k)])
+
+  fun withJoinPoints es e =
+    let val join_case =
+          S.CASE (S.VAR "n", ListUtil.mapi (fn (i, e) => (Pattern.INT i, e)) es)
+        val join_fun = S.LAMBDA (["n"], join_case)
+    in  S.LETX (S.LET, [("$join", join_fun)], e)
+    end
+
+  fun block [] = Impossible.impossible "empty block"
+    | block (e :: es) = S.APPLY (e, es)
+
 end

@@ -13,6 +13,7 @@ structure Env :> sig
   val binds : 'a env * name -> bool
 
   val toString : ('a -> string) -> 'a env -> string
+  val <+> : 'a env * 'a env -> 'a env  (* BPC, chap 5 *)
 end
   =
 struct
@@ -47,6 +48,10 @@ struct
     let fun binding (x, a) = concat [x, " |--> ", elem a]
     in  concat ["{ ", String.concatWith ", " (map binding rho), " }"]
     end
+
+
+  infix 6 <+>
+  fun pairs <+> pairs' = pairs' @ pairs
 
 end
   

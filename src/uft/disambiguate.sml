@@ -17,6 +17,8 @@ struct
   structure P = Primitive
   structure S = VScheme
   structure X = UnambiguousVScheme   (* "X" for "Extended Scheme" *)
+  structure LU = ListUtil
+  structure SU = VSchemeUtils
 
   (**************** possible referents for a name ****************)
 
@@ -67,6 +69,7 @@ struct
           | exp (S.IFX (e1, e2, e3))    = X.IFX (exp e1, exp e2, exp e3)
           | exp (S.WHILEX (e1, e2))     = X.WHILEX (exp e1, exp e2)
           | exp (S.BEGIN es)            = X.BEGIN (map exp es)
+          | exp (S.APPLY (S.VCON con, es)) = X.CONSTRUCTED (con, map exp es)
           | exp (S.APPLY (e, es)) = 
               raise LeftAsExercise "disambiguate APPLY"
           | exp (S.LETX (S.LET, bindings, e)) =
@@ -81,6 +84,12 @@ struct
               in  X.LETX (X.LETREC, bs, e)
               end
           | exp (S.LAMBDA (xs, e)) = X.LAMBDA (xs, exp' (e, xs @ locals))
+          | exp (S.VCON k) = X.CONSTRUCTED (k, [])
+          | exp (S.CASE (e, choices)) =
+              let fun choice (pat, e) = (pat, exp' (e, PatUtil.bound pat @ locals))
+              in  X.CASE (exp e, map choice choices)
+              end
+          | exp (S.COND _) = Impossible.impossible "parser produced a COND form"
     in  
         exp e
     end
@@ -95,7 +104,6 @@ struct
         X.CHECK_EXPECT (expString e, exp' (e, []), expString e', exp' (e', []))
     | def (S.CHECK_ASSERT e) =
         X.CHECK_ASSERT (expString e, exp' (e, []))
-
   val disambiguate = def
 
   (***************** re-embedding into ambiguous code *************)
@@ -126,6 +134,8 @@ struct
          - Everything else maps one to one.
      *)
 
+    fun apply f es = S.APPLY (S.VAR f, es)
+
     fun exp e = (case maybeValue e
                    of SOME v => S.LITERAL v
                     | NONE => exp' e)
@@ -142,6 +152,8 @@ struct
       | exp' (X.BEGIN es)               = S.BEGIN (map exp es)
       | exp' (X.WHILEX (c, body))       = S.WHILEX (exp c, exp body)
       | exp' (X.LAMBDA (xs, e))         = S.LAMBDA (xs, exp e)
+      | exp' (X.CASE c)                 = S.CASE (Case.map exp c)
+      | exp' (X.CONSTRUCTED (vcon, es)) = S.APPLY (S.VCON vcon, map exp es)
     and binding (x, e) = (x, exp e)
 
     fun def (X.EXP e)               = S.EXP (exp e)

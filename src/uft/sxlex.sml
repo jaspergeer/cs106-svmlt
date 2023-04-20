@@ -91,7 +91,9 @@ struct
   fun isMyDelim c = Char.isSpace c orelse Char.contains "()[]{};" c
 
 
-  val atom = NAME  (* could change to recognize reserved words *)
+  fun atom "#t" = SHARP true
+    | atom "#f" = SHARP false
+    | atom x = NAME x
 
   val whitespace = many (sat Char.isSpace one)
 

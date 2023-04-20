@@ -17,6 +17,17 @@ struct
   structure E  = Env
   structure P  = Primitive
 
+  structure MC = MatchCompiler(type register = int
+                               fun regString r = "$r" ^ Int.toString r
+                              )
+
+  structure MV = MatchViz(structure Tree = MC)
+  val vizTree = MV.viz (WppScheme.expString o CSUtil.embedExp)
+
+
+  infix 6 <+>
+  val op <+> = Env.<+>
+
   fun fst (x, y) = x
   fun member x = List.exists (fn y => x = y)
 

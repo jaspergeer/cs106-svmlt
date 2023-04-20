@@ -35,7 +35,9 @@ structure Error :> ERROR = struct
 
   fun mapList f = errorList o List.map f
 
-
+  fun option NONE = OK NONE
+    | option (SOME (OK x)) = OK (SOME x)
+    | option (SOME (ERROR m)) = ERROR m
 
 end
 

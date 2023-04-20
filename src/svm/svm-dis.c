@@ -40,6 +40,15 @@ int main(int argc, char **argv) {
     VMState vm = newstate();
     showpc = svmdebug_value("pc");
 
+    if (argv[1] && !strcmp(argv[1], "-pc")) {
+      argv++;
+      argc--;
+      showpc = "true";
+    } else if (argv[1] && *argv[1] == '-') {
+      fprintf(stderr, "%s: unknown option %s\n", argv[0], argv[1]);
+      exit(1);
+    }
+
     if (argc == 1) {
       disfile(vm, stdin);
     } else {
@@ -58,11 +67,7 @@ int main(int argc, char **argv) {
         printf("------------------------------------\n");
         printf(";    function at literal %d\n", i);
         struct VMFunction *f = v.f;
-        for (int j = 0; j < f->size; j++) {
-          if (showpc) printf("%3d: ", j);
-          printasm(stdout, vm, f->instructions[j]);
-          fputs("\n", stdout);
-        }
+        dismodule(vm, f);
       }
     }
         

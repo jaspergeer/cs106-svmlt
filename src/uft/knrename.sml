@@ -19,6 +19,7 @@ struct
 
   fun curry  f x y   = f (x, y)
   fun curry3 f x y z = f (x, y, z)
+  fun pair x y = (x, y)
 
   (* AsmLex.registerNum takes a string starting with "r" followed by a number n
      such that 0 <= n < 256, and returns n *)

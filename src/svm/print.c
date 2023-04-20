@@ -6,6 +6,7 @@
 
 #include <assert.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include "name.h"
 #include "print.h"
@@ -159,7 +160,6 @@ void installprinters(void) {
     installprinter('%', printpercent);
 }
 
-
 static void print_list(Printbuf output, Value v) {
   Value cons = v;
   const char *prefix = "";
@@ -176,6 +176,28 @@ static void print_list(Printbuf output, Value v) {
   }
   bufputs(output, ")");
 }
+    
+
+static void print_block(Printbuf output, struct VMBlock *block, int depth) {
+  if (depth == 0) {
+    char address[80];
+    snprintf(address, sizeof address, "[block @%p]", (void *) block);
+    bufputs(output, address);
+  } else {
+    const char *prefix = "[";
+    for (int i = 0; i < block->nslots; i++) {
+      bufputs(output, prefix);
+      Value v = block->slots[i];
+      if (v.tag == Block)
+        print_block(output, v.block, depth - 1);
+      else
+        bprint(output, "%v", v);
+      prefix = " ";
+    }
+    bufputs(output, "]");
+  }
+}
+
     
 
 void bprintvalue(Printbuf output, va_list_box *box) {
@@ -205,7 +227,7 @@ void bprintvalue(Printbuf output, va_list_box *box) {
       break;
     case Table:      OUTPUT("table %p", (void *) v.table); break;
     case Seq:        OUTPUT("sequence %p", (void *) v.seq); break;
-    case Block:      OUTPUT("gc-block %p", (void *) v.block); break;
+    case Block:      print_block(output, v.block, 3); break;
     case CFunction:  OUTPUT("primitive %s", v.cf->name); break;
     case VMFunction: OUTPUT("function %p", (void *) v.f); break;
     case VMClosure:  OUTPUT("closure %p", (void *) v.hof); break;

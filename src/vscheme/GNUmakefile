@@ -33,3 +33,10 @@ $(BUILD)/predef-fo.vo: $(BIN)/vscheme $(BIN)/uft
 
 $(BUILD)/predef-ho.vo: $(BIN)/vscheme $(BIN)/uft
 	$(BIN)/vscheme -predef | $(BIN)/uft ho-vo > $@
+
+predef: $(BUILD)/predef-es.vo
+
+$(BUILD)/predef-es.vo: $(BIN)/uft $(BIN)/vscheme $(TOP)/src/vscheme/predefs.es
+	$(BIN)/uft es-vo $(TOP)/src/vscheme/predefs.es > $@
+
+

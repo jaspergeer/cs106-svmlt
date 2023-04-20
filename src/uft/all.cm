@@ -9,6 +9,7 @@ group is
   env.sml         (* environment abstraction *)
   set.sml         (* set abstraction *)
   ioutil.sml      (* convenience functions for I/O *)
+  listutil.sml    (* list functions missing from Moscow ML *)
 
   (***** all the languages we'll eventually translate ****)
 
@@ -44,6 +45,7 @@ group is
 
   primitives.sml   (* given to students; properties of primitives *)
 
+  case.sml      (* introduction and elimination forms for constructed data *)
   vscheme.sml   (* vscheme and utilities; given to students *)
 
   pp.cm              (* vscheme prettyprinter, with infrastructure; given to students *)
@@ -51,7 +53,9 @@ group is
   ppwrapper.sml
   wppscheme.sml
 
-  disambiguate.sml  (* vscheme disambiguation; completed by students *)
+  match-compiler.sml (* pattern-match compiler; completed by students *)
+  match-viz.sml      (* visualization of decision trees *)
+  disambiguate.sml   (* vscheme disambiguation; completed by students *)
 
   sxlex.sml          (* vscheme parser (and S-expressions); given to students *)
   sx.sml

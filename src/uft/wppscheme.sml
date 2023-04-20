@@ -6,6 +6,7 @@ structure WppScheme :> sig
   val pp    : VScheme.def -> Wppx.doc
   val ppexp : VScheme.exp -> Wppx.doc
   val expString : VScheme.exp -> string  (* for use with check and expect *)
+  val patString : Pattern.pat -> string
 end
   =
 struct
@@ -57,6 +58,13 @@ struct
   fun kw k docs = P.group (te "(" ++ te k ++ te " " ++ P.seq cn id docs ++ te ")")
   fun kwbreak k b docs = P.group (te "(" ++ te k ++ te " " ++ b ++ P.seq cn id docs ++ te ")")
 
+  structure Pat = Pattern
+  fun pat (Pat.INT k) = P.int k
+    | pat (Pat.VAR x) = te x
+    | pat (Pat.WILDCARD) = te "_"
+    | pat (Pat.APPLY (vcon, [])) = te vcon
+    | pat (Pat.APPLY (vcon, pats)) = nest 3 (wrap (te vcon :: map pat pats))
+
   fun exp e =
      let
          fun pplet thekw bs e =
@@ -88,6 +96,8 @@ struct
                 nest 3 (kw "while" (map exp [e1, e2]))
             | S.BEGIN es => 
                 nest 3 $ bracket [te "begin", cn, P.seq cn exp es]
+            | S.APPLY (S.VCON k, []) =>
+                te k
             | S.APPLY (e, es) => 
                 nest 3 (wrap (map exp (e::es)))
             | S.LETX (S.LET, bs as [(x, e')], e) =>
@@ -98,12 +108,22 @@ struct
                        | _ => pplet "let*" bs e
                 end
             | S.LETX (lk, bs, e) => 
-                let fun binding (x, e) = wraps [te x, exp e]
-                    val bindings = P.seq on binding bs
+                let fun binding (x, e) = nest 3 (wraps [te x, exp e])
+                    val bindings = P.seq cn binding bs
                 in  nest 3 (kwbreak (letkeyword lk) on [wrap [bindings], exp e])
                 end
             | S.LAMBDA (xs, body) =>
                 nest 3 (kw "lambda" [wrap (map te xs), exp body])
+            | S.COND qas =>
+                let fun qa (q, a) = nest 6 (wraps [exp q, exp a])
+                in  nest 3 (kw "cond" [on, P.seq cn qa qas])
+                end
+            | S.CASE (e, choices) => 
+                let fun choice (p, e) = nest 6 (wraps [pat p, exp e])
+                in  nest 3 (kw "case" [exp e, P.seq cn choice choices])
+                end
+            | S.VCON "'()" => te "'()"
+            | S.VCON k => te ("'" ^ k)
      end
  
 
@@ -130,6 +150,7 @@ struct
        | _ => s
   
   val expString = stripFinalNewline o Wppx.toString 60 o ppexp
+  val patString = stripFinalNewline o Wppx.toString 60 o pat
 
 end
 

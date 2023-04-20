@@ -1,0 +1,13 @@
+#!/bin/ksh
+
+for i
+do
+  base="$(basename "$i" .scm)"
+  dir="$(dirname "$i")"
+  dot="$dir/$base.dot"
+  pdf="$dir/$base.pdf"
+
+  env MATCHVIZ="$dot" uft es-kn "$i" > /dev/null
+  dot -Tpdf -o "$pdf" "$dot"
+  open "$pdf"
+done

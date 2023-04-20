@@ -23,4 +23,7 @@ signature ERROR = sig
   val list : 'a error list -> 'a list error
   val mapList : ('a -> 'b error) -> ('a list -> 'b list error)
     (* law: mapList f xs = list (List.map f xs) *)
+
+  (* list error out of option *)
+  val option : 'a error option -> 'a option error
 end

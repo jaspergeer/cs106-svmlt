@@ -23,6 +23,8 @@ structure ClosedScheme = struct
     | CAPTURED  of int
     | CLOSURE   of closure
     | LETREC    of (name * closure) list * exp
+    | CONSTRUCTED of exp Constructed.t
+    | CASE        of exp Case.t
   withtype closure = (name list * exp) * exp list (* funcode, captured variables *)
   type funcode = name list * exp (* invariant: has no free (LOCAL) variables *)
 
@@ -35,7 +37,8 @@ end
 
 
 structure CSUtil :> sig
-  val embed : ClosedScheme.def -> VScheme.def
+  val embed    : ClosedScheme.def -> VScheme.def
+  val embedExp : ClosedScheme.exp -> VScheme.exp
     (* exploit closure conversion; runnable *)
 end
   = 
@@ -73,6 +76,8 @@ struct
     | exp (C.SETLOCAL (x, e))  = S.SET (x, exp e)
     | exp (C.SETGLOBAL (x, e)) = S.SET (x, exp e)
     | exp (C.WHILEX (c, body)) = S.WHILEX (exp c, exp body)
+    | exp (C.CASE c)           = S.CASE (Case.map exp c)
+    | exp (C.CONSTRUCTED (con, es)) = SU.constructed con (map exp es)
   and binding (x, e) = (x, exp e)
 
   fun def (C.EXP e) = S.EXP (exp e)
@@ -82,5 +87,6 @@ struct
     | def (C.CHECK_ASSERT (s, e)) = S.CHECK_ASSERT (exp e)
 
   val embed = def
+  val embedExp = exp
 
 end

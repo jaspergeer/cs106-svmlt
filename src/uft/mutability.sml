@@ -21,6 +21,8 @@ struct
     | hasLambda (X.BEGIN es)               = anyLambda es
     | hasLambda (X.WHILEX (c, body))       = hasLambda c orelse hasLambda body
     | hasLambda (X.LAMBDA (xs, e))         = true
+    | hasLambda (X.CASE c) = Case.exists hasLambda c
+    | hasLambda (X.CONSTRUCTED (_, es)) = anyLambda es
   and anyLambda es = List.exists hasLambda es
 
   fun setsLocal (X.FUNCALL (f, args))      = anySet (f :: args)
@@ -35,6 +37,8 @@ struct
     | setsLocal (X.BEGIN es)               = anySet es
     | setsLocal (X.WHILEX (c, body))       = setsLocal c orelse setsLocal body
     | setsLocal (X.LAMBDA (xs, e))         = setsLocal e
+    | setsLocal (X.CASE c)                 = Case.exists setsLocal c
+    | setsLocal (X.CONSTRUCTED (_, es))    = anySet es
   and anySet es = List.exists setsLocal es
 
   fun badExp e = hasLambda e andalso setsLocal e

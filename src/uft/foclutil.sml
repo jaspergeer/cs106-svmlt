@@ -22,6 +22,8 @@ struct
     | exp (F.SETLOCAL (x, e))  = C.SETLOCAL (x, exp e)
     | exp (F.SETGLOBAL (x, e)) = C.SETGLOBAL (x, exp e)
     | exp (F.WHILEX (c, body)) = C.WHILEX (exp c, exp body)
+    | exp (F.CASE c)           = C.CASE (Case.map exp c)
+    | exp (F.CONSTRUCTED c)    = C.CONSTRUCTED (Constructed.map exp c)
   and binding (x, e) = (x, exp e)
 
   fun def (F.VAL (x, e)) = C.VAL (x, exp e)

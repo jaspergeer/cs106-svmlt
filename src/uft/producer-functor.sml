@@ -28,7 +28,7 @@ struct
 
   fun produce p inputs =
     case p inputs
-      of NONE => E.ERROR (species ^ " did not recognize the input")
+      of NONE => E.ERROR (species ^ " did not recognize this input: " ^ show inputs)
        | SOME (a, []) => a
        | SOME (a, leftover) =>
            let val outcome =

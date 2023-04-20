@@ -5,7 +5,7 @@
     but don't need to look at the implementation *)
 
 structure Languages :> sig
-  datatype language = HOX | HO | FO | CL | KN | VS | VO
+  datatype language = ES | HOX | HO | FO | CL | KN | VS | VO
   val table : { language : language, short : string, description : string } list
 
   val find : string -> language option
@@ -14,12 +14,13 @@ structure Languages :> sig
 end
   =
 struct
-  datatype language = HOX | HO | FO | CL | KN | VS | VO
+  datatype language = ES | HOX | HO | FO | CL | KN | VS | VO
 
   fun inject (l, s, d) = { language = l, short = s, description = d }
 
   val table = map inject
-    [ (HOX, "hox", "Higher-order vScheme with mutable variables in closures")
+    [ (ES,  "es",  "eScheme (ho vScheme plus Erlang-style pattern matching)")
+    , (HOX, "hox", "Higher-order vScheme with mutable variables in closures")
     , (HO,  "ho",  "Higher-order vScheme")
     , (FO,  "fo",  "First-order vScheme")
     , (CL,  "cl",  "First-order vScheme with closure and capture forms")
@@ -42,7 +43,9 @@ struct
     | pred FO  = SOME HO
     | pred HO  = SOME HOX
     | pred HOX = NONE
+    | pred ES  = NONE
 
-  fun le (from, to) =
-    from = to orelse (case pred to of SOME x => le (from, x) | NONE => false)
+  fun le (ES, _) = true
+    | le (from, to) =
+        from = to orelse (case pred to of SOME x => le (from, x) | NONE => false)
 end

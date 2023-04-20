@@ -30,6 +30,7 @@ Instruction eR0   (Opcode opcode);
 Instruction eR1   (Opcode opcode, unsigned x);
 Instruction eR2   (Opcode opcode, unsigned x, unsigned y);
 Instruction eR3   (Opcode opcode, unsigned x, unsigned y, unsigned z);
+Instruction eR1U8 (Opcode opcode, unsigned x, unsigned y);
 Instruction eR2U8 (Opcode opcode, unsigned x, unsigned y, unsigned z);
 Instruction eR1U16(Opcode opcode, unsigned x, unsigned yz);
 Instruction eR0I24(Opcode opcode, int32_t xyz);

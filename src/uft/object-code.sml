@@ -27,6 +27,9 @@ structure ObjectCode = struct
                *)
 
       | REGINT     of operator * reg * reg * int
+      | GOTO_VCON  of reg * int (* number of succeeding jump-table entries *)
+      | JUMP_TABLE_ENTRY of (int * int * literal)
+             (* (arity, PC-relative offset, vcon value) *)
 
 
     type module = instr list
@@ -65,6 +68,9 @@ struct
     | instr (O.REGINT (opr, r1, r2, offset)) =
                concatSp [opr, int r1, int r2, int offset]
     | instr (O.LOADFUNC _) = Impossible.impossible "LOADFUNC reached instr"
+    | instr (O.GOTO_VCON (r, n)) = concatSp ["goto-vcon", int r, int n]
+    | instr (O.JUMP_TABLE_ENTRY (arity, offset, con)) =
+        concatSp ("jump-table-entry" :: int arity :: int offset :: literal con)
 
   fun add (O.LOADFUNC (r, k, body), tail) =
         list (concatSp [".load", int r, "function", int k]) body tail

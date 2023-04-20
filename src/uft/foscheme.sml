@@ -18,6 +18,8 @@ structure FirstOrderScheme = struct
     | FUNCALL   of exp * exp list
     | PRIMCALL  of Primitive.primitive * exp list
     | LET       of (name * exp) list * exp
+    | CASE        of exp Case.t
+    | CONSTRUCTED of exp Constructed.t
 
   datatype def  = VAL    of name * exp
                 | DEFINE of name * (name list * exp)

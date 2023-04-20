@@ -16,6 +16,7 @@ end
 
 structure SxUtil :> sig
   val whatis : Sx.sx -> string
+  val show : Sx.sx -> string
 end
   =
 struct
@@ -24,6 +25,12 @@ struct
     | whatis (Sx.SYM _)  = "a symbol"
     | whatis (Sx.REAL _) = "a real number"
     | whatis (Sx.LIST _) = "a list"
+
+  fun show (Sx.INT i) = Int.toString i
+    | show (Sx.BOOL b) = if b then "#t" else "#f"
+    | show (Sx.SYM s)  = s
+    | show (Sx.REAL x) = Real.toString x
+    | show (Sx.LIST sxs) = "(" ^ String.concatWith " " (map show sxs) ^ ")"
 end
 
 

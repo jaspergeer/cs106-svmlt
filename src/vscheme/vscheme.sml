@@ -1141,8 +1141,13 @@ and    value = SYM       of name
              | CLOSURE   of lambda * value ref env
              | PRIMITIVE of primitive
              | ARRAY     of value array
+             | LETREC_DEFERRED of value ref
 withtype primitive = exp * value list -> value (* raises RuntimeError *)
      and lambda    = name list * exp
+
+fun undefer (LETREC_DEFERRED p) = undefer (!p)
+  | undefer v = v
+
 (* definition of [[def]] for \uscheme 305b *)
 datatype def  = VAL    of name * exp
               | EXP    of exp
@@ -1175,6 +1180,8 @@ val _ = op valueString : value -> string
   | valueString (PRIMITIVE _) = "<primitive>"
   | valueString (ARRAY vs) =
     "[| " ^ String.concatWith " " (Array.foldr (fn (v, vs) => valueString v :: vs) [] vs) ^ " |]"
+  | valueString (LETREC_DEFERRED p) = "deferred " ^ valueString (!p)
+
 (* definition of [[expString]] for \uscheme S221a *)
 fun expString e =
   let fun bracket s = "(" ^ s ^ ")"
@@ -1219,6 +1226,7 @@ fun embedBool b = BOOLV b
 fun projectBool (BOOLV false) = false
   | projectBool (LUANIL)      = false
   | projectBool _             = true
+val projectBool = projectBool o undefer
 (* type declarations for consistency checking *)
 val _ = op embedBool   : bool  -> value
 val _ = op projectBool : value -> bool
@@ -1420,6 +1428,10 @@ val _ = op bindings  : (name * exp) list parser
      , ("(cond ([q a] ...))",
         let fun desugarCond qas = raise LeftAsExercise "desugar cond"
             val qa = bracket ("[question answer]", pair <$> exp <*> exp)
+            fun addCond ((question, answer), otherwise) =
+                  IFX (question, answer, otherwise)
+            val nomatch = APPLY (VAR "error", [LITERAL (SYM "no case matched in `cond`")])
+            val desugarCond = foldr addCond nomatch
      (* type declarations for consistency checking *)
      val _ = op desugarCond : (exp * exp) list -> exp
         in  desugarCond <$> many qa
@@ -1652,9 +1664,11 @@ val _ = op stringsxdefs : string * string list               -> xdef stream
                   val bfree = foldl addFree (free body) es
               in  union (s, diff (bfree, xs))
               end
-          | addFree (LETX (LETSTAR, [], body), s) = s
+          | addFree (LETX (LETSTAR, [], body), s) = addFree (body, s)
           | addFree (LETX (LETSTAR, (x, e) :: bs, body), s) =
-              union (addFree (e, s), diff (addFree (body, []), [x]))
+              union ( addFree (e, s)
+                    , diff (addFree (LETX (LETSTAR, bs, body), []), [x])
+                    )
 
     in  addFree (e, [])
     end
@@ -1691,7 +1705,7 @@ fun eval (e, rho) =
         | ev (LAMBDA (xs, e)) = CLOSURE ((xs, e), rho)
         (* more alternatives for [[ev]] for \uscheme 308e *)
         | ev (e as APPLY (f, args)) = 
-               (case ev f
+               (case undefer (ev f)
                   of PRIMITIVE prim => prim (e, map ev args)
                    | closure as PAIR (ref (f as CLOSURE _), _) =>
                        ev (APPLY (LITERAL f, LITERAL closure :: args))
@@ -1708,8 +1722,8 @@ fun eval (e, rho) =
                                       " but got (" ^ spaceSep (map valueString actuals) ^ ")"
                                                )
                                        end
-                   | v => raise RuntimeError ("Applied non-function " ^
-                                                                  valueString v)
+                   | v => raise RuntimeError ("Applied " ^ expString f ^
+                                              ", whose value is " ^ valueString v)
                )
         (* more alternatives for [[ev]] for \uscheme 309b *)
         | ev (LETX (LET, bs, body)) =
@@ -1724,24 +1738,39 @@ fun eval (e, rho) =
             end
         (* more alternatives for [[ev]] for \uscheme 309c *)
         | ev (LETX (LETREC, bs, body)) =
-            let val (names, values) = ListPair.unzip bs
+            if true then
+              let val (names, values) = ListPair.unzip bs
+                  fun fresh _ = (ref o LETREC_DEFERRED o ref o unspecified) ()
+                  val rho' = bindList (names, map fresh values, rho)
+                  fun update (x, e) =
+                        let val v = eval (e, rho')
+                            val loc = ! (find (x, rho'))
+                        in  case loc
+                              of LETREC_DEFERRED p => p := v
+                               | _ => raise InternalError "letrec not deferred"
+                        end
+              in  List.app update bs;
+                  eval (body, rho')
+              end
+            else
+              let val (names, values) = ListPair.unzip bs
 
-(* if any expression in [[values]] is not a [[lambda]], reject the [[letrec]] S208g *)
-                fun insistLambda (LAMBDA _) = ()
-                  | insistLambda e =
-                      raise RuntimeError (
-                                 "letrec tries to bind non-lambda expression " ^
-                                          expString e)
-                val _ = app insistLambda values
-                val rho' =
-                  bindList (names, map (fn _ => ref (unspecified())) values, rho
-                                                                               )
-                val updates = map (fn (n, e) => (n, eval (e, rho'))) bs
-        (* type declarations for consistency checking *)
-        val _ = List.app : ('a -> unit) -> 'a list -> unit
-            in  List.app (fn (n, v) => find (n, rho') := v) updates; 
-                eval (body, rho')
-            end
+  (* if any expression in [[values]] is not a [[lambda]], reject the [[letrec]] S208g *)
+                  fun insistLambda (LAMBDA _) = ()
+                    | insistLambda e =
+                        raise RuntimeError (
+                                   "letrec tries to bind non-lambda expression " ^
+                                            expString e)
+                  val _ = app insistLambda values
+                  val rho' =
+                    bindList (names, map (fn _ => ref (unspecified())) values, rho
+                                                                                 )
+                  val updates = map (fn (n, e) => (n, eval (e, rho'))) bs
+          (* type declarations for consistency checking *)
+                  val _ = List.app : ('a -> unit) -> 'a list -> unit
+              in  List.app (fn (n, v) => find (n, rho') := v) updates; 
+                  eval (body, rho')
+              end
 (* type declarations for consistency checking *)
 val _ = op embedList : value list -> value
 (* type declarations for consistency checking *)
@@ -2125,6 +2154,7 @@ val primitiveBasis =
                                                           true | _ => false)) ::
                         (* primitives for \uscheme\ [[::]] S209b *)
                         ("mkclosure", binaryOp (fn (a, b) => PAIR (ref a, ref b))) ::
+                        ("block", embedList) ::
                         ("cons", binaryOp (fn (a, b) => PAIR (ref a, ref b))) ::
                         ("car",  unaryOp  (fn (PAIR (ref car, _)) => car 
                                             | NIL => raise RuntimeError
@@ -2249,7 +2279,21 @@ val primitiveBasis =
                      , "    (car xs)"
                      , "    (nth (- n 1) (cdr xs))))"
                      , ""
+                     , "(define getblockslot (block k) (nth block k))"
                      , "(define CAPTURED-IN (i xs) (nth (+ i 1) xs))"
+
+, "(define list-of-length? (v k)"
+, "  (if (= k 0)"
+, "      (null? v)"
+, "      (&& (pair? v) (list-of-length? (cdr v) (- k 1)))))"
+
+, "(define matches-vcon-arity? (v con k)"
+, "  (if (= k 0)"
+, "      (= v con)"
+, "      (&& (list-of-length? v (+ k 1))"
+, "          (= (car v) con))))"
+, "(define getblockslot (v k) (nth k v))"
+
                      , 
 ";  definitions of predefined uScheme functions [[and]], [[or]], and [[not]] 97a "
                      , "(define and (b c) (if b  c  b))"
@@ -2386,6 +2430,8 @@ val primitiveBasis =
 , "    (if pair"
 , "        (set-cdr! pair v)"
 , "        (set-cdr! t (cons (cons k v) (cdr t))))))"
+, ""
+, "(define non-atomic (_ v) v)"
 
                       ]
 
