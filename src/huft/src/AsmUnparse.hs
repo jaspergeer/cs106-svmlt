@@ -56,6 +56,7 @@ unparse1 i = case i of
   A.DefLabel label -> unwords ["def", label]
   A.GotoLabel label -> unwords ["goto", label]
   A.IfGotoLabel r label -> unwords ["if", reg r, "goto", label]
+  A.GotoVCon r ls -> error "implement me (module 12)"
   _ -> error "IMPOSSIBLE: unknown assembly instruction"
 
 unparse :: [A.Instr] -> [String]

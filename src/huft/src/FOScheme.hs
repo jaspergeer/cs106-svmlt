@@ -2,6 +2,9 @@ module FOScheme where
 import qualified ObjectCode as O
 import qualified Primitives as P
 
+import qualified Case
+import qualified Constructed
+
 type Name = String
 
 -- why uft has 2 datatype keywords
@@ -18,6 +21,9 @@ data Exp = Literal Literal
          | FunCall Exp [Exp]
          | PrimCall P.Primitive [Exp]
          | Let [(Name, Exp)] Exp
+        -- module 12
+         | Constructed (Constructed.T Exp)
+         | Case (Case.T Exp)
          deriving Show
 
 data Def = Val Name Exp

@@ -1,5 +1,8 @@
 module VScheme where
 
+import qualified Pattern as P
+import qualified Case
+
 type Name = String
 
 data Exp = Literal Value
@@ -11,6 +14,8 @@ data Exp = Literal Value
          | Apply   Exp [Exp]
          | LetX    LetKind [(Name, Exp)] Exp
          | Lambda  [Name] Exp
+         | VCon    P.VCon
+         | Case    (Case.T Exp)
          deriving Show
 
 data LetKind = Let | LetRec deriving Show

@@ -4,6 +4,7 @@ module KNF where
 --    the utility functions.
 import qualified ObjectCode as O
 import qualified Primitives as P
+import qualified Pattern
 
 type Literal = O.Literal
 type VMOP = P.Primitive
@@ -26,6 +27,8 @@ data Exp a = Literal Literal
            | VMOPGLO VMOP [a] Literal
            | Captured Int
            | ClosureX (Closure a)
+           | Block [a]
+           | SwitchVCon a [((Pattern.VCon, Int), Exp a)] (Exp a)
            deriving Show
 
 type Funcode a = ([a], Exp a) -- lambda with no free names

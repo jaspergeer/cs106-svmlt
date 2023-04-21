@@ -11,10 +11,13 @@ module ClScheme where
 
 import qualified ObjectCode as O
 import qualified Primitives as P
+import qualified Case
+import qualified Constructed
+
 
 type Name = String
 -- funcode, captured variable
-data Closure = Closure [Name] Exp [Exp]
+data Closure = Closure [Name] Exp [Exp] deriving Show
 -- invariant: has no free (Local) variables
 data FunCode = FunCode [Name] Exp
 
@@ -32,6 +35,10 @@ data Exp = Literal O.Literal
   | Captured Int
   | ClosureX Closure
   | LetRec [(Name, Closure)] Exp
+  -- module 12
+  | Constructed (Constructed.T Exp)
+  | Case (Case.T Exp)
+  deriving Show
 
 data Def = Val Name Exp
           | Define Name FunCode

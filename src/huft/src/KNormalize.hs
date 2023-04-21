@@ -109,6 +109,8 @@ exp rho a e =
           f' x (\y -> map' f' xs (\ys -> k (y:ys)))
       in map' (closure . snd) bindings
         (\cs -> K.LetRec (zip ts cs) (exp rho' a' body))
+    (C.Constructed c) -> undefined -- module 12
+    (C.Case c) -> undefined -- module 12
     -- _ -> error $ show e
 
 -- This function does almost the same thing as the code you have written 

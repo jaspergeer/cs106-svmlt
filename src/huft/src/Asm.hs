@@ -10,6 +10,8 @@ data Instr
   | DefLabel Label
   | GotoLabel Label
   | IfGotoLabel O.Reg Label
+  | GotoVCon O.Reg [(O.Literal, Int, String)]
+    -- module 12: (vcon name, arity, label)
   deriving Show
 
 type Binop = String

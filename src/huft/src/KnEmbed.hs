@@ -85,6 +85,8 @@ def e = S.Exp (exp e)
                         bindings' = map (\(f, closure) -> (f, exp (K.ClosureX closure))) bindings
                         body' = exp body
                     in S.LetX S.LetRec bindings' body'
+                K.Block _ -> error "Left as Exercise"
+                K.SwitchVCon {} -> error "Left as Exercise"
 
 -- What will happen if the offset of the VMOPL is not a string in getglobal case:
 -- Ans: impossible, should have some error message for debugging,

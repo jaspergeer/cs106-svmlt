@@ -8,6 +8,9 @@ import qualified Data.Set as S
 import qualified ObjectCode as O
 import qualified Primitives as P
 
+import qualified Case
+import qualified Constructed
+
 -- nr's set signature
 
 --   type 'a set
@@ -77,6 +80,7 @@ closedExp captured e =
                 bindings = map (\(n, e) -> (n, closure (unLambda e))) bs
               in C.LetRec bindings (exp e)
             (X.LambdaX (X.Lambda xs e)) -> C.ClosureX (closure (X.Lambda xs e))
+            (X.Case c) -> C.Case $ fmap exp c
     in exp e
 
 free :: X.Exp -> S.Set X.Name
@@ -97,6 +101,8 @@ free e = case e of
     (X.LetX X.LetRec xs e) -> S.difference (S.union (S.unions (map (free . snd) xs)) (free e))
                                            (S.fromList (map fst xs))
     (X.LambdaX (X.Lambda xs e)) -> S.difference (free e) (S.fromList xs) 
+    (X.Case c) -> Case.free free c
+    (X.Constructed c) -> Constructed.free free c
 
 close :: X.Def -> C.Def
 close d = case d of

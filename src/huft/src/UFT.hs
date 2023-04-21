@@ -66,6 +66,20 @@ schemeOfFile infile = hGetContents' infile <&> ParseUtils.parseAndErr VSchemePar
 schemexOfFile :: Reader [UnambiguousVScheme.Def]
 schemexOfFile = schemeOfFile ==> ((E.Error . Right) . map Disambiguate.disambiguate)
 
+  -- val eschemeOfFile : instream -> VScheme.def list error =
+  --   sourceReader EschemeParsers.defs
+
+  -- val eschemexOfFile : instream -> UnambiguousVScheme.def list error =
+  --   eschemeOfFile >>>
+  --   Error.map (map Disambiguate.disambiguate)
+
+eschemeOfFile :: Reader [VScheme.Def]
+eschemeOfFile = undefined -- we need to have eschemeParser.defs
+
+eschemexOfFile :: Reader [UnambiguousVScheme.Def]
+eschemexOfFile = undefined
+-- use just call disambiguage
+
 vsOfFile :: Reader [Asm.Instr]
 vsOfFile infile = hGetContents' infile <&> ParseUtils.parseAndErr AsmParse.parse
 
@@ -86,6 +100,12 @@ hoOf :: Language -> Reader [UnambiguousVScheme.Def]
 hoOf HO = schemexOfFile
 hoOf HOX = error "imperative features (HOX to HO)"
 hoOf _ = throw Backward
+
+  -- fun ES_of ES   = eschemexOfFile 
+  --   | ES_of _    = raise Backward
+
+esOf ES = eschemexOfFile
+esOf _ = throw Backward
 
 clOf :: Language -> Reader [ClScheme.Def]
 clOf CL = clOf FO
@@ -173,6 +193,7 @@ translate inLang outLang infile outfile = catch
     FO -> foOf inLang infile <&> (emitFO outfile <$>)
     CL -> clOf inLang infile <&> (emitCL outfile <$>)
     HOX -> hoxOf inLang infile <&> (emitHO outfile <$>)
+    ES -> esOf inLang infile <&> (emitHO outfile <$>)
     )
   (\e -> case e of
     Backward -> throw (NotForward inLang outLang)

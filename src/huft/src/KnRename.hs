@@ -44,4 +44,7 @@ mapx f e =
                           (K.Closure <$> mapM f formals <*> mx body <*> mapM f captured))
                         bindings 
                <*> mx body
-      -- there's probably a better way to write this
+    K.Block xs -> K.Block <$> mapM f xs
+    K.SwitchVCon x choices fallthru ->
+      let choice (pat, e) = (pat,) <$> mapx f e
+      in K.SwitchVCon <$> f x <*> mapM choice choices <*> mapx f fallthru
