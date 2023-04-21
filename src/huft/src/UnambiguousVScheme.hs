@@ -5,6 +5,9 @@ module UnambiguousVScheme where
 import qualified Primitives as P
 import qualified VScheme as S
 
+import qualified Constructed
+import qualified Case
+
 data LetKind = Let | LetRec deriving Show
 
 type Name = String
@@ -23,6 +26,8 @@ data Exp = Literal Value
          | PrimCall P.Primitive [Exp]
          | LetX LetKind [(Name, Exp)] Exp
          | LambdaX Lambda
+         | Case    (Case.T Exp)
+         | Constructed (Constructed.T Exp)
          deriving Show
 
 data Value = Sym Name

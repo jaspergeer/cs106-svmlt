@@ -39,16 +39,17 @@ labelElim :: [A.Instr] -> E.Env Int -> Error [O.Instr]
 labelElim instrs env = let
   f pos i is = case i of
     -- loadfunc
-    (A.LoadFunc reg arity body) -> (:) <$>
+    A.LoadFunc reg arity body -> (:) <$>
       (O.LoadFunc reg arity <$> translate body) <*> is
     -- goto
-    (A.GotoLabel n) -> 
+    A.GotoLabel n -> 
       E.find n env >>= \x -> (O.Goto (x - pos - 1) :) <$> is
-    (A.IfGotoLabel r1 n) -> 
+    A.IfGotoLabel r1 n -> 
       E.find n env >>= \x -> ([O.Regs "cskip" [r1], O.Goto (x - pos - 2)] ++) <$> is
     -- base cases
-    (A.ObjectCode o) -> (o :) <$> is
-    (A.DefLabel _ ) -> is
+    A.ObjectCode o -> (o :) <$> is
+    A.DefLabel _ -> is
+    A.GotoVCon {} -> error "Left as Exercise"
   in foldrInstrStream f (Error $ Right []) instrs
 
 translate :: [A.Instr] -> Error [O.Instr]

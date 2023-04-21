@@ -80,6 +80,11 @@ exp' e locals =
               e' = exp' e locals'
           in X.LetX X.LetRec bs e'
         S.Lambda xs e -> X.LambdaX (X.Lambda xs (exp' e (xs ++ locals)))
+        S.VCon k -> X.Constructed k []
+        S.Case e choices ->
+            let fun choice (pat, e) = (pat, exp' e undefined) --  PatUtil.bound pat @ locals)
+             in X.Case (exp e, map choice choices)
+        _ -> error $ "exp': " ++ show e
   in exp e
 
 def :: S.Def -> X.Def
