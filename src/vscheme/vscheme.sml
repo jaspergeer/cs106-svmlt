@@ -127,11 +127,13 @@ fun predefinedFunctionError s = eprintln ("while reading predefined functions, "
 (* utility functions for string manipulation and printing S70f *)
 fun intString n =
   String.map (fn #"~" => #"-" | c => c) (Int.toString n)
+val oldConversion  = StringCvt.FIX (SOME 2)
+val realConversion = StringCvt.GEN (SOME 6) (* match printf("%g") *)
 fun realString x =
  (if Real.== (x, real (Real.floor x)) then
     intString (Real.floor x)
   else
-    String.map (fn #"~" => #"-" | c => c) (Real.fmt (StringCvt.FIX (SOME 2)) x)
+    String.map (fn #"~" => #"-" | c => c) (Real.fmt realConversion x)
  ) handle Overflow => Real.toString x
 
 (* utility functions for string manipulation and printing S70g *)
@@ -1073,7 +1075,7 @@ fun setup_error_format interactivity =
 local
   val throttleCPU = case OS.Process.getEnv "BPCOPTIONS"
                       of SOME "nothrottle" => false
-                       | _ => true
+                       | _ => not (String.isSuffix "vscheme.opt" (CommandLine.name ()))
   val defaultRecursionLimit = 6000 (* about 1/5 of 32,000? *)
   val recursionLimit = ref defaultRecursionLimit
   val evalFuel       = ref 1000000
@@ -1179,7 +1181,7 @@ val _ = op valueString : value -> string
   | valueString (CLOSURE ((xs, _), _)) = "<function(" ^ Int.toString (length xs) ^ ")>"
   | valueString (PRIMITIVE _) = "<primitive>"
   | valueString (ARRAY vs) =
-    "[| " ^ String.concatWith " " (Array.foldr (fn (v, vs) => valueString v :: vs) [] vs) ^ " |]"
+    "[" ^ String.concatWith " " (Array.foldr (fn (v, vs) => valueString v :: vs) [] vs) ^ "]"
   | valueString (LETREC_DEFERRED p) = "deferred " ^ valueString (!p)
 
 (* definition of [[expString]] for \uscheme S221a *)
@@ -2430,8 +2432,6 @@ val primitiveBasis =
 , "    (if pair"
 , "        (set-cdr! pair v)"
 , "        (set-cdr! t (cons (cons k v) (cdr t))))))"
-, ""
-, "(define non-atomic (_ v) v)"
 
                       ]
 

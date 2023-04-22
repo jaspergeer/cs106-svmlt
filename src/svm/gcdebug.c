@@ -4,6 +4,8 @@
 #include "svmdebug.h"
 #include "print.h"
 
+#define NOVALGRIND 1
+
 #ifndef NOVALGRIND
   #include <valgrind/memcheck.h>
 #else
