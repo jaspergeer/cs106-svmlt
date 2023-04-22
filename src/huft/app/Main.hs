@@ -6,9 +6,9 @@ import Data.String
 import System.IO
 
 import Languages as L -- cabal will take care of it
-import System.IO (stdin, openFile)
 import qualified UFT
 import qualified Error as E
+import GHC.IO.Device (RawIO(read))
 
 translationOf :: String -> Handle -> Handle -> IO (E.Error (IO ()))
 translationOf spec =
@@ -22,20 +22,24 @@ translationOf spec =
 reportandExit Nothing = putStrLn "invalid translation specification"
 reportandExit _       = putStrLn "Valid translation specification"
 
-main :: IO ()
-main = do  
-    progName <- getProgName
-    args <- getArgs
-    case args of -- stopgap implementation
-        spec:infile:_ -> do
+readAndTranslate :: String -> String -> IO()
+readAndTranslate spec "-" = do
+        translation <- translationOf spec stdin stdout
+        case E.getError translation of
+            Left e -> putStrLn e
+            Right r -> r
+readAndTranslate spec infile = do
             file <- openFile infile ReadMode
             translation <- translationOf spec file stdout
             case E.getError translation of
                 Left e -> putStrLn e
                 Right r -> r
-        spec:_ -> do
-            translation <- translationOf spec stdin stdout
-            case E.getError translation of
-                Left e -> putStrLn e
-                Right r -> r
+
+main :: IO ()
+main = do  
+    progName <- getProgName
+    args <- getArgs
+    case args of -- stopgap implementation
+        spec:infiles -> do
+            mapM_ (readAndTranslate spec) infiles
         _ -> putStrLn ("Usage: " ++ progName ++ " inLang-outLang infile/stdin")

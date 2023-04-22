@@ -88,7 +88,7 @@ exp' e locals =
           undefined
             -- let choice (pat, e) = (pat, exp' e undefined) --  PatUtil.bound pat @ locals)
             --  in X.Case (Case.T (exp e, map choice choices))
-        _ -> error $ "exp': " ++ show e
+        -- _ -> error $ "exp': " ++ show e
   in exp e
 
 def :: S.Def -> X.Def
