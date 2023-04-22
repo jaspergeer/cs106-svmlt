@@ -91,6 +91,7 @@ bool eqvalue(Value v1, Value v2) { // Will not work for hashing!
     case Table:   return v1.table == v2.table;  // object identity
     case Seq:     return v1.seq == v2.seq;  // object identity
     case ConsCell: return false;
+    case Block:    return false;
     case Emptylist: return true;
     case VMFunction: return false;
     case CFunction: return false;
@@ -103,11 +104,19 @@ bool eqvalue(Value v1, Value v2) { // Will not work for hashing!
 //// the test used in uscheme check-expect
 
 bool eqtests(Value v1, Value v2) { // will not work for hashing!
-  if (v1.tag == v2.tag && v1.tag == ConsCell)
+  if (v1.tag == v2.tag && v1.tag == ConsCell) {
     return eqtests(v1.block->slots[0], v2.block->slots[0]) &&
            eqtests(v1.block->slots[1], v2.block->slots[1]);
-  else
+  } else if (v1.tag == v2.tag && v1.tag == Block && v1.block->nslots == v2.block->nslots) {
+    if (v1.block == v2.block)
+      return true;
+    for (int i = 0; i < v1.block->nslots; i++)
+      if (!eqtests(v1.block->slots[i], v2.block->slots[i]))
+        return false;
+    return true;
+  } else {
     return eqvalue(v1, v2);
+  }
 }
 
 

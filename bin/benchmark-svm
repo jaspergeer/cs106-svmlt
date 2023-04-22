@@ -1,0 +1,78 @@
+#!/bin/ksh
+
+N=3
+medians=
+shortnames=
+
+set -A failed
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -short) shortnames=yes ; shift ;;
+    -[0-9]*) N="$(expr 0 - "$1")" ; shift ;;
+    -*) die "unknown option" ;;
+    *) break
+  esac
+done
+
+
+M=$(expr $N + 1)
+M=$(expr $M / 2)
+
+output=$(mktemp)
+
+predefvo=$(mktemp)
+
+trap "rm -f $output $predefvo" 0 1 2 3 6 9  # not sure if /bin/sh supports...
+
+vscheme -predef | uft ho-vo > $predefvo
+
+
+for i
+do
+  if [[ -n "$shortnames" ]]; then
+    benchname="$(basename "$(dirname "$i")")/$(basename "$i")"
+  else
+    benchname="$i"
+  fi
+
+  if cpu-limited 25 test-svm "$i" >/dev/null 2>/dev/null; then
+    times=
+    badexit=
+    for j in $(seq 1 $N)
+    do
+      uft ho-vo "$i" | cpu-limited 25 /usr/bin/time -f '%e' -o $output svm $predefvo - > /dev/null
+      rc="$?"
+      if [[ $rc -ne 0 ]]; then
+        badexit=" [exit status $rc]"
+      fi
+      printf "%5.2f  %s\n" $(cat $output) "$benchname$badexit"
+      times="$times$(cat $output)
+"
+    done
+    median=$(echo "$times" | fgrep . | sort | sed -n ${M}p)
+    medians="$medians$median $benchname$badexit
+"
+  else
+    failed+=("$benchname")
+  fi
+done
+
+echo
+echo "Median times for $(which svm):"
+echo "$medians" | while read time bench; do
+  if test -n "$bench"; then
+    printf "%5.2f  %s\n" "$time" "$bench"
+  fi
+done
+
+for i in ${failed[@]}; do
+  echo "failed $i"
+done
+
+rm -f $output $predefvo
+
+if [[ ${#failed[*]} -gt 0 ]]; then
+  exit 1
+fi
+
