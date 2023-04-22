@@ -18,6 +18,8 @@
 #include "vmstate.h"
 #include "vtable.h"
 
+#define NOVALGRIND 1
+
 #ifndef NOVALGRIND
 
   #include <valgrind/memcheck.h>
