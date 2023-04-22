@@ -1,6 +1,6 @@
 
 -- the MatchCompiler functor is called in knormalize
-
+-- Need to rename Decision Tree to MatchCompiler for haskell module requirement
 module DecisionTree where
 
 import qualified Pattern as P

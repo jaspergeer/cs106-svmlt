@@ -27,14 +27,14 @@ main = do
     progName <- getProgName
     args <- getArgs
     case args of -- stopgap implementation
-        [spec] -> do
-            translation <- translationOf spec stdin stdout
+        spec:infile:_ -> do
+            file <- openFile infile ReadMode
+            translation <- translationOf spec file stdout
             case E.getError translation of
                 Left e -> putStrLn e
                 Right r -> r
-        spec:infile:[] -> do
-            file <- openFile infile ReadMode
-            translation <- translationOf spec file stdout
+        spec:_ -> do
+            translation <- translationOf spec stdin stdout
             case E.getError translation of
                 Left e -> putStrLn e
                 Right r -> r

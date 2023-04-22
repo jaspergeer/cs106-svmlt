@@ -4,6 +4,9 @@ import qualified VScheme as S
 import qualified UnambiguousVScheme as X
 import qualified VSchemeUnparse as U
 
+import qualified Case
+import qualified Constructed
+
 data Referent = Local | Primitive P.Primitive | OtherGlobal
 
 type Name = String
@@ -80,10 +83,11 @@ exp' e locals =
               e' = exp' e locals'
           in X.LetX X.LetRec bs e'
         S.Lambda xs e -> X.LambdaX (X.Lambda xs (exp' e (xs ++ locals)))
-        S.VCon k -> X.Constructed k []
-        S.Case e choices ->
-            let fun choice (pat, e) = (pat, exp' e undefined) --  PatUtil.bound pat @ locals)
-             in X.Case (exp e, map choice choices)
+        S.VCon k -> X.Constructed (Constructed.T k [])
+        S.Case (Case.T e choices) ->
+          undefined
+            -- let choice (pat, e) = (pat, exp' e undefined) --  PatUtil.bound pat @ locals)
+            --  in X.Case (Case.T (exp e, map choice choices))
         _ -> error $ "exp': " ++ show e
   in exp e
 

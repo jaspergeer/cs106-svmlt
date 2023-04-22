@@ -9,7 +9,7 @@ type Name = P.Name
 data T exp = T VCon [exp] deriving Show
 
 instance Foldable T where
-  foldr :: (a -> b -> b) -> b -> T a -> b
+  -- foldr :: (a -> b -> b) -> b -> T a -> b
   foldr f z (T con es) = foldr f z es
 
 instance Functor T where

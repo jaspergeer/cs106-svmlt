@@ -60,7 +60,11 @@ executable huft
         ClScheme,
         CSUtil,
         FOClUtil,
-        ClConvert
+        ClConvert,
+        Case,
+        Constructed,
+        Pattern
+        -- MatchCompiler
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
