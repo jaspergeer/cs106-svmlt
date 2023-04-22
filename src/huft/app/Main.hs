@@ -40,6 +40,11 @@ main = do
     progName <- getProgName
     args <- getArgs
     case args of -- stopgap implementation
+        spec:[] -> do
+            translation <- translationOf spec stdin stdout
+            case E.getError translation of
+                Left e -> putStrLn e
+                Right r -> r
         spec:infiles -> do
             mapM_ (readAndTranslate spec) infiles
         _ -> putStrLn ("Usage: " ++ progName ++ " inLang-outLang infile/stdin")
