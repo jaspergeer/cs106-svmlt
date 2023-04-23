@@ -46,5 +46,5 @@ mapx f e =
                <*> mx body
     K.Block xs -> K.Block <$> mapM f xs
     K.SwitchVCon x choices fallthru ->
-      let choice (pat, e) = (pat,) <$> mapx f e
+      let choice (pat, e) = (,) pat <$> mapx f e
       in K.SwitchVCon <$> f x <*> mapM choice choices <*> mapx f fallthru

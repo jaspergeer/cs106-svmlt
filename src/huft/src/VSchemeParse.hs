@@ -24,7 +24,12 @@ import Text.Parsec ( between,
                      (<|>),
                      try, many, manyTill, anyChar, spaces, endOfLine, sepBy, skipMany, eof, satisfy )
 import Data.Char (isSpace, isDigit)
+import Data.List.Split
 
+isVcon x =
+  let
+    lastPart = splitOn "." x
+  in undefined
 
 valOfSx s = case s of
   Sx.Int i -> S.Int i

@@ -1,7 +1,7 @@
 module Languages where
 import qualified Data.Map as M
 
-data Language = HOX | HO | FO | CL | KN | VS | VO deriving (Enum, Eq, Show)
+data Language = HOX | HO | FO | CL | KN | VS | VO | ES deriving (Enum, Eq, Show)
 instance Ord Language where
   a <= b = fromEnum a <= fromEnum b
 
@@ -12,7 +12,8 @@ tableInit =
   , (CL,  "cl",  "First-order vScheme with closure and capture forms")
   , (KN,  "kn",  "K-Normal form")
   , (VS,  "vs",  "VM assembly language")
-  , (VO,  "vo",  "VM object code") ]
+  , (VO,  "vo",  "VM object code")
+  , (ES, "", "") ]
 
 table :: M.Map Language (String, String)
 table = foldr (\(x, y, z) m -> M.insert x (y, z) m)  M.empty tableInit
