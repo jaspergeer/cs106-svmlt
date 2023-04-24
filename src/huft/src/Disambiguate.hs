@@ -6,6 +6,9 @@ import qualified VSchemeUnparse as U
 import qualified Case
 import qualified Constructed
 
+import qualified Case
+import qualified Constructed
+
 data Referent = Local | Primitive P.Primitive | OtherGlobal
 
 type Name = String

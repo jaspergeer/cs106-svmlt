@@ -107,7 +107,6 @@ struct
           = NONE                  otherwise
      *)
     = fn (pi, P.APPLY (vcon, pats)) => SOME (pi, vcon, pats)
-       | (pi, P.INT k) => SOME (pi, Int.toString k, [])
        | _ => NONE
 
 

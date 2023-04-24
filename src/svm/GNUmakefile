@@ -85,5 +85,8 @@ $(BIN)/svm-dis: $(OBJ) $(BUILD)/svm-dis.o
 $(BUILD)/%.o: %.c
 	gcc $(CFLAGS) -MMD -MF $(BUILD)/$*.d -o $@ -c -Wall -Werror -Wno-unused-function -std=c11 $<
 
+$(BUILD)/vmrun.o: vmrun.c
+	gcc $(CFLAGS) -MMD -MF $(BUILD)/vmrun.d -o $@ -c -Wall -Werror -std=c11 -O2 $<
+
 
 -include $(DEPS)

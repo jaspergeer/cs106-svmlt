@@ -59,8 +59,7 @@ struct
   fun kwbreak k b docs = P.group (te "(" ++ te k ++ te " " ++ b ++ P.seq cn id docs ++ te ")")
 
   structure Pat = Pattern
-  fun pat (Pat.INT k) = P.int k
-    | pat (Pat.VAR x) = te x
+  fun pat (Pat.VAR x) = te x
     | pat (Pat.WILDCARD) = te "_"
     | pat (Pat.APPLY (vcon, [])) = te vcon
     | pat (Pat.APPLY (vcon, pats)) = nest 3 (wrap (te vcon :: map pat pats))

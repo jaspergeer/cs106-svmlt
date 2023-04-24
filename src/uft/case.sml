@@ -2,9 +2,10 @@ structure Pattern = struct
   type vcon = string
   type name = string
   datatype pat = APPLY of vcon * pat list
-               | INT   of int
                | VAR   of name
                | WILDCARD
+    (* N.B. a pattern for literal integer k is represented
+       as APPLY (Int.toString k, [])  *)
 end
 
 signature CASE = sig (* elimination form for constructed data *)
@@ -35,7 +36,6 @@ end
 struct
   structure P = Pattern
   fun addBound (P.APPLY (vcon, pats), vars) = foldr addBound vars pats
-    | addBound (P.INT _, vars) = vars
     | addBound (P.WILDCARD, vars) = vars
     | addBound (P.VAR x, vars) = x :: vars
   fun bound p = addBound (p, [])
@@ -50,7 +50,6 @@ structure Case :> CASE = struct
   fun fold f z (e, choices) = List.foldr (fn ((p, e), z) => f (e, z)) (f (e, z)) choices
 
   fun patBound (APPLY (_, ps)) = Set.union' (List.map patBound ps)
-    | patBound (INT _) = Set.empty
     | patBound (VAR x) = Set.singleton x
     | patBound WILDCARD = Set.empty
 
