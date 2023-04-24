@@ -124,15 +124,17 @@ exp rho a e =
     (C.Constructed c) -> error $ show e -- module 12
     (C.Case (Case.T e choices)) -> bindAnyReg a (exp rho a e)
      (\t ->
-      let treeGen :: RegSet -> MC.Tree C.Exp -> K.Exp Reg
-          treeGen a (MC.Test r edgeList defalt) = undefined
+      let 
+          treeGen :: RegSet -> MC.Tree C.Exp -> K.Exp Reg
+          treeGen a (MC.Test r edgeList (Just defalt)) = K.SwitchVCon r (fmap (\(MC.E c t) -> (c, treeGen a t)) edgeList) (treeGen a defalt)
           treeGen a (MC.LetChild (r, i)  k) = bindAnyReg a (K.VMOPGLO P.getblockslot [r] (O.Int i)) 
                                                            (\t -> treeGen (a \\ t) (k t))
-          treeGen a (MC.Match e env) = undefined
-          -- treeGen a (MC.Leaf e) = exp rho a e
+          treeGen a (MC.Match e env) = exp (E.union env rho) a e -- dont you add union rho and env?
           a' = a \\ t
        in treeGen a' (id (MC.decisionTree t choices))) -- import VUScheme latter for HLS to work
     -- _ -> error $ show e
+
+
 
 -- work as identity function, might do unsafe IO for side effect
 -- vizTree = MV.viz (VU.ppexp . CSUtil.embedExp)
