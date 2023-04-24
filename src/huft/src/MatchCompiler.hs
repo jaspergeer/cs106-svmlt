@@ -42,7 +42,7 @@ newtype Frontier a = F (a, [Constraint])
     These constraints show in which register each bound name is stored.
 
     The key operation on frontiers is *refinement* (called `project`
-    in the paper).  Refing revises the constraints under the assumption
+    in the paper).  Refining revises the constraints under the assumption
     that a given register holds an application of a given labeled_constructor 
 -}
 
@@ -134,6 +134,82 @@ refineFrontier r lcon@(con, arity) frontier@(F (i, constraints)) =
     Just _ -> Nothing
     _ -> Just frontier
 
+
 decisionTree :: Register -> [(Pat, a)] -> Tree a
 -- register argument is the register that will hold the value of the scrutinee
-decisionTree = undefined
+decisionTree r choices@((pat, a):ps) =
+  let 
+      initFrontier = map (\(pat, e) -> F (e, [(REGISTER r, pat)])) choices
+
+      frontierMatches (F (_, constraints)) =
+        not (any (\(_, constraint) -> case constraint of
+                    P.Apply {} -> True
+                    _ -> False) constraints)
+      -- helper function for (MATCH (hd frontiers) on paper)
+      match (F (a, constraints)) = Match a (foldr (\(pi, pat) env -> case (pi, pat) of
+                                                    (REGISTER r, P.Var x) -> E.bind x r env
+                                                    -- (CHILD (r, i), P.Var x) -> E.bind x r env
+                                                    -- what should i bind?
+                                                    _ -> env) E.empty constraints)
+      compile frontiers@(front@(F (a, constraints)):_) =
+  
+        if frontierMatches front 
+        then match front
+        else
+          -- let 
+          --   pi = case foldrM ()
+          -- in
+          -- case pi of
+          --   CHILD (reg, i) -> undefined
+          --   REGISTER reg -> 
+          -- pi:_ = [pi' | pi' `elem` dom f && patternAt pi' f == Just (P.Var _), F (i, f) <- frontiers]
+          
+          -- pi_may = find (\pi -> case patternAt pi f of
+          --                 Just (P.Var _) -> True
+          --                 _ -> False) (dom )
+
+          let
+
+            dom constraints = [pi' | (pi', _) <- constraints]
+            pis = [pi | frontier@(F (_, constraints)) <- frontiers, pi <- dom constraints, case patternAt pi frontier of
+                                                                                              Just (P.Var _) -> True
+                                                                                              _ -> False]
+            -- pis = [ f | (i, f) <- constraints]
+            pi = head pis
+
+            cs = [(cons, length pats) | (_, P.Apply cons pats) <- constraints]
+            refineFrontiers reg lcons =
+              foldr (\ft fts -> case refineFrontier reg lcons ft of
+                                Just ft' -> ft':fts
+                                _ -> fts) []
+            edges = map (\lcons -> E lcons (compile (refineFrontiers r lcons frontiers))) cs
+            
+            defaults = filter (\ft@(F (i, f)) -> notElem pi (dom f) ||
+              case patternAt pi ft of
+                Just (P.Var _) -> True
+                _ -> False) frontiers
+          in Test r edges (Just (compile defaults))
+  in compile initFrontier
+
+  
+  -- case pat of
+  --   P.Var x -> Match a (E.bind x r E.empty)
+  --   P.Wildcard -> Match a E.empty
+  --   P.Apply vcon pats ->  -- the initial frontier  [(root, p)],
+    -- where root is the scrutinee register and p is the original pattern
+    -- in the source code.
+      -- let pi = undefined
+      --     cs = undefined -- set of all labeled constructors
+      --     edges = undefined
+      -- in
+      --   undefined
+        
+
+
+{-
+  Now implement function decisionTree. The TEST and MATCH nodes are described in the paper. 
+  When your match compiler produces a node of the form LET_CHILD ((r, i), k), 
+  you define continuation k. The continuation expects a new, temporary register, 
+  and it updates all the frontiers, substituting the new register for the 
+  old path CHILD (r, i). Perform the substitution using function forPath.
+-}

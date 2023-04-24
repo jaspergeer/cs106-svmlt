@@ -17,6 +17,9 @@ bind = M.insert
 binds :: Env a -> Name -> Bool
 binds env n = M.member n env
 
+union :: Env a -> Env a -> Env a 
+union = M.union 
+
 empty :: Env a
 empty = M.empty
 
