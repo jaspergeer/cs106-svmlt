@@ -81,6 +81,10 @@ closedExp captured e =
               in C.LetRec bindings (exp e)
             (X.LambdaX (X.Lambda xs e)) -> C.ClosureX (closure (X.Lambda xs e))
             (X.Case c) -> C.Case $ fmap exp c
+            (X.Constructed c) -> C.Constructed $ fmap exp c
+            -- _ -> error "not implemented yet"
+            -- | exp (X.CONSTRUCTED c) = C.CONSTRUCTED (Constructed.map exp c)
+
     in exp e
 
 free :: X.Exp -> S.Set X.Name

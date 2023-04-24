@@ -69,15 +69,11 @@ schemexOfFile = schemeOfFile ==> ((E.Error . Right) . map Disambiguate.disambigu
   -- val eschemeOfFile : instream -> VScheme.def list error =
   --   sourceReader EschemeParsers.defs
 
-  -- val eschemexOfFile : instream -> UnambiguousVScheme.def list error =
-  --   eschemeOfFile >>>
-  --   Error.map (map Disambiguate.disambiguate)
-
 eschemeOfFile :: Reader [VScheme.Def]
 eschemeOfFile = undefined -- we need to have eschemeParser.defs
 
 eschemexOfFile :: Reader [UnambiguousVScheme.Def]
-eschemexOfFile = undefined
+eschemexOfFile = eschemeOfFile ==> ((E.Error . Right) . map Disambiguate.disambiguate)
 -- use just call disambiguage
 
 vsOfFile :: Reader [Asm.Instr]
@@ -101,9 +97,6 @@ hoOf HO = schemexOfFile
 hoOf HOX = error "imperative features (HOX to HO)"
 hoOf _ = throw Backward
 
-  -- fun ES_of ES   = eschemexOfFile 
-  --   | ES_of _    = raise Backward
-
 esOf ES = eschemexOfFile
 esOf _ = throw Backward
 
@@ -111,6 +104,7 @@ clOf :: Language -> Reader [ClScheme.Def]
 clOf CL = clOf FO
 clOf HO = hoOf HO ==> (mapM $ return . ClConvert.close)
 clOf HOX = hoOf HOX ==> (mapM $ return . ClConvert.close)
+clOf ES = esOf ES ==> (mapM $ return . ClConvert.close)
 clOf inLang = foOf inLang ==> (mapM $ return . FOClUtil.embed)
 
 vsOfkn :: [KNF.Exp ObjectCode.Reg] -> [Asm.Instr]
