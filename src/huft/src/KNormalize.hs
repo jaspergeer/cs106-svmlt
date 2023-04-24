@@ -125,7 +125,10 @@ exp rho a e =
     (C.Case (Case.T e choices)) -> bindAnyReg a (exp rho a e)
      (\t ->
       let treeGen :: RegSet -> MC.Tree C.Exp -> K.Exp Reg
-          treeGen a (MC.Test r edgeList defalt) = undefined 
+          treeGen a (MC.Test r edgeList defalt) = undefined
+          treeGen a (MC.LetChild (r, i)  k) = bindAnyReg a (K.VMOPGLO P.getblockslot [r] (O.Int i)) 
+                                                           (\t -> treeGen (a \\ t) (k t))
+          treeGen a (MC.Match e env) = undefined
           -- treeGen a (MC.Leaf e) = exp rho a e
           a' = a \\ t
        in treeGen a' (id (MC.decisionTree t choices))) -- import VUScheme latter for HLS to work

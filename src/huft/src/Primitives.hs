@@ -13,7 +13,7 @@ data Primitive = SetsRegister Base
 -- we add more binary airthmetic operators here
 
 binary = [ "+", "-", "*", "/", "<", ">", ">=", "<=", "cons", "=", "idiv"
-         , "mod", "and", "or", "xor"
+         , "mod", "and", "or", "xor", "mkclosure"
          ]
 
 unary = [ "boolean?", "null?", "number?", "pair?", "function?", "nil?"
@@ -85,3 +85,4 @@ loadliteral  = SetsRegister (Base "loadliteral" 1)
 mkclosure    = SetsRegister (Base "mkclosure" 2)
 setclslot    = HasEffect (Base "setclslot" 3)
 getclslot    = SetsRegister (Base "getclslot" 2)
+getblockslot = SetsRegister (Base "getblockslot" 2)

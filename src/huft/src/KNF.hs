@@ -28,7 +28,12 @@ data Exp a = Literal Literal
            | Captured Int
            | ClosureX (Closure a)
            | Block [a]
+                {- allocate a block and initialize each slot with the
+                   corresponding register-}
            | SwitchVCon a [((Pattern.VCon, Int), Exp a)] (Exp a)
+                {- given SWITCH_VCON (r, choices, other), if the value in register
+                   r matches any (vcon, k) pair, then evaluate the corresponding
+                   expression, otherwise evaluate the other expression -}
            deriving Show
 
 type Funcode a = ([a], Exp a) -- lambda with no free names
