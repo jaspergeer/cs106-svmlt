@@ -2,6 +2,8 @@ module Ambiguate where
 import qualified Primitives as P
 import qualified VScheme as S
 import qualified UnambiguousVScheme as X
+import qualified Case
+import qualified Constructed
 
 -- re-embedding into ambiguous code
 
@@ -39,6 +41,8 @@ exp' e = case maybeValue e of
     X.Begin es -> S.Begin (map exp es)
     X.WhileX c body -> S.WhileX (exp c) (exp body)
     X.LambdaX (X.Lambda xs e) -> S.Lambda xs (exp e)
+    X.Case c -> S.Case (fmap exp c)
+    X.Constructed (Constructed.T vcon es) -> S.Apply (S.VCon vcon) (map exp es)
   binding (x, e) = (x, exp e)
 
 def d = case d of
