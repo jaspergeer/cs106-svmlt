@@ -64,7 +64,8 @@ executable huft
         Case,
         Constructed,
         Pattern,
-        MatchCompiler
+        MatchCompiler,
+        MatchViz
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
