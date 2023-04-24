@@ -17,6 +17,9 @@ import qualified VSchemeUtils as U
 import qualified ParseUtils
 import qualified Sx
 import qualified SxParse
+import qualified Pattern as P
+import qualified Case
+
 import Text.Parsec.String ( Parser )
 import Text.Parsec.Token ( symbol )
 import Text.Parsec ( between,
@@ -25,6 +28,20 @@ import Text.Parsec ( between,
                      try, many, manyTill, anyChar, spaces, endOfLine, sepBy, skipMany, eof, satisfy )
 import Data.Char (isSpace, isDigit)
 
+rwords =
+  [ "set", "if", "while", "begin", "let", "let*", "letrec", "lambda",
+    "quote","val", "define", "case", "data", "implicit-data",
+    "check-principal-type*", "record", "check-type", ":" ]
+
+reserved x = x `elem` rwords
+
+isVcon x = case x of
+  (y:ys) | y `elem` ['A'..'Z'] -> True
+  ('m':'a':'k':'e':'-':xs) -> True
+  ('#':xs) -> True
+  "cons" -> True
+  "'()" -> True
+  _ -> False
 
 valOfSx s = case s of
   Sx.Int i -> S.Int i
@@ -52,11 +69,29 @@ double = ParseUtils.double
 bool = ParseUtils.bool
 name = SxParse.name
 
-parend :: Parser a -> Parser a
-parend p = tok "(" *> p <* tok ")"
-
 brackd :: Parser a -> Parser a
 brackd p = tok "[" *> p <* tok "]"
+        <|> tok "(" *> p <* tok ")"
+
+sat :: (Show a) => (a -> Bool) -> Parser a -> Parser a
+sat p parser = do
+  v <- parser
+  if p v then return v else fail ("not expecting " ++ show v)
+
+vcon =
+  let
+    isEmptyList S.EmptyList = True
+    isEmptyList _ = False
+    boolname p = if p then "#t" else "#f"
+  in boolname <$> bool
+    <|> sat isVcon name
+    <|> "'()" <$ brackd (tok "quote" *> sat (isEmptyList . valOfSx) SxParse.sx) -- definately wrong
+
+pattern :: Parser P.Pat
+pattern = try (P.Apply <$> vcon <*> many pattern)
+       <|> try (P.Int <$> int)
+       <|> try (P.Wildcard <$ tok "_")
+       <|> try (P.Var <$> name)
 
 formals = many name
 bind = brackd ((,) <$> name <*> expr)
@@ -71,13 +106,22 @@ expr = let
       <|> S.IfX <$> try (tok "if" *> expr) <*> expr <*> expr
       <|> S.WhileX <$> try (tok "while" *> expr) <*> expr
       <|> S.Begin <$> try (tok "begin" *> many expr)
-      <|> S.Lambda <$> try (try (tok "lambda") *> parend formals) <*> expr
-      <|> letstar <$> try (try (tok "let*") *> parend (many bind)) <*> expr
-      <|> S.LetX <$> letKind <*> parend (many bind) <*> expr
+      <|> S.Lambda <$> try (try (tok "lambda") *> brackd formals) <*> expr
+      <|> letstar <$> try (try (tok "let*") *> brackd (many bind)) <*> expr
+      <|> let
+        choices = brackd (many (brackd ((,) <$> pattern <*> expr)))
+        caset = Case.T <$> expr <*> choices
+        in S.Case <$> try (tok "case" *> caset)
+      <|> S.LetX <$> letKind <*> brackd (many bind) <*> expr
       <|> S.Apply <$> expr <*> many expr
   in
-    parend expr'
-    <|> try (S.Literal . valOfSx <$> SxParse.sx)
+    brackd expr'
+    <|> try (do
+      v <- valOfSx <$> SxParse.sx
+      case v of
+        S.EmptyList -> return (S.VCon "'()")
+        _ -> return (S.Literal v))
+    <|> S.VCon <$> vcon
     <|> S.Var <$> name
 
 -- record desugaring
@@ -94,7 +138,7 @@ desugarRecord recname fieldnames =
   where recordConstructor recname fieldnames =
           let con = "make-" ++ recname
               formals = map ("the-" ++) fieldnames
-              body = cons (S.Literal (S.Sym con)) (varlist formals)
+              body = S.Apply (S.VCon con) (map S.Var formals)
           in S.Define con formals body
         recordPredicate recname fieldnames = 
           let tag = S.Sym ("make-" ++ recname)
@@ -155,11 +199,11 @@ single x = [x]
 def :: Parser [S.Def]
 def = let
   def' = S.Val <$> try (tok "val " *> name) <*> expr
-     <|> S.Define <$> try (tok "define " *> name) <*> parend formals <*> expr
+     <|> S.Define <$> try (tok "define " *> name) <*> brackd formals <*> expr
      <|> S.CheckExpect <$> try (tok "check-expect" *> expr) <*> expr
      <|> S.CheckAssert <$> try (tok "check-assert" *> expr)
      <|> S.Use <$> try  (tok "use " *> name)
-  in try (parend (single <$> def'
+  in try (brackd (single <$> def'
  <|> desugarRecord <$> (tok "record" *> name) <*> brackd (many name)))
  <|> single . S.Exp <$> expr
 
