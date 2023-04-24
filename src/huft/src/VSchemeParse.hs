@@ -17,6 +17,9 @@ import qualified VSchemeUtils as U
 import qualified ParseUtils
 import qualified Sx
 import qualified SxParse
+import qualified Pattern as P
+import qualified Case
+
 import Text.Parsec.String ( Parser )
 import Text.Parsec.Token ( symbol )
 import Text.Parsec ( between,
@@ -84,6 +87,11 @@ vcon =
     <|> sat isVcon name
     <|> "'()" <$ brackd (tok "quote" *> sat (isEmptyList . valOfSx) SxParse.sx) -- definately wrong
 
+pattern :: Parser P.Pat
+pattern = try (P.Apply <$> vcon <*> many pattern)
+       <|> try (P.Int <$> int)
+       <|> try (P.Wildcard <$ tok "_")
+       <|> try (P.Var <$> name)
 
 formals = many name
 bind = brackd ((,) <$> name <*> expr)
@@ -100,6 +108,10 @@ expr = let
       <|> S.Begin <$> try (tok "begin" *> many expr)
       <|> S.Lambda <$> try (try (tok "lambda") *> brackd formals) <*> expr
       <|> letstar <$> try (try (tok "let*") *> brackd (many bind)) <*> expr
+      <|> let
+        choices = brackd (many (brackd ((,) <$> pattern <*> expr)))
+        caset = Case.T <$> expr <*> choices
+        in S.Case <$> try (tok "case" *> caset)
       <|> S.LetX <$> letKind <*> brackd (many bind) <*> expr
       <|> S.Apply <$> expr <*> many expr
   in
