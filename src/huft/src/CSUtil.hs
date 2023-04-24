@@ -8,6 +8,9 @@ import qualified VSchemeUtils as SU
 import qualified ObjectCode as O
 import qualified KnEmbed
 
+import qualified Case
+import qualified Constructed
+
 -- (* The embedding of a `CAPTURED` form should call the predefined
 --     vScheme function `CAPTURED-IN`.
 --   *)
@@ -38,6 +41,8 @@ exp e =
   C.SetLocal x e -> S.Set x (exp e)
   C.SetGlobal x e -> S.Set x (exp e)
   C.WhileX c body -> S.WhileX (exp c) (exp body)
+  C.Case c -> S.Case (fmap exp c)
+  C.Constructed (Constructed.T con es) -> S.Apply (S.VCon con) (map exp es)
 
 embedExp :: C.Exp -> S.Exp
 embedExp = exp

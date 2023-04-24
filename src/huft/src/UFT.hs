@@ -70,7 +70,7 @@ schemexOfFile = schemeOfFile ==> ((E.Error . Right) . map Disambiguate.disambigu
   --   sourceReader EschemeParsers.defs
 
 eschemeOfFile :: Reader [VScheme.Def]
-eschemeOfFile = undefined -- we need to have eschemeParser.defs
+eschemeOfFile = schemeOfFile -- we need to have eschemeParser.defs
 
 eschemexOfFile :: Reader [UnambiguousVScheme.Def]
 eschemexOfFile = eschemeOfFile ==> ((E.Error . Right) . map Disambiguate.disambiguate)
