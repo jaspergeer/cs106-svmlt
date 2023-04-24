@@ -89,7 +89,7 @@ vcon =
 
 pattern :: Parser P.Pat
 pattern = try (P.Apply <$> vcon <*> many pattern)
-       <|> try (P.Int <$> int)
+      --  <|> try (P.Int <$> int)
        <|> try (P.Wildcard <$ tok "_")
        <|> try (P.Var <$> name)
        <|> try (brackd pattern)
@@ -123,7 +123,7 @@ expr = let
         S.EmptyList -> return (S.VCon "'()")
         _ -> return (S.Literal v))
     <|> S.VCon <$> try vcon
-    <|> S.Var <$> name
+    <|> S.Var <$> try name
 
 -- record desugaring
 

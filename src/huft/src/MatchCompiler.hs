@@ -1,7 +1,8 @@
 
 -- the MatchCompiler functor is called in knormalize
 -- Need to rename Decision Tree to MatchCompiler for haskell module requirement
-module DecisionTree where
+-- module DecisionTree where
+module MatchCompiler where
 
 import qualified Pattern as P
 -- no need for ListUtil
@@ -15,7 +16,7 @@ type Arity = Int
 type LabeledConstructor = (String, Arity)
 type Pat = P.Pat
 
-data Edge a = E
+data Edge a = E LabeledConstructor (Tree a)
 data Tree a = Test Register [Edge a] (Maybe (Tree a))
             | LetChild (Register, Int) (Register -> Tree a)
             | Match a (E.Env Register)
@@ -65,38 +66,74 @@ compatibilityConcat = foldr (\a b -> case (a, b) of
     (COMPATIBLE [])
 
 
-
 --- DEBUGGING SUPPORT
 
 -- I HOPE WE DO NOT NEED TO DO THIS
 
+  -- val eprint = IOUtil.output TextIO.stdErr
 
---- DIRTY TRICKS
+  -- val patString = WppScheme.patString
+  -- fun pathString (REGISTER r) = regString r
+  --   | pathString (CHILD (r, i)) = regString r ^ "." ^ Int.toString i
+
+  -- fun frontierString (F (_, constraints)) =
+  --   let fun conString (pi, p) = patString p ^ "@" ^ pathString pi
+  --   in  String.concatWith " /\\ " (map conString constraints)
+  --   end
+
+
+{----------- DIRTY TRICKS -------------}
 --  allow integer literals to masquerade as value constructors
 
 -- maybeConstructed (π, p) 
 --           = SOME (π, vcon, pats), when p is equivalent to P.APPLY (vcon, pats)
 --           = NONE                  otherwise
-
 maybeConstructed :: Constraint -> Maybe (Path, P.VCon, [Pat])
-maybeConstructed = undefined
+maybeConstructed (pi, P.Apply vcon pats) = Just (pi, vcon, pats)
+maybeConstructed _ = Nothing
 
 
--- USEFUL OPERATIONS ON PATHS AND FRONTIERS
 
+{----------- USEFUL OPERATIONS ON PATHS AND FRONTIERS -------------}
+
+{-  Function `patternAt` implements the @ operation from the paper.
+     When `frontier` is `(i, f)`, f@π is `patternAt π frontier` -}
 patternAt :: Path -> Frontier a -> Maybe Pat
 patternAt pi (F (_, pairs)) = let pathIs pi (pi', _) = pi == pi'
                               in fmap snd (L.find (pathIs pi) pairs)
 
+{- Substitution for paths: `(new forPath old)` returns
+   a substitution function -}
 forPath :: Path -> Path -> Frontier a -> Frontier a
 newPi `forPath` oldPi =
   let constraint c@(pi, pat) = if pi == oldPi then (newPi, pat) else c
   in (\(F (i, constraints)) -> F (i, map constraint constraints))
 
+
+{--------- MAIN PART (STUDENT'S RESPONSIBILITY) -----------------}
+
 refineConstraint :: Register -> LabeledConstructor -> Constraint -> Compatibility [Constraint]
 refineConstraint r lcon constraint =
   case (lcon, constraint) of
-    (_, (pi', _)) | REGISTER r /= pi'-> COMPATIBLE [constraint]
-    ((con, arity), (pi', P.Apply vcon ps)) | con == vcon || length ps == arity
+    (_, (pi', _)) | REGISTER r /= pi' -> COMPATIBLE [constraint]
+    ((con, arity), (pi', P.Apply vcon ps)) | con == vcon && length ps == arity
       -> COMPATIBLE $ zipWith (\i p -> (CHILD (r, i), p)) [1..(length ps)] ps
     _ -> INCOMPATIBLE
+
+
+refineFrontier :: Register -> LabeledConstructor -> Frontier a -> Maybe (Frontier a)
+-- returns the refinement of the given frontier, if compatible
+-- I assume r ~ pi / c' ~ C / i ~ i / constraints ~ f
+-- I hope this is what the 
+refineFrontier r lcon@(con, arity) frontier@(F (i, constraints)) = 
+  case patternAt (REGISTER r) frontier of
+    Just (P.Apply vcon ps) | con == vcon && length ps == arity
+      -> let newcon = concat $ mapCompatible (refineConstraint r lcon) constraints
+          -- what if newcon is INCOMPATIBLE?
+          in Just $ F (i, newcon)
+    Just _ -> Nothing
+    _ -> Just frontier
+
+decisionTree :: Register -> [(Pat, a)] -> Tree a
+-- register argument is the register that will hold the value of the scrutinee
+decisionTree = undefined

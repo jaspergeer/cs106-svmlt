@@ -63,8 +63,9 @@ executable huft
         ClConvert,
         Case,
         Constructed,
-        Pattern
-        -- MatchCompiler
+        Pattern,
+        MatchCompiler,
+        MatchViz
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:

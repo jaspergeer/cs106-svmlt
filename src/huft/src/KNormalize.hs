@@ -12,6 +12,18 @@ import qualified Error
 import qualified Primitives as P
 import qualified ObjectCode as O
 
+import qualified Case
+import qualified Pattern
+
+import qualified MatchCompiler as MC
+import qualified MatchViz as MV
+import qualified CSUtil
+-- import qualified VSchemeUnparse as VU
+
+import AsmUtils (i)
+-- needa somehow figure out MatchViz here
+
+
 type Reg = Int
 
 regname :: Reg -> String
@@ -109,17 +121,49 @@ exp rho a e =
           f' x (\y -> map' f' xs (\ys -> k (y:ys)))
       in map' (closure . snd) bindings
         (\cs -> K.LetRec (zip ts cs) (exp rho' a' body))
-    (C.Constructed c) -> undefined -- module 12
-    (C.Case c) -> undefined -- module 12
+    (C.Constructed c) -> error $ show e -- module 12
+    (C.Case (Case.T e choices)) -> bindAnyReg a (exp rho a e)
+     (\t ->
+      let treeGen :: RegSet -> MC.Tree C.Exp -> K.Exp Reg
+          treeGen a (MC.Test r edgeList defalt) = undefined
+          treeGen a (MC.LetChild (r, i)  k) = bindAnyReg a (K.VMOPGLO P.getblockslot [r] (O.Int i)) 
+                                                           (\t -> treeGen (a \\ t) (k t))
+          treeGen a (MC.Match e env) = undefined
+          -- treeGen a (MC.Leaf e) = exp rho a e
+          a' = a \\ t
+       in treeGen a' (id (MC.decisionTree t choices))) -- import VUScheme latter for HLS to work
     -- _ -> error $ show e
 
--- This function does almost the same thing as the code you have written 
--- that K‑normalizes the F.DEFINE form: 
--- the formal parameters go into an environment,
---  and every nonzero register that is not used to hold a formal parameter 
--- is available. The only difference from F.DEFINE is that in a 
--- lambda expression, the function has no name, 
--- so the environment does not bind a function name to register 0.
+-- work as identity function, might do unsafe IO for side effect
+-- vizTree = MV.viz (VU.ppexp . CSUtil.embedExp)
+
+{-
+| F.CASE (e, choices) => 
+   (... normalize e into a register, using the following continuation ...) (fn t =>
+     let fun treeGen = ...
+         val _ = treeGen : regset -> F.exp MC.tree -> reg K.exp
+         val A' = ... available registers minus t ...
+     in  treeGen A' (vizTree (MC.decisionTree (t, choices)))
+     end)
+The CASE form is defined in structure Case in file case.sml; 
+variable e has type F.exp and variable choices has type 
+(Pattern.pattern * F.exp) list.
+
+Function vizTree acts like an identity function, except it may also write a visualiation to disk.
+
+Define function treeGen.
+-}
+
+
+
+
+{- This function does almost the same thing as the code you have written 
+   that K‑normalizes the F.DEFINE form: 
+   the formal parameters go into an environment,
+    and every nonzero register that is not used to hold a formal parameter 
+   is available. The only difference from F.DEFINE is that in a 
+   lambda expression, the function has no name,  
+   so the environment does not bind a function name to register 0. -}
 
 funcode :: C.FunCode -> K.Funcode Reg
 funcode (C.FunCode formals body) =
@@ -129,18 +173,6 @@ funcode (C.FunCode formals body) =
                 (E.bind n (smallest a) rho, a \\ smallest a)) (E.empty, RS 1) formals
       funbody = exp funenv regset body
   in (args, funbody)
-
-
--- Implement let bindings. K‑normalize the C.LET form. 
--- I encourage you to use nbRegs; you can figure out an appropriate policy. 
--- The continuation will have to remove all the bound registers from the available set. 
--- You can implement this operation in a special-purpose recursive function, 
--- or you can use a fold with a “flipped” version of function --.2
-
--- You will need to use bindSmallest to put the function in the smallest available register, 
--- then K‑normalize the arguments using nbRegs with bindSmallest as the policy. 
---When K-normalizing the arguments, do not overwrite the register that holds the function.
-
 
 -- primcall :: P.Primitive -> [C.Exp] -> Exp
 -- primcall p es = exp E.empty (RS 0) (C.PrimCall p es)
@@ -179,6 +211,7 @@ def e = case e of
     --   in K.Let 0 (K.FunCode [1..(length params)] (exp funenv regset body))
     --              (K.VMOPGLO P.setglobal [0] (O.String funname))
 
+
 -- bindSmallest behaves just like bindAnyReg, except it doesn’t 
 -- optimize for the case of an expression already in a register. 
 bindSmallest :: RegSet -> Exp -> (Reg -> Exp) -> Exp
@@ -189,3 +222,13 @@ bindAnyReg :: RegSet -> Exp -> (Reg -> Exp) -> Exp
 bindAnyReg a e k = case e of
   (K.Name n) -> k n
   _ -> bindSmallest a e k
+
+
+{-  printing pattern matching tree   -}
+
+-- structure MC = MatchCompiler(type register = int
+--                              fun regString r = "$r" ^ Int.toString r
+--                             )
+
+-- structure MV = MatchViz(structure Tree = MC)
+-- val vizTree = MV.viz (WppScheme.expString o CSUtil.embedExp)

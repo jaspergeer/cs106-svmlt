@@ -2,6 +2,8 @@ module VSchemeUnparse where
 import Prelude hiding ( exp )
 import qualified VScheme as S
 import qualified Prettyprinter as P
+import qualified Case
+import qualified Pattern as Pat
 -- sadly HLS cannot go any farther, cabal repl and :t is the move now
 -- see https://hackage.haskell.org/package/prettyprinter-1.7.1/docs/Prettyprinter.html#v:pretty
 
@@ -27,10 +29,20 @@ value (S.Pair car cdr) =
 --   fun kw k docs = P.group (te "(" ++ te k ++ te " " ++ P.seq cn id docs ++ te ")")
 
 kw k docs = P.group $ P.parens $ P.pretty k <+> P.vsep docs
+
 wrap = P.group . P.parens . P.vsep
+wraps = P.group . P.brackets . P.vsep
 
 -- nestedBindings (prefix', S.LetX (S.Let, [(x, e')], e)) = nestedBindings ((x, e') :: prefix', e)
 -- nestedBindings (prefix', e) = (rev prefix', e)
+
+-- NEED TO DO LETX RESURGARING AT SOME POINT
+
+pat (Pat.Var x) = P.pretty x
+pat Pat.Wildcard = P.pretty "_"
+pat (Pat.Apply vcon []) = P.pretty vcon
+pat (Pat.Apply vcon ps) = P.nest 3 (wrap (P.pretty vcon : map pat ps))
+
 
 exp (S.Literal v) = case v of
         S.Int _ -> value v
@@ -55,11 +67,21 @@ exp (S.LetX lk bs e) = case lk of
 -- ignore other letkinds because i dont quite get what wppscheme is trying to do
 exp (S.Lambda xs body) = P.nest 3 $ kw "lambda" [wrap (map P.pretty xs), exp body]
 
-def (S.Val x e) = P.nest 3 $ kw "val" [P.pretty x, exp e]
-def (S.Define x xs e) = P.nest 3 $ kw "define" [P.pretty x, wrap (map P.pretty xs), exp e]
-def (S.CheckExpect e1 e2) = P.nest 3 $ kw "check-expect" [exp e1, exp e2]
-def (S.CheckAssert e) = P.nest 3 $ kw "check-assert" [exp e]
-def (S.Exp e) = exp e
+-- module 12 case expressions
+exp (S.Case (Case.T e choices)) = 
+    let choice p e = P.nest 6 (wraps [pat p, exp e])
+        cn = P.pretty " ->"
+    in P.nest 3 (kw "case" [exp e, P.vsep undefined]) --[exp e, P.seq cn choice choices])
+    -- where cn = P.pretty " ->" -- very not sure about this
+exp (S.VCon "'()") = P.pretty "'()"
+exp (S.VCon k) = P.pretty ("'" <> k) -- append
+
+def d = case d of
+    (S.Val x e) -> P.nest 3 $ kw "val" [P.pretty x, exp e]
+    (S.Define f xs e) -> P.nest 3 $ kw "define" [P.pretty f, wrap (map P.pretty xs), exp e]
+    (S.CheckExpect e1 e2) -> P.nest 3 $ kw "check-expect" [exp e1, exp e2]
+    (S.CheckAssert e) -> P.nest 3 $ kw "check-assert" [exp e]
+    (S.Exp e) -> exp e
 
 pp = show . def
 ppexp = show . exp

@@ -39,6 +39,9 @@ exp e =
   C.SetGlobal x e -> S.Set x (exp e)
   C.WhileX c body -> S.WhileX (exp c) (exp body)
 
+embedExp :: C.Exp -> S.Exp
+embedExp = exp
+
 helper = undefined
 
 def :: C.Def -> S.Def

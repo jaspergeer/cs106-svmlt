@@ -19,7 +19,6 @@ fold = undefined
 
 patBound p = case p of
   P.Apply _ ps -> Set.unions (map patBound ps)
-  P.Int _ -> Set.empty
   P.Var x -> Set.singleton x
   P.Wildcard -> Set.empty
 
