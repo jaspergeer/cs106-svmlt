@@ -92,6 +92,7 @@ pattern = try (P.Apply <$> vcon <*> many pattern)
       --  <|> try (P.Int <$> int)
        <|> try (P.Wildcard <$ tok "_")
        <|> try (P.Var <$> name)
+       <|> try (brackd pattern)
 
 formals = many name
 bind = brackd ((,) <$> name <*> expr)
@@ -109,8 +110,8 @@ expr = let
       <|> S.Lambda <$> try (try (tok "lambda") *> brackd formals) <*> expr
       <|> letstar <$> try (try (tok "let*") *> brackd (many bind)) <*> expr
       <|> let
-        choices = brackd (many (brackd ((,) <$> pattern <*> expr)))
-        caset = Case.T <$> expr <*> choices
+        choice = brackd ((,) <$> pattern <*> expr)
+        caset = Case.T <$> expr <*> brackd (many choice)
         in S.Case <$> try (tok "case" *> caset)
       <|> S.LetX <$> letKind <*> brackd (many bind) <*> expr
       <|> S.Apply <$> expr <*> many expr
