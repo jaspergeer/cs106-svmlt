@@ -121,8 +121,8 @@ expr = let
       case v of
         S.EmptyList -> return (S.VCon "'()")
         _ -> return (S.Literal v))
-    <|> S.VCon <$> vcon
-    <|> S.Var <$> name
+    <|> S.VCon <$> try vcon
+    <|> S.Var <$> try name
 
 -- record desugaring
 

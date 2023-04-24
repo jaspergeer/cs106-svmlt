@@ -123,7 +123,16 @@ refineConstraint r lcon constraint =
 
 refineFrontier :: Register -> LabeledConstructor -> Frontier a -> Maybe (Frontier a)
 -- returns the refinement of the given frontier, if compatible
-refineFrontier = undefined
+-- I assume r ~ pi / c' ~ C / i ~ i / constraints ~ f
+-- I hope this is what the 
+refineFrontier r lcon@(con, arity) frontier@(F (i, constraints)) = 
+  case patternAt (REGISTER r) frontier of
+    Just (P.Apply vcon ps) | con == vcon && length ps == arity
+      -> let newcon = concat $ mapCompatible (refineConstraint r lcon) constraints
+          -- what if newcon is INCOMPATIBLE?
+          in Just $ F (i, newcon)
+    Just _ -> Nothing
+    _ -> Just frontier
 
 decisionTree :: Register -> [(Pat, a)] -> Tree a
 -- register argument is the register that will hold the value of the scrutinee

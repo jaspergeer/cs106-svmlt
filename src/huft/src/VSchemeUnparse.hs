@@ -43,6 +43,7 @@ pat Pat.Wildcard = P.pretty "_"
 pat (Pat.Apply vcon []) = P.pretty vcon
 pat (Pat.Apply vcon ps) = P.nest 3 (wrap (P.pretty vcon : map pat ps))
 
+
 exp (S.Literal v) = case v of
         S.Int _ -> value v
         S.Real _ -> value v
@@ -73,7 +74,7 @@ exp (S.Case (Case.T e choices)) =
     in P.nest 3 (kw "case" [exp e, P.vsep undefined]) --[exp e, P.seq cn choice choices])
     -- where cn = P.pretty " ->" -- very not sure about this
 exp (S.VCon "'()") = P.pretty "'()"
-exp (S.VCon v) = P.pretty ("'" <> v) -- append
+exp (S.VCon k) = P.pretty ("'" <> k) -- append
 
 def d = case d of
     (S.Val x e) -> P.nest 3 $ kw "val" [P.pretty x, exp e]
