@@ -3,11 +3,10 @@ import qualified Primitives as P
 import qualified VScheme as S
 import qualified UnambiguousVScheme as X
 import qualified VSchemeUnparse as U
-import qualified Case
-import qualified Constructed
 
 import qualified Case
 import qualified Constructed
+import qualified Pattern
 
 data Referent = Local | Primitive P.Primitive | OtherGlobal
 
@@ -87,9 +86,9 @@ exp' e locals =
         S.Lambda xs e -> X.LambdaX (X.Lambda xs (exp' e (xs ++ locals)))
         S.VCon k -> X.Constructed (Constructed.T k [])
         S.Case (Case.T e choices) ->
-            let choice (pat, e) = (pat, exp' e undefined) --  PatUtil.bound pat @ locals)
+            let choice (pat, e) = (pat, exp' e (Pattern.bound pat ++ locals)) --  PatUtil.bound pat @ locals)
              in X.Case (Case.T (exp e) (map choice choices))
-        _ -> error $ "exp': " ++ show e
+        -- _ -> error $ "exp': " ++ show e
   in exp e
 
 def :: S.Def -> X.Def

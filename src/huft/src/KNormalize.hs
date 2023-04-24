@@ -189,3 +189,13 @@ bindAnyReg :: RegSet -> Exp -> (Reg -> Exp) -> Exp
 bindAnyReg a e k = case e of
   (K.Name n) -> k n
   _ -> bindSmallest a e k
+
+
+{-  printing pattern matching tree   -}
+
+-- structure MC = MatchCompiler(type register = int
+--                              fun regString r = "$r" ^ Int.toString r
+--                             )
+
+-- structure MV = MatchViz(structure Tree = MC)
+-- val vizTree = MV.viz (WppScheme.expString o CSUtil.embedExp)
