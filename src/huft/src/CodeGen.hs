@@ -8,7 +8,7 @@ import qualified AsmUtils as U
 import Control.Monad.Trans.State (state, evalState)
 import qualified MatchCompiler as M
 import Data.Char (isDigit)
-import Data.Foldable (foldrM)
+import Data.Foldable (foldrM, foldlM)
 
 
 type Reg = O.Reg
@@ -59,13 +59,14 @@ conLiteral lcons = case lcons of
 
 switchVcon :: Generator Code -> Code -> (Reg, [(M.LabeledConstructor, Exp)], Exp) -> U.UniqueLabelState Code
 switchVcon gen finish (r, choices, fallthru) = do
-  (cases, code) <- foldrM (\((cons, arity), e) (cases, code)->
+  (table, cases) <- foldlM (\(table, cases) ((cons, arity), e) ->
     do 
       l <- U.newLabel
       body <- gen e
-      return $ ((O.String cons, arity, l): cases, code . s (U.deflabel l) . body)) ([], empty) choices
-  last <- gen fallthru
-  return $ s (A.GotoVCon 0 cases) -- TODO fix
+      return ((conLiteral (cons, arity), arity, l): table, cases . s (U.deflabel l) . body))
+      ([], empty) choices
+  dfault <- gen fallthru
+  return $ s (A.GotoVCon r table) . cases . dfault
 
 toReg' :: Reg -> Generator Code
 toReg' dest e = case e of
@@ -95,6 +96,10 @@ toReg' dest e = case e of
     K.Block es ->
       return $ s (U.mkblock dest dest (length es)) .
                l (mapi (U.setblkslot dest) es)
+    K.SwitchVCon x cases dfault -> do
+      exit <- U.newLabel
+      switchVcon (toReg' dest) (s (U.goto exit)) (x, cases, dfault) <.>
+        return (s (U.deflabel exit))
     _ -> error $ show e
 -- Using A.mkclosure, allocate the closure into that register.
 -- Initialize the slots by emitting a sequence of instructions created using A.setclslot.
@@ -143,6 +148,10 @@ forEffect' e = case e of
   K.ClosureX (K.Closure args body captured) -> return empty
   K.LetRec bindings body -> letrec forEffect' bindings body
   K.Block {} -> return empty
+  K.SwitchVCon x cases dfault -> do
+      exit <- U.newLabel
+      switchVcon forEffect' (s (U.goto exit)) (x, cases, dfault) <.>
+        return (s (U.deflabel exit))
 
 -- wont be implementing till module 8
 toReturn' :: Generator Code
@@ -175,6 +184,8 @@ toReturn' e = let
     body' <- toReg' 0 body
     letrec toReturn' bindings body <.> return (body' . s (returnx 0))
   K.Block {} -> returnIn0 e
+  K.SwitchVCon x cases dfault -> switchVcon toReturn' empty (x, cases, dfault)
+  
 
 codeGen :: [Exp] -> [Instruction]
 codeGen es = foldr (.) empty (evalState (mapM forEffect' es) 0) []
