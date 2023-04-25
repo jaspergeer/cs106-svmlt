@@ -91,9 +91,13 @@ instruction_info instructions[] = {
   { "getclslot", GetClSlot, parseR2U8, "rX := rY.Z" },
   { "setclslot", SetClSlot, parseR2U8, "rX.Z := rY" },
   
+  // module 12
+  { "mkblock", MkBlock, parseR2U8, "$rX := block[$rY,Z]"},
+  { "getblkslot", GetBlkSlot, parseR2U8, "rX := rY@Z" },
+  { "setblkslot", SetBlkSlot, parseR2U8, "rX@Z := rY" },
+
   { "gc", GC, parseR0, "gc" },
   { "halt", Return, parseR0, "halt" }
-  
   };
 
 int number_of_instructions = sizeof(instructions) / sizeof(instructions[0]);

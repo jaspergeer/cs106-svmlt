@@ -51,6 +51,11 @@ nbRegsWith _ _ _ [] k = k []
 nbRegsWith normalize p a (e:es) k = p a (normalize a e)
   (\t -> nbRegsWith normalize p (a \\ t) es (\ts -> k (t:ts)))
 
+inLocalVar :: RegSet -> (Reg -> Exp) -> Exp
+inLocalVar rs k =
+  let t = smallest rs
+  in K.Assign t (k t)
+
 exp :: E.Env Reg -> RegSet -> C.Exp -> Exp
 exp rho a e =
   let nbRegs = nbRegsWith (exp rho)
@@ -88,20 +93,26 @@ exp rho a e =
              bind_regs ns ts = foldl (\rho (n, t) -> E.bind n t rho) rho (zip ns ts)
          in nbRegs bindSmallest a es
               (\ts -> exp (bind_regs ns ts) (foldl (\\) a ts) body)
-    (C.ClosureX (C.Closure formals body [])) ->
-      let
-        -- update funreg by always binding smallest to the formals
-        -- maybe can rewrite with bindSmallestReg policy?
-        -- NEED TO CHECK the justification of the `funcode` helper function
-        (args, funbody) = funcode (C.FunCode formals body)
-      in K.FunCode args funbody
+    -- (C.ClosureX (C.Closure formals body [])) ->
+    --   let
+    --     -- update funreg by always binding smallest to the formals
+    --     -- maybe can rewrite with bindSmallestReg policy?
+    --     -- NEED TO CHECK the justification of the `funcode` helper function
+    --     (args, funbody) = funcode (C.FunCode formals body)
+    --   in K.FunCode args funbody
+    -- (C.ClosureX (C.Closure formals body captured)) ->
+    --   let
+    --     -- if the captured vars is not empty, they must be put in regs by nbRegsWith
+    --   in
+    --     nbRegs bindAnyReg a captured (\ts ->
+    --     let (args, funbody) = funcode (C.FunCode formals body)
+    --     in K.ClosureX (K.Closure args funbody ts))
     (C.ClosureX (C.Closure formals body captured)) ->
-      let
-        -- if the captured vars is not empty, they must be put in regs by nbRegsWith
-      in
-        nbRegs bindAnyReg a captured (\ts ->
-        let (args, funbody) = funcode (C.FunCode formals body)
-        in K.ClosureX (K.Closure args funbody ts))
+      inLocalVar a (\t -> nbRegs bindAnyReg (a \\ t)
+        captured (\ts ->
+          let
+            (args, funbody) = funcode (C.FunCode formals body)
+          in K.ClosureX (K.Closure args funbody ts)))
 
     (C.Captured i) -> K.Captured i
     (C.LetRec bindings body) ->
@@ -126,7 +137,8 @@ exp rho a e =
     (C.Constructed (CONS.T "#f" [])) -> K.Literal (O.Bool False)
     (C.Constructed (CONS.T "cons" [x, y])) -> nbRegs bindAnyReg a [x, y] (K.VMOP P.cons)
     (C.Constructed (CONS.T "'()" [])) -> K.Literal O.EmptyList
-    (C.Constructed (CONS.T cons es)) -> nbRegs bindAnyReg a (C.Literal (O.String cons) : es) K.Block
+    (C.Constructed (CONS.T cons es)) -> inLocalVar a
+      (\t -> nbRegs bindAnyReg (a \\ t) (C.Literal (O.String cons) : es) K.Block)
     (C.Case (Case.T e choices)) -> bindAnyReg a (exp rho a e)
      (\t ->
       let
