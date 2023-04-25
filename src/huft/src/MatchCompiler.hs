@@ -8,6 +8,7 @@ import qualified Pattern as P
 -- no need for ListUtil
 import qualified Env as E
 import qualified Data.List as L
+import Data.Maybe
 
 -- basic data sturctures
 
@@ -159,79 +160,70 @@ refineFrontier r lcon@(con, arity) frontier@(F (i, constraints)) =
         INCOMPATIBLE -> Nothing
         COMPATIBLE newpairs -> Just $ F (i, newpairs)
 
+match :: Frontier a -> Tree a
+match (F (a, constraints)) = Match a (foldr (\(pi, pat) env ->
+  case (pi, pat) of
+    (REGISTER r, P.Var x) -> E.bind x r env
+    _ -> env) E.empty constraints)
+
+compile :: Register -> [Frontier a] -> Tree a
+compile scrutinee frontiers@(front@(F (a, constraints)):_) =
+  case [pi | (pi, P.Apply {}) <- constraints]
+    of [] -> match front
+       pi@(CHILD (r, i)) : _ -> LetChild (r, i)
+        (\r ->
+          let frontiers' = map (REGISTER r `forPath` pi) frontiers
+          in compile scrutinee frontiers')
+       pi@(REGISTER r) : _ ->
+        let
+          dom constraints = [pi' | (pi', _) <- constraints]
+          cs = [(cons, length pats) | (_, P.Apply cons pats) <- constraints] -- TODO fix
+          refineFrontiers reg lcons = mapMaybe (refineFrontier reg lcons)
+          edges = map (\lcons ->
+            let
+              refined = refineFrontiers scrutinee lcons frontiers
+            in E lcons (compile scrutinee refined)) cs
+          defaults = filter (\ft@(F (i, f)) -> notElem pi (dom f) ||
+            case patternAt pi ft of
+              Just (P.Var _) -> True
+              _ -> False) frontiers
+        in Test scrutinee edges (if null defaults then Nothing else Just (compile scrutinee defaults))
+
+split :: (a -> Bool) -> [a] -> ([a], [a])
+split p l =
+  let
+    split' p as (b:bs) = if p b then split' p (b:as) bs else (as, b:bs)
+  in split' p [] l
+
 decisionTree :: Register -> [(Pat, a)] -> Tree a
 -- register argument is the register that will hold the value of the scrutinee
-decisionTree r choices = let
-  -- initFrontiers = map (\(pat, a) -> F (a, [(REGISTER r, pat)])) choices
-  decisionTree' frontiers =
-    let
-        frontierMatches (F (_, constraints)) =
-          not (any (\(_, constraint) -> case constraint of
-                      P.Apply {} -> True
-                      _ -> False) constraints)
-        -- helper function for (MATCH (hd frontiers) on paper)
-        -- for match, first check if there's nay CHILD  case in path, if so, emit LETCHILD, ohterwise just MATCH
-        match (F (a, constraints)) = Match a (foldr (\(pi, pat) env -> case (pi, pat) of
-                                                      (REGISTER r, P.Var x) -> E.bind x r env
-                                                      -- CHILD CASE FOR PATH?
-                                                      -- Kresten enforces the invariant that Path only has REGSITER form
-                                                      _ -> env) 
-                                                      E.empty constraints)
-        compile [] = error "no frontiers"
-        compile frontiers@(front@(F (a, constraints)):_) =
-          if frontierMatches front
-          then match front
-          else
-            let
-              dom constraints = [pi' | (pi', _) <- constraints]
-              pis = [pi | frontier@(F (_, constraints)) <- frontiers, pi <- dom constraints,
-                case patternAt pi frontier of
-                  Just (P.Apply {}) -> True
-                  _ -> False]
-              pi = head pis
-            in
-              case pi of
-                (CHILD (r, i)) -> LetChild (r, i)
-                  (\r -> let
-                    renamePaths :: [Constraint] -> [Constraint]
-                    renamePaths = map (\(pi', pat) -> if pi' == pi then (REGISTER r, pat) else (pi', pat))
-                    frontiers' = map (\(F (a, constraints)) -> F (a, renamePaths constraints)) frontiers
-                    in compile frontiers')
-                REGISTER r' ->
-                  let
-                    cs = [(cons, length pats) | (_, P.Apply cons pats) <- constraints]
-                    refineFrontiers reg lcons =
-                      foldr (\ft fts -> case refineFrontier reg lcons ft of
-                                        Just ft' -> ft':fts
-                                        _ -> fts) []
-                    edges = foldr (\lcons edges ->
-                      let
-                        refined = refineFrontiers r' lcons frontiers
-                      in
-                        if null refined then edges
-                        else E lcons (compile refined) : edges) [] cs
 
-                    defaults = filter (\ft@(F (i, f)) -> notElem pi (dom f) ||
-                      case patternAt pi ft of
-                        Just (P.Var _) -> True
-                        _ -> False) frontiers
-                  in Test r' edges (if null defaults then Nothing else Just (compile defaults))
-    in compile frontiers
-  in foldl (\t@(Test r edges dfault) (pat, a) ->
-    case dfault of
-      Just _ -> t
-      Nothing ->
-        case pat of
-          P.Wildcard -> Test r edges (Just (Match a E.empty))
-          P.Var x -> Match a (E.bind x r E.empty)
-          P.Apply vcon as ->
-            let
-              initFrontier = [F (a, [(REGISTER r, pat)])]
-              t' = decisionTree' initFrontier
-            in case t' of
-              Test _ edges' _ -> Test r (edges ++ edges') Nothing
-              _ -> error (show (vcon, as))
-        ) (Test r [] Nothing) choices
+decisionTree scrutinee choices =
+  let
+    (applys, rest) = split
+      (\(pat, _) -> case pat of
+                    P.Apply {} -> True
+                    _ -> False) choices
+    initFrontiers = map (\(pat, a) -> F (a, [(REGISTER scrutinee, pat)])) choices
+    -- cases = map (\(pat, a) -> compile scrutinee [F (a, [(REGISTER scrutinee, pat)])]) applys
+
+  -- in foldl (\t@(Test r edges dfault) (pat, a) ->
+  --   case dfault of
+  --     Just _ -> t
+  --     Nothing ->
+  --       case pat of
+  --         P.Wildcard -> Test r edges (Just (Match a E.empty))
+  --         P.Var x -> Match a (E.bind x r E.empty)
+  --         P.Apply vcon as ->
+  --           let
+  --             initFrontier = [F (a, [(REGISTER r, pat)])]
+  --             t' = compile r initFrontier
+  --           in case t' of
+  --             Test _ edges' _ -> Test r (edges ++ edges') Nothing
+  --             _ -> error (show (vcon, as))
+  --       ) (Test scrutinee [] Nothing) choices
+  in compile scrutinee initFrontiers
+
 
 {-
   Now implement function decisionTree. The TEST and MATCH nodes are described in the paper. 

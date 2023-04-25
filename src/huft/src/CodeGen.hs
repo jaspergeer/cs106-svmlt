@@ -6,14 +6,20 @@ import qualified KNF as K
 import qualified Primitives as P
 import qualified AsmUtils as U
 import Control.Monad.Trans.State (state, evalState)
+import qualified MatchCompiler as M
+import Data.Char (isDigit)
+import Data.Foldable (foldrM)
 
- 
+
 type Reg = O.Reg
 type Instruction = A.Instr
 
 ----- Join lists, John Hughes (1985) style -----
 
 type HughesList a = [a] -> [a]
+type Code = HughesList Instruction
+type Exp = K.Exp Reg
+type Generator a = Exp -> U.UniqueLabelState a
 
 empty :: HughesList a
 empty tail = tail
@@ -43,7 +49,25 @@ makeIf toX x e1 e2 = do
       return $ s (U.ifgoto x l) . branch2 . s (U.goto l') .
                s (U.deflabel l) . branch1 . s (U.deflabel l')
 
-toReg' :: Reg -> K.Exp Reg -> U.UniqueLabelState (HughesList Instruction)
+conLiteral :: M.LabeledConstructor -> O.Literal
+conLiteral lcons = case lcons of
+  ("#t", 0) -> O.Bool True
+  ("#f", 0) -> O.Bool False
+  ("'()", 0) -> O.EmptyList
+  (cons, 0) | all isDigit cons -> O.Int (read cons)
+  (cons, _) -> O.String cons
+
+switchVcon :: Generator Code -> Code -> (Reg, [(M.LabeledConstructor, Exp)], Exp) -> U.UniqueLabelState Code
+switchVcon gen finish (r, choices, fallthru) = do
+  (cases, code) <- foldrM (\((cons, arity), e) (cases, code)->
+    do 
+      l <- U.newLabel
+      body <- gen e
+      return $ ((O.String cons, arity, l): cases, code . s (U.deflabel l) . body)) ([], empty) choices
+  last <- gen fallthru
+  return $ s (A.GotoVCon 0 cases) -- TODO fix
+
+toReg' :: Reg -> Generator Code
 toReg' dest e = case e of
     -- forms with direct translation
     K.Literal lit -> return $ s $ U.reglit "loadliteral" dest lit
@@ -66,8 +90,11 @@ toReg' dest e = case e of
       b' <- toReturn' body
       return $ s (A.LoadFunc dest (length args) (b' [])) .
                s (U.mkclosure dest dest (length captured)) .
-               l (mapi (\i r -> U.setclslot dest i r) captured)
+               l (mapi (U.setclslot dest) captured)
     K.LetRec bindings body -> letrec (toReg' dest) bindings body
+    K.Block es ->
+      return $ s (U.mkblock dest dest (length es)) .
+               l (mapi (U.setblkslot dest) es)
     _ -> error $ show e
 -- Using A.mkclosure, allocate the closure into that register.
 -- Initialize the slots by emitting a sequence of instructions created using A.setclslot.
@@ -78,7 +105,7 @@ mapi f xs =
       go i (x:xs) = f i x : go (i+1) xs
   in go 0 xs
 
-forEffect' :: K.Exp Reg -> U.UniqueLabelState (HughesList Instruction)
+forEffect' :: Generator Code
 forEffect' e = case e of
   K.Literal lit -> return empty
   K.Name a -> return empty
@@ -87,6 +114,12 @@ forEffect' e = case e of
   -- otherwise
   K.VMOP _ _ -> return empty
   K.VMOPGLO (P.HasEffect (P.Base op _)) args v -> return $ s $
+  {- assume args only have one argument -}
+  {- assume args only have one argument -}
+  {- assume args only have one argument -}
+  {- assume args only have one argument -}
+  {- assume args only have one argument -}
+  {- assume args only have one argument -}
   {- assume args only have one argument -}
   {- assume args only have one argument -} A.ObjectCode (O.RegLit op (head args) v)
   -- here we did not catch getglo because it is a SetRegister Primitive
@@ -109,18 +142,20 @@ forEffect' e = case e of
   K.Captured i -> return empty
   K.ClosureX (K.Closure args body captured) -> return empty
   K.LetRec bindings body -> letrec forEffect' bindings body
+  K.Block {} -> return empty
 
 -- wont be implementing till module 8
-toReturn' :: K.Exp Reg -> U.UniqueLabelState (HughesList Instruction)
+toReturn' :: Generator Code
 toReturn' e = let
   returnx x = U.regs "return" [x]
+  returnIn0 e = toReg' 0 e <.> return (s $ returnx 0)
   in case e of
-  K.Literal lit -> toReg' 0 e <.> return (s $ returnx 0)
+  K.Literal lit -> returnIn0 e
   K.Name a -> return $ s $ returnx a
-  K.VMOP prim args -> toReg' 0 e <.> return (s $ returnx 0)
-  K.VMOPGLO prim args v -> toReg' 0 e <.> return (s $ returnx 0)
+  K.VMOP prim args -> returnIn0 e
+  K.VMOPGLO prim args v -> returnIn0 e
   K.FunCall funreg args -> return $ s $ U.tailcall funreg args
-  K.FunCode args body -> toReg' 0 e <.> return (s $ returnx 0)
+  K.FunCode args body -> returnIn0 e
   -- control flow
   K.If x e1 e2 -> do
       l <- U.newLabel
@@ -128,23 +163,24 @@ toReturn' e = let
       branch1 <- toReturn' e1
       return $ s (U.ifgoto x l) . branch2 .
                s (U.deflabel l) . branch1
-  K.While x e e' -> toReg' 0 e <.> return (s $ returnx 0)
+  K.While x e e' -> returnIn0 e
   -- floatable
   K.Seq e1 e2 -> forEffect' e1 <.> toReturn' e2
   K.Let x e e' -> toReg' x e <.> toReturn' e'
   K.Assign _ e -> toReturn' e
   -- not sure?
-  K.Captured i -> toReg' 0 e <.> return (s $ returnx 0)
-  K.ClosureX (K.Closure args body captured) -> toReg' 0 e <.> return (s $ returnx 0)
+  K.Captured i -> returnIn0 e
+  K.ClosureX (K.Closure args body captured) -> returnIn0 e
   K.LetRec bindings body -> do
     body' <- toReg' 0 body
     letrec toReturn' bindings body <.> return (body' . s (returnx 0))
+  K.Block {} -> returnIn0 e
 
-codeGen :: [K.Exp Reg] -> [Instruction]
+codeGen :: [Exp] -> [Instruction]
 codeGen es = foldr (.) empty (evalState (mapM forEffect' es) 0) []
 
-letrec :: (K.Exp Reg -> U.UniqueLabelState (HughesList Instruction)) -> [(Reg, K.Closure Reg)] -> K.Exp Reg -> U.UniqueLabelState (HughesList Instruction)
-letrec gen bindings body = 
+letrec :: Generator Code -> [(Reg, K.Closure Reg)] -> Generator Code
+letrec gen bindings body =
   let alloc (f_i, K.Closure formals body captures) =
         toReg' f_i (K.FunCode formals body) <.> return (s (U.mkclosure f_i f_i (length captures)))
       init (f_i, K.Closure formals body captures) = l (mapi (U.setclslot f_i) captures)
