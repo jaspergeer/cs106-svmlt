@@ -148,17 +148,22 @@ refineFrontier :: Register -> LabeledConstructor -> Frontier a -> Maybe (Frontie
 --     Just _ -> Nothing
 --     _ -> Just frontier
 
-refineFrontier r lcon@(con, arity) frontier@(F (i, constraints)) = 
-  case patternAt (REGISTER r) frontier of
-    Nothing -> Nothing
-    -- the following two cases can be reduces
-    Just (P.Var _) -> Just frontier
-    Just P.Wildcard -> Just frontier
-    Just (P.Apply vcon ps) | con == vcon && length ps == arity ->
-      let allcomp = compatibilityConcat (map (refineConstraint r lcon) constraints)
-      in case allcomp of
-        INCOMPATIBLE -> Nothing
-        COMPATIBLE newpairs -> Just $ F (i, newpairs)
+-- refineFrontier r lcon@(con, arity) frontier@(F (i, constraints)) = 
+--   case patternAt (REGISTER r) frontier of
+--     Nothing -> Nothing
+--     -- the following two cases can be reduces
+--     Just (P.Var _) -> Just frontier
+--     Just P.Wildcard -> Just frontier
+--     Just (P.Apply vcon ps) | con == vcon && length ps == arity ->
+--       let allcomp = compatibilityConcat (map (refineConstraint r lcon) constraints)
+--       in case allcomp of
+--         INCOMPATIBLE -> Nothing
+--         COMPATIBLE newpairs -> Just $ F (i, newpairs)
+
+refineFrontier r con f@(F (rule, pairs)) =
+  case compatibilityConcat (map (refineConstraint r con) pairs) of
+    INCOMPATIBLE -> Nothing
+    COMPATIBLE newpairs -> Just $ F (rule, newpairs)
 
 match :: Frontier a -> Tree a
 match (F (a, constraints)) = Match a (foldr (\(pi, pat) env ->
