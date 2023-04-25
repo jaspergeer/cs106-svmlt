@@ -6,6 +6,9 @@ import qualified KNF as K
 import qualified Primitives as P
 import qualified AsmUtils as U
 import Control.Monad.Trans.State (state, evalState)
+import qualified MatchCompiler as M
+import Data.Char (isDigit)
+import Data.Foldable (foldrM)
 
 
 type Reg = O.Reg
@@ -14,6 +17,9 @@ type Instruction = A.Instr
 ----- Join lists, John Hughes (1985) style -----
 
 type HughesList a = [a] -> [a]
+type Code = HughesList Instruction
+type Exp = K.Exp Reg
+type Generator a = Exp -> U.UniqueLabelState a
 
 empty :: HughesList a
 empty tail = tail
@@ -43,7 +49,25 @@ makeIf toX x e1 e2 = do
       return $ s (U.ifgoto x l) . branch2 . s (U.goto l') .
                s (U.deflabel l) . branch1 . s (U.deflabel l')
 
-toReg' :: Reg -> K.Exp Reg -> U.UniqueLabelState (HughesList Instruction)
+conLiteral :: M.LabeledConstructor -> O.Literal
+conLiteral lcons = case lcons of
+  ("#t", 0) -> O.Bool True
+  ("#f", 0) -> O.Bool False
+  ("'()", 0) -> O.EmptyList
+  (cons, 0) | all isDigit cons -> O.Int (read cons)
+  (cons, _) -> O.String cons
+
+switchVcon :: Generator Code -> Code -> (Reg, [(M.LabeledConstructor, Exp)], Exp) -> U.UniqueLabelState Code
+switchVcon gen finish (r, choices, fallthru) = do
+  (cases, code) <- foldrM (\((cons, arity), e) (cases, code)->
+    do 
+      l <- U.newLabel
+      body <- gen e
+      return $ ((O.String cons, arity, l): cases, code . s (U.deflabel l) . body)) ([], empty) choices
+  last <- gen fallthru
+  return $ s (A.GotoVCon 0 cases) -- TODO fix
+
+toReg' :: Reg -> Generator Code
 toReg' dest e = case e of
     -- forms with direct translation
     K.Literal lit -> return $ s $ U.reglit "loadliteral" dest lit
@@ -81,7 +105,7 @@ mapi f xs =
       go i (x:xs) = f i x : go (i+1) xs
   in go 0 xs
 
-forEffect' :: K.Exp Reg -> U.UniqueLabelState (HughesList Instruction)
+forEffect' :: Generator Code
 forEffect' e = case e of
   K.Literal lit -> return empty
   K.Name a -> return empty
@@ -121,7 +145,7 @@ forEffect' e = case e of
   K.Block {} -> return empty
 
 -- wont be implementing till module 8
-toReturn' :: K.Exp Reg -> U.UniqueLabelState (HughesList Instruction)
+toReturn' :: Generator Code
 toReturn' e = let
   returnx x = U.regs "return" [x]
   returnIn0 e = toReg' 0 e <.> return (s $ returnx 0)
@@ -152,10 +176,10 @@ toReturn' e = let
     letrec toReturn' bindings body <.> return (body' . s (returnx 0))
   K.Block {} -> returnIn0 e
 
-codeGen :: [K.Exp Reg] -> [Instruction]
+codeGen :: [Exp] -> [Instruction]
 codeGen es = foldr (.) empty (evalState (mapM forEffect' es) 0) []
 
-letrec :: (K.Exp Reg -> U.UniqueLabelState (HughesList Instruction)) -> [(Reg, K.Closure Reg)] -> K.Exp Reg -> U.UniqueLabelState (HughesList Instruction)
+letrec :: Generator Code -> [(Reg, K.Closure Reg)] -> Generator Code
 letrec gen bindings body =
   let alloc (f_i, K.Closure formals body captures) =
         toReg' f_i (K.FunCode formals body) <.> return (s (U.mkclosure f_i f_i (length captures)))
