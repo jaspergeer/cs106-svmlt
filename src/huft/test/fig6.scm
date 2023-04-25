@@ -1,9 +1,8 @@
 (define figure-6 (arg)
   (case arg
-    [(C1 x) 'one]
-    [(C2 x)  'two]
-    [(C3 x)  'three]
-    [_          'four]
-    ))
+    [C1 'one]
+    [(C1 x C4)  'two]
+    [(C1 x C5)  'three]
+    [_          'four]))
 
-;; (check-expect (figure-6 (C1 C2 C3)) 'one)
+(check-expect (figure-6 (C1 3 C4)) 'two)

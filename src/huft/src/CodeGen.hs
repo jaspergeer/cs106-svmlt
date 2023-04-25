@@ -68,6 +68,7 @@ toReg' dest e = case e of
                s (U.mkclosure dest dest (length captured)) .
                l (mapi (\i r -> U.setclslot dest i r) captured)
     K.LetRec bindings body -> letrec (toReg' dest) bindings body
+    _ -> error $ show e
 -- Using A.mkclosure, allocate the closure into that register.
 -- Initialize the slots by emitting a sequence of instructions created using A.setclslot.
 
