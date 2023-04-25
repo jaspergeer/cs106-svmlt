@@ -171,24 +171,34 @@ decisionTree r choices@((pat, a):ps) =
           let
 
             dom constraints = [pi' | (pi', _) <- constraints]
-            pis = [pi | frontier@(F (_, constraints)) <- frontiers, pi <- dom constraints, case patternAt pi frontier of
-                                                                                              Just (P.Var _) -> True
-                                                                                              _ -> False]
+            pis = [pi | frontier@(F (_, constraints)) <- frontiers, pi <- dom constraints,
+              case patternAt pi frontier of
+                Just (P.Var _) -> True
+                _ -> False]
             -- pis = [ f | (i, f) <- constraints]
             pi = head pis
-
-            cs = [(cons, length pats) | (_, P.Apply cons pats) <- constraints]
-            refineFrontiers reg lcons =
-              foldr (\ft fts -> case refineFrontier reg lcons ft of
-                                Just ft' -> ft':fts
-                                _ -> fts) []
-            edges = map (\lcons -> E lcons (compile (refineFrontiers r lcons frontiers))) cs
-            
-            defaults = filter (\ft@(F (i, f)) -> notElem pi (dom f) ||
-              case patternAt pi ft of
-                Just (P.Var _) -> True
-                _ -> False) frontiers
-          in Test r edges (Just (compile defaults))
+          in
+            case pi of
+              (CHILD (r, i)) -> LetChild (r, i) 
+                (\r -> let
+                  renamePaths :: [Constraint] -> [Constraint]
+                  renamePaths = map (\(pi', pat) -> if pi' == pi then (REGISTER r, pat) else (pi', pat))
+                  frontiers' = map (\(F (a, constraints)) -> F (a, renamePaths constraints)) frontiers
+                  in compile frontiers')
+              REGISTER r' ->
+                let
+                  cs = [(cons, length pats) | (_, P.Apply cons pats) <- constraints]
+                  refineFrontiers reg lcons =
+                    foldr (\ft fts -> case refineFrontier reg lcons ft of
+                                      Just ft' -> ft':fts
+                                      _ -> fts) []
+                  edges = map (\lcons -> E lcons (compile (refineFrontiers r' lcons frontiers))) cs
+                  
+                  defaults = filter (\ft@(F (i, f)) -> notElem pi (dom f) ||
+                    case patternAt pi ft of
+                      Just (P.Var _) -> True
+                      _ -> False) frontiers
+                in Test r' edges (Just (compile defaults))
   in compile initFrontier
 
   
