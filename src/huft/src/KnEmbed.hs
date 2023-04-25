@@ -85,8 +85,15 @@ def e = S.Exp (exp e)
                         bindings' = map (\(f, closure) -> (f, exp (K.ClosureX closure))) bindings
                         body' = exp body
                     in S.LetX S.LetRec bindings' body'
-                K.Block _ -> error "Left as Exercise"
-                K.SwitchVCon {} -> error "Left as Exercise"
+                K.Block xs -> S.Apply (S.Var "block") (map S.Var xs)
+                K.SwitchVCon x choices e ->
+                  let
+                    lastQa = [S.Literal (S.Bool True), exp e]
+                    isCon vcon arity =
+                      S.Apply (S.Var "matches-vcon-arity?")
+                        [S.Var x, S.Literal (S.Sym vcon), (S.Literal . S.Int) arity]
+                    qa c e = (isCon c, exp e)
+                  in undefined
 
 -- What will happen if the offset of the VMOPL is not a string in getglobal case:
 -- Ans: impossible, should have some error message for debugging,
