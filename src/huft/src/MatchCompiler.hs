@@ -161,8 +161,8 @@ refineFrontier r lcon@(con, arity) frontier@(F (i, constraints)) =
 decisionTree :: Register -> [(Pat, a)] -> Tree a
 -- register argument is the register that will hold the value of the scrutinee
 decisionTree r choices = let
-  initFrontiers = map (\(pat, e) -> F (e, [(REGISTER r, pat)])) choices
-  decisionTree' frontiers (pat, a) =
+  -- initFrontiers = map (\(pat, a) -> F (a, [(REGISTER r, pat)])) choices
+  decisionTree' frontiers =
     let
         frontierMatches (F (_, constraints)) =
           not (any (\(_, constraint) -> case constraint of
@@ -171,8 +171,6 @@ decisionTree r choices = let
         -- helper function for (MATCH (hd frontiers) on paper)
         match (F (a, constraints)) = Match a (foldr (\(pi, pat) env -> case (pi, pat) of
                                                       (REGISTER r, P.Var x) -> E.bind x r env
-                                                      -- (CHILD (r, i), P.Var x) -> E.bind x r env
-                                                      -- what should i bind?
                                                       _ -> env) E.empty constraints)
         compile [] = error "no frontiers"
         compile frontiers@(front@(F (a, constraints)):_) =
@@ -223,12 +221,12 @@ decisionTree r choices = let
           P.Var x -> Match a (E.bind x r E.empty)
           P.Apply vcon as ->
             let
-              lcons = (vcon, length as)
-              t' = decisionTree' initFrontiers (pat, a)
+              initFrontier = [F (a, [(REGISTER r, pat)])]
+              t' = decisionTree' initFrontier
             in case t' of
-              Test _ edges' _ -> Test r (edges' ++ edges) Nothing
+              Test _ edges' _ -> Test r (edges ++ edges') Nothing
+              _ -> error (show (vcon, as))
         ) (Test r [] Nothing) choices
-
 
 {-
   Now implement function decisionTree. The TEST and MATCH nodes are described in the paper. 
