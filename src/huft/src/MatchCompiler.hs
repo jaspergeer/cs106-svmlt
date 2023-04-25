@@ -138,25 +138,26 @@ refineConstraint r lcon constraint =
 --     _ -> Just frontier
 
 refineFrontier :: Register -> LabeledConstructor -> Frontier a -> Maybe (Frontier a)
-refineFrontier r lcon@(con, arity) frontier@(F (i, constraints)) =
-  case patternAt (REGISTER r) frontier of
-    Just (P.Apply vcon ps) | con == vcon && length ps == arity
-      -> let newcon = concat $ mapCompatible (refineConstraint r lcon) constraints
-          -- what if newcon is INCOMPATIBLE?
-          in Just $ F (i, newcon)
-    Just _ -> Nothing
-    _ -> Just frontier
-
--- refineFrontier r lcon@(con, arity) frontier@(F (i, constraints)) = 
+-- refineFrontier r lcon@(con, arity) frontier@(F (i, constraints)) =
 --   case patternAt (REGISTER r) frontier of
---     Nothing -> Nothing
---     Just (P.Var _) -> Just frontier
---     Just P.Wildcard -> Just frontier
---     Just (P.Apply vcon ps) | con == vcon && length ps == arity ->
---       let allcomp = compatibilityConcat (map (refineConstraint r lcon) constraints)
---       in case allcomp of
---         INCOMPATIBLE -> Nothing
---         COMPATIBLE newpairs -> Just $ F (i, newpairs)
+--     Just (P.Apply vcon ps) | con == vcon && length ps == arity
+--       -> let newcon = concat $ mapCompatible (refineConstraint r lcon) constraints
+--           -- what if newcon is INCOMPATIBLE?
+--           in Just $ F (i, newcon)
+--     Just _ -> Nothing
+--     _ -> Just frontier
+
+refineFrontier r lcon@(con, arity) frontier@(F (i, constraints)) = 
+  case patternAt (REGISTER r) frontier of
+    Nothing -> Nothing
+    -- the following two cases can be reduces
+    Just (P.Var _) -> Just frontier
+    Just P.Wildcard -> Just frontier
+    Just (P.Apply vcon ps) | con == vcon && length ps == arity ->
+      let allcomp = compatibilityConcat (map (refineConstraint r lcon) constraints)
+      in case allcomp of
+        INCOMPATIBLE -> Nothing
+        COMPATIBLE newpairs -> Just $ F (i, newpairs)
 
 decisionTree :: Register -> [(Pat, a)] -> Tree a
 -- register argument is the register that will hold the value of the scrutinee
@@ -169,9 +170,13 @@ decisionTree r choices = let
                       P.Apply {} -> True
                       _ -> False) constraints)
         -- helper function for (MATCH (hd frontiers) on paper)
+        -- for match, first check if there's nay CHILD  case in path, if so, emit LETCHILD, ohterwise just MATCH
         match (F (a, constraints)) = Match a (foldr (\(pi, pat) env -> case (pi, pat) of
                                                       (REGISTER r, P.Var x) -> E.bind x r env
-                                                      _ -> env) E.empty constraints)
+                                                      -- CHILD CASE FOR PATH?
+                                                      -- Kresten enforces the invariant that Path only has REGSITER form
+                                                      _ -> env) 
+                                                      E.empty constraints)
         compile [] = error "no frontiers"
         compile frontiers@(front@(F (a, constraints)):_) =
           if frontierMatches front
