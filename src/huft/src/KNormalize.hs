@@ -18,6 +18,7 @@ import qualified Pattern
 import qualified MatchCompiler as MC
 import qualified MatchViz as MV
 import qualified CSUtil
+import qualified Constructed as CONS
 -- import qualified VSchemeUnparse as VU
 
 import AsmUtils (i)
@@ -121,6 +122,10 @@ exp rho a e =
           f' x (\y -> map' f' xs (\ys -> k (y:ys)))
       in map' (closure . snd) bindings
         (\cs -> K.LetRec (zip ts cs) (exp rho' a' body))
+    (C.Constructed (CONS.T "#t" [])) -> K.Literal (O.Bool True)
+    (C.Constructed (CONS.T "#f" [])) -> K.Literal (O.Bool False)
+    (C.Constructed (CONS.T "cons" [x, y])) -> nbRegs bindAnyReg a [x, y] (K.VMOP P.cons)
+    (C.Constructed (CONS.T "'()" [])) -> K.Literal O.EmptyList
     (C.Constructed c) -> error $ show e -- module 12
     (C.Case (Case.T e choices)) -> bindAnyReg a (exp rho a e)
      (\t ->
@@ -132,7 +137,6 @@ exp rho a e =
           treeGen a (MC.Match e env) = exp (E.union env rho) a e -- dont you add union rho and env?
           a' = a \\ t
        in treeGen a' (id (MC.decisionTree t choices))) -- import VUScheme latter for HLS to work
-    -- _ -> error $ show e
 
 
 

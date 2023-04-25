@@ -111,7 +111,7 @@ expr = let
       <|> letstar <$> try (try (tok "let*") *> brackd (many bind)) <*> expr
       <|> let
         choice = brackd ((,) <$> pattern <*> expr)
-        caset = Case.T <$> expr <*> brackd (many choice)
+        caset = Case.T <$> expr <*> many choice
         in S.Case <$> try (tok "case" *> caset)
       <|> S.LetX <$> letKind <*> brackd (many bind) <*> expr
       <|> S.Apply <$> expr <*> many expr
