@@ -139,25 +139,26 @@ refineConstraint r lcon constraint =
 --     _ -> Just frontier
 
 refineFrontier :: Register -> LabeledConstructor -> Frontier a -> Maybe (Frontier a)
-refineFrontier r lcon@(con, arity) frontier@(F (i, constraints)) =
-  case patternAt (REGISTER r) frontier of
-    Just (P.Apply vcon ps) | con == vcon && length ps == arity
-      -> let newcon = concat $ mapCompatible (refineConstraint r lcon) constraints
-          -- what if newcon is INCOMPATIBLE?
-          in Just $ F (i, newcon)
-    Just _ -> Nothing
-    _ -> Just frontier
-
--- refineFrontier r lcon@(con, arity) frontier@(F (i, constraints)) = 
+-- refineFrontier r lcon@(con, arity) frontier@(F (i, constraints)) =
 --   case patternAt (REGISTER r) frontier of
---     Nothing -> Nothing
---     Just (P.Var _) -> Just frontier
---     Just P.Wildcard -> Just frontier
---     Just (P.Apply vcon ps) | con == vcon && length ps == arity ->
---       let allcomp = compatibilityConcat (map (refineConstraint r lcon) constraints)
---       in case allcomp of
---         INCOMPATIBLE -> Nothing
---         COMPATIBLE newpairs -> Just $ F (i, newpairs)
+--     Just (P.Apply vcon ps) | con == vcon && length ps == arity
+--       -> let newcon = concat $ mapCompatible (refineConstraint r lcon) constraints
+--           -- what if newcon is INCOMPATIBLE?
+--           in Just $ F (i, newcon)
+--     Just _ -> Nothing
+--     _ -> Just frontier
+
+refineFrontier r lcon@(con, arity) frontier@(F (i, constraints)) = 
+  case patternAt (REGISTER r) frontier of
+    Nothing -> Nothing
+    -- the following two cases can be reduces
+    Just (P.Var _) -> Just frontier
+    Just P.Wildcard -> Just frontier
+    Just (P.Apply vcon ps) | con == vcon && length ps == arity ->
+      let allcomp = compatibilityConcat (map (refineConstraint r lcon) constraints)
+      in case allcomp of
+        INCOMPATIBLE -> Nothing
+        COMPATIBLE newpairs -> Just $ F (i, newpairs)
 
 match :: Frontier a -> Tree a
 match (F (a, constraints)) = Match a (foldr (\(pi, pat) env ->
@@ -196,6 +197,7 @@ split p l =
 
 decisionTree :: Register -> [(Pat, a)] -> Tree a
 -- register argument is the register that will hold the value of the scrutinee
+
 decisionTree scrutinee choices =
   let
     (applys, rest) = split
@@ -221,6 +223,7 @@ decisionTree scrutinee choices =
   --             _ -> error (show (vcon, as))
   --       ) (Test scrutinee [] Nothing) choices
   in compile scrutinee initFrontiers
+
 
 {-
   Now implement function decisionTree. The TEST and MATCH nodes are described in the paper. 
