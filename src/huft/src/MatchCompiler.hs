@@ -168,13 +168,6 @@ compile scrutinee frontiers@(front@(F (a, constraints)):_) =
               Just (P.Var _) -> True
               _ -> False) frontiers
         in Test scrutinee edges (if null defaults then Nothing else Just (compile scrutinee defaults))
-
-split :: (a -> Bool) -> [a] -> ([a], [a])
-split p l =
-  let
-    split' p as (b:bs) = if p b then split' p (b:as) bs else (as, b:bs)
-  in split' p [] l
-
 {-
   Now implement function decisionTree. The TEST and MATCH nodes are described in the paper. 
   When your match compiler produces a node of the form LET_CHILD ((r, i), k), 
@@ -186,10 +179,6 @@ split p l =
 decisionTree :: Register -> [(Pat, a)] -> Tree a
 decisionTree scrutinee choices =
   let
-    (applys, rest) = split
-      (\(pat, _) -> case pat of
-                    P.Apply {} -> True
-                    _ -> False) choices
     initFrontiers = map (\(pat, a) -> F (a, [(REGISTER scrutinee, pat)])) choices
   in compile scrutinee initFrontiers
 
