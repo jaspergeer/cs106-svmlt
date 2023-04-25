@@ -191,19 +191,6 @@ split p l =
     split' p as (b:bs) = if p b then split' p (b:as) bs else (as, b:bs)
   in split' p [] l
 
-decisionTree :: Register -> [(Pat, a)] -> Tree a
--- register argument is the register that will hold the value of the scrutinee
-
-decisionTree scrutinee choices =
-  let
-    (applys, rest) = split
-      (\(pat, _) -> case pat of
-                    P.Apply {} -> True
-                    _ -> False) choices
-    initFrontiers = map (\(pat, a) -> F (a, [(REGISTER scrutinee, pat)])) choices
-  in compile scrutinee initFrontiers
-
-
 asReg (REGISTER r) k = k r
 asREg (CHILD (r, i)) k = LetChild (r, i) k
 
@@ -222,6 +209,8 @@ registerize ((_, pat) : _) _ = undefined
 -}
 
 decisionTree :: Register -> [(Pat, a)] -> Tree a
+-- register argument is the register that will hold the value of the scrutinee
+
 decisionTree scrutinee choices =
   let
     initFrontiers = map (\(pat, a) -> F (a, [(REGISTER scrutinee, pat)])) choices

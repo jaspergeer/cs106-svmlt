@@ -100,7 +100,7 @@ toReg' dest e = case e of
       exit <- U.newLabel
       switchVcon (toReg' dest) (s (U.goto exit)) (x, cases, dfault) <.>
         return (s (U.deflabel exit))
-    _ -> error $ show e
+    -- _ -> error $ show e
 -- Using A.mkclosure, allocate the closure into that register.
 -- Initialize the slots by emitting a sequence of instructions created using A.setclslot.
 
