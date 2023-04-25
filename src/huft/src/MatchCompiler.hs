@@ -90,9 +90,6 @@ compatibilityConcat = foldr (\a b -> case (a, b) of
 {----------- DIRTY TRICKS -------------}
 --  allow integer literals to masquerade as value constructors
 
--- maybeConstructed (π, p) 
---           = SOME (π, vcon, pats), when p is equivalent to P.APPLY (vcon, pats)
---           = NONE                  otherwise
 maybeConstructed :: Constraint -> Maybe (Path, P.VCon, [Pat])
 maybeConstructed (pi, P.Apply vcon pats) = Just (pi, vcon, pats)
 maybeConstructed _ = Nothing
@@ -125,21 +122,8 @@ refineConstraint r lcon constraint =
       -> COMPATIBLE $ zipWith (\i p -> (CHILD (r, i), p)) [1..(length ps)] ps
     _ -> INCOMPATIBLE
 
-
--- refineFrontier :: Register -> LabeledConstructor -> Frontier a -> Maybe (Frontier a)
--- -- returns the refinement of the given frontier, if compatible
--- -- I assume r ~ pi / c' ~ C / i ~ i / constraints ~ f
--- -- I hope this is what the 
--- refineFrontier r lcon@(con, arity) frontier@(F (i, constraints)) =
---   case patternAt (REGISTER r) frontier of
---     Just (P.Apply vcon ps) | con == vcon && length ps == arity
---       -> let newcon = concat $ mapCompatible (refineConstraint r lcon) constraints
---           -- what if newcon is INCOMPATIBLE?
---           in Just $ F (i, newcon)
---     Just _ -> Nothing
---     _ -> Just frontier
-
 refineFrontier :: Register -> LabeledConstructor -> Frontier a -> Maybe (Frontier a)
+
 -- refineFrontier r lcon@(con, arity) frontier@(F (i, constraints)) =
 --   case patternAt (REGISTER r) frontier of
 --     Just (P.Apply vcon ps) | con == vcon && length ps == arity
@@ -236,3 +220,9 @@ registerize ((_, pat) : _) _ = undefined
   and it updates all the frontiers, substituting the new register for the 
   old path CHILD (r, i). Perform the substitution using function forPath.
 -}
+
+decisionTree :: Register -> [(Pat, a)] -> Tree a
+decisionTree scrutinee choices =
+  let
+    initFrontiers = map (\(pat, a) -> F (a, [(REGISTER scrutinee, pat)])) choices
+  in compile scrutinee initFrontiers
