@@ -130,14 +130,21 @@ exp rho a e =
     (C.Case (Case.T e choices)) -> bindAnyReg a (exp rho a e)
      (\t ->
       let
-          treeGen :: RegSet -> MC.Tree C.Exp -> K.Exp Reg
-          treeGen a (MC.Test r edgeList (Just dfalt)) = K.SwitchVCon r (fmap (\(MC.E c t) -> (c, treeGen a t)) edgeList) (treeGen a dfalt)
-          treeGen a (MC.Test r edgeList Nothing) = K.SwitchVCon r (fmap (\(MC.E c t) -> (c, treeGen a t)) edgeList) (K.VMOP P.err [r])
-          treeGen a (MC.LetChild (r, i)  k) = bindAnyReg a (K.VMOPGLO P.getblockslot [r] (O.Int i))
-                                                           (\t -> treeGen (a \\ t) (k t))
-          treeGen a (MC.Match e env) = exp (E.union env rho) a e -- dont yopu add union rho and env?
           a' = a \\ t
-       in treeGen a' (id (MC.decisionTree t choices))) -- import VUScheme latter for HLS to work
+          treeGen :: RegSet -> MC.Tree C.Exp -> K.Exp Reg
+          treeGen a (MC.Test r edgeList (Just dfalt)) = 
+            K.SwitchVCon r (fmap (\(MC.E c tree') -> (c, treeGen a' tree')) edgeList) 
+                           (treeGen a' dfalt)
+          treeGen a (MC.Test r edgeList Nothing) = 
+            K.SwitchVCon r (fmap (\(MC.E c tree') -> (c, treeGen a' tree')) edgeList) 
+                           (K.VMOP P.err [r])
+          treeGen a (MC.LetChild (r, i)  k) = 
+            bindAnyReg a (K.VMOPGLO P.getblockslot [r] (O.Int i))
+                          (\t' -> treeGen (a \\ t') (k t))
+          treeGen a (MC.Match e env) = exp (E.union env rho) a e
+
+       in treeGen a' (id (MC.decisionTree t choices))) 
+       -- import VUScheme latter for HLS to work
 
 
 
