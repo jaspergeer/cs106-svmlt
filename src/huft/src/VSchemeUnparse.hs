@@ -74,6 +74,12 @@ exp (S.Case (Case.T e choices)) =
     in P.nest 3 (kw "case" [exp e, P.vsep $ map choice choices]) --[exp e, P.seq cn choice choices])
 exp (S.VCon "'()") = P.pretty "'()"
 exp (S.VCon k) = P.pretty $ "'" <> k -- append
+exp (S.Cond qas) =
+    let qa (q, a) = P.nest 6 (wraps [exp q, exp a])
+     in P.nest 3 (kw "cond" [on, P.vsep $ map qa qas])
+    where
+        on = P.pretty " "
+--   val on = te " " ++ P.Line.optional
 
 def d = case d of
     (S.Val x e) -> P.nest 3 $ kw "val" [P.pretty x, exp e]
