@@ -9,6 +9,7 @@ import qualified Pattern as P
 import qualified Env as E
 import qualified Data.List as L
 import Data.Maybe
+import qualified Data.Sequence as Env
 
 -- basic data sturctures
 
@@ -218,6 +219,15 @@ decisionTree scrutinee choices =
     initFrontiers = map (\(pat, a) -> F (a, [(REGISTER scrutinee, pat)])) choices
   in compile scrutinee initFrontiers
 
+
+asReg (REGISTER r) k = k r
+asREg (CHILD (r, i)) k = LetChild (r, i) k
+
+
+registerize [] k = k Env.Empty
+registerize ((pi, P.Var x) : pairs) k = 
+  asReg pi (\t -> registerize pairs (\env -> E.bind x t)) -- not true
+registerize ((_, pat) : _) _ = undefined
 
 {-
   Now implement function decisionTree. The TEST and MATCH nodes are described in the paper. 
