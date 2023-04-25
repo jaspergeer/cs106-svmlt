@@ -88,7 +88,7 @@ def e = S.Exp (exp e)
                 K.Block xs -> S.Apply (S.Var "block") (map S.Var xs)
                 K.SwitchVCon x choices e -> 
                     let lastQa = [(S.Literal (S.Bool True), exp e)]
-                        isCon (vcon, arity) = S.Apply (S.Var "marches-vcon-arity?") [S.Var x, S.Literal (S.Sym vcon), S.Literal (S.Int arity)]
+                        isCon (vcon, arity) = S.Apply (S.Var "matches-vcon-arity?") [S.Var x, S.Literal (S.Sym vcon), S.Literal (S.Int arity)]
                         qa (c, e) = (isCon c, exp e)
                      in S.Cond (map qa choices ++ lastQa)
 

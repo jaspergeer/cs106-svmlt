@@ -21,7 +21,7 @@ unary = [ "boolean?", "null?", "number?", "pair?", "function?", "nil?"
         ]
 
 sideEffecty   = [ "print", "printu", "println" ] -- arity 1
-errory         = [ "err" ]  -- arity 1 never returns
+errory         = [ "error" ]  -- arity 1 never returns
 halty          = [ "halt" ]
 checky         = [ "check", "expect" ] -- arity 2: one is literal
 
@@ -86,3 +86,4 @@ mkclosure    = SetsRegister (Base "mkclosure" 2)
 setclslot    = HasEffect (Base "setclslot" 3)
 getclslot    = SetsRegister (Base "getclslot" 2)
 getblockslot = SetsRegister (Base "getblockslot" 2)
+err = HasEffect (Base "error" 1)
