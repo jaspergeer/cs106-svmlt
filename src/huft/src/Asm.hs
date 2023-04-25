@@ -61,7 +61,7 @@ opcodesR1 =
   , "printu"
   , "print"
   , "cskip"
-  , "err"
+  , "error"
   , "return"
   , "check-assert" ]
 

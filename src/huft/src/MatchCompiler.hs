@@ -23,13 +23,16 @@ data Tree a = Test Register [Edge a] (Maybe (Tree a))
 
 data Path = REGISTER Register
           | CHILD (Register, Int)
-          deriving Eq
+          deriving (Eq, Show)
 -- in order to match block slots, children should be numbered from 1
 
 type Constraint = (Path, Pat)
 --  (π, p) is satisfied if the subject subtree at path π matches p
 
 newtype Frontier a = F (a, [Constraint])
+
+instance Show (Frontier a) where
+  show (F (_, cs)) = show cs
 {-
     A frontier holds a set of constraints that apply to the scrutinee.
 
@@ -121,11 +124,21 @@ refineConstraint r lcon constraint =
     _ -> INCOMPATIBLE
 
 
+-- refineFrontier :: Register -> LabeledConstructor -> Frontier a -> Maybe (Frontier a)
+-- -- returns the refinement of the given frontier, if compatible
+-- -- I assume r ~ pi / c' ~ C / i ~ i / constraints ~ f
+-- -- I hope this is what the 
+-- refineFrontier r lcon@(con, arity) frontier@(F (i, constraints)) =
+--   case patternAt (REGISTER r) frontier of
+--     Just (P.Apply vcon ps) | con == vcon && length ps == arity
+--       -> let newcon = concat $ mapCompatible (refineConstraint r lcon) constraints
+--           -- what if newcon is INCOMPATIBLE?
+--           in Just $ F (i, newcon)
+--     Just _ -> Nothing
+--     _ -> Just frontier
+
 refineFrontier :: Register -> LabeledConstructor -> Frontier a -> Maybe (Frontier a)
--- returns the refinement of the given frontier, if compatible
--- I assume r ~ pi / c' ~ C / i ~ i / constraints ~ f
--- I hope this is what the 
-refineFrontier r lcon@(con, arity) frontier@(F (i, constraints)) = 
+refineFrontier r lcon@(con, arity) frontier@(F (i, constraints)) =
   case patternAt (REGISTER r) frontier of
     Just (P.Apply vcon ps) | con == vcon && length ps == arity
       -> let newcon = concat $ mapCompatible (refineConstraint r lcon) constraints
@@ -134,86 +147,87 @@ refineFrontier r lcon@(con, arity) frontier@(F (i, constraints)) =
     Just _ -> Nothing
     _ -> Just frontier
 
+-- refineFrontier r lcon@(con, arity) frontier@(F (i, constraints)) = 
+--   case patternAt (REGISTER r) frontier of
+--     Nothing -> Nothing
+--     Just (P.Var _) -> Just frontier
+--     Just P.Wildcard -> Just frontier
+--     Just (P.Apply vcon ps) | con == vcon && length ps == arity ->
+--       let allcomp = compatibilityConcat (map (refineConstraint r lcon) constraints)
+--       in case allcomp of
+--         INCOMPATIBLE -> Nothing
+--         COMPATIBLE newpairs -> Just $ F (i, newpairs)
 
 decisionTree :: Register -> [(Pat, a)] -> Tree a
 -- register argument is the register that will hold the value of the scrutinee
-decisionTree r choices@((pat, a):ps) =
-  let 
-      initFrontier = map (\(pat, e) -> F (e, [(REGISTER r, pat)])) choices
+decisionTree r choices = let
+  initFrontiers = map (\(pat, e) -> F (e, [(REGISTER r, pat)])) choices
+  decisionTree' frontiers (pat, a) =
+    let
+        frontierMatches (F (_, constraints)) =
+          not (any (\(_, constraint) -> case constraint of
+                      P.Apply {} -> True
+                      _ -> False) constraints)
+        -- helper function for (MATCH (hd frontiers) on paper)
+        match (F (a, constraints)) = Match a (foldr (\(pi, pat) env -> case (pi, pat) of
+                                                      (REGISTER r, P.Var x) -> E.bind x r env
+                                                      -- (CHILD (r, i), P.Var x) -> E.bind x r env
+                                                      -- what should i bind?
+                                                      _ -> env) E.empty constraints)
+        compile [] = error "no frontiers"
+        compile frontiers@(front@(F (a, constraints)):_) =
+          if frontierMatches front
+          then match front
+          else
+            let
+              dom constraints = [pi' | (pi', _) <- constraints]
+              pis = [pi | frontier@(F (_, constraints)) <- frontiers, pi <- dom constraints,
+                case patternAt pi frontier of
+                  Just (P.Apply {}) -> True
+                  _ -> False]
+              pi = head pis
+            in
+              case pi of
+                (CHILD (r, i)) -> LetChild (r, i)
+                  (\r -> let
+                    renamePaths :: [Constraint] -> [Constraint]
+                    renamePaths = map (\(pi', pat) -> if pi' == pi then (REGISTER r, pat) else (pi', pat))
+                    frontiers' = map (\(F (a, constraints)) -> F (a, renamePaths constraints)) frontiers
+                    in compile frontiers')
+                REGISTER r' ->
+                  let
+                    cs = [(cons, length pats) | (_, P.Apply cons pats) <- constraints]
+                    refineFrontiers reg lcons =
+                      foldr (\ft fts -> case refineFrontier reg lcons ft of
+                                        Just ft' -> ft':fts
+                                        _ -> fts) []
+                    edges = foldr (\lcons edges ->
+                      let
+                        refined = refineFrontiers r' lcons frontiers
+                      in
+                        if null refined then edges
+                        else E lcons (compile refined) : edges) [] cs
 
-      frontierMatches (F (_, constraints)) =
-        not (any (\(_, constraint) -> case constraint of
-                    P.Apply {} -> True
-                    _ -> False) constraints)
-      -- helper function for (MATCH (hd frontiers) on paper)
-      match (F (a, constraints)) = Match a (foldr (\(pi, pat) env -> case (pi, pat) of
-                                                    (REGISTER r, P.Var x) -> E.bind x r env
-                                                    -- (CHILD (r, i), P.Var x) -> E.bind x r env
-                                                    -- what should i bind?
-                                                    _ -> env) E.empty constraints)
-      compile frontiers@(front@(F (a, constraints)):_) =
-  
-        if frontierMatches front 
-        then match front
-        else
-          -- let 
-          --   pi = case foldrM ()
-          -- in
-          -- case pi of
-          --   CHILD (reg, i) -> undefined
-          --   REGISTER reg -> 
-          -- pi:_ = [pi' | pi' `elem` dom f && patternAt pi' f == Just (P.Var _), F (i, f) <- frontiers]
-          
-          -- pi_may = find (\pi -> case patternAt pi f of
-          --                 Just (P.Var _) -> True
-          --                 _ -> False) (dom )
-
-          let
-
-            dom constraints = [pi' | (pi', _) <- constraints]
-            pis = [pi | frontier@(F (_, constraints)) <- frontiers, pi <- dom constraints,
-              case patternAt pi frontier of
-                Just (P.Var _) -> True
-                _ -> False]
-            -- pis = [ f | (i, f) <- constraints]
-            pi = head pis
-          in
-            case pi of
-              (CHILD (r, i)) -> LetChild (r, i) 
-                (\r -> let
-                  renamePaths :: [Constraint] -> [Constraint]
-                  renamePaths = map (\(pi', pat) -> if pi' == pi then (REGISTER r, pat) else (pi', pat))
-                  frontiers' = map (\(F (a, constraints)) -> F (a, renamePaths constraints)) frontiers
-                  in compile frontiers')
-              REGISTER r' ->
-                let
-                  cs = [(cons, length pats) | (_, P.Apply cons pats) <- constraints]
-                  refineFrontiers reg lcons =
-                    foldr (\ft fts -> case refineFrontier reg lcons ft of
-                                      Just ft' -> ft':fts
-                                      _ -> fts) []
-                  edges = map (\lcons -> E lcons (compile (refineFrontiers r' lcons frontiers))) cs
-                  
-                  defaults = filter (\ft@(F (i, f)) -> notElem pi (dom f) ||
-                    case patternAt pi ft of
-                      Just (P.Var _) -> True
-                      _ -> False) frontiers
-                in Test r' edges (Just (compile defaults))
-  in compile initFrontier
-
-  
-  -- case pat of
-  --   P.Var x -> Match a (E.bind x r E.empty)
-  --   P.Wildcard -> Match a E.empty
-  --   P.Apply vcon pats ->  -- the initial frontier  [(root, p)],
-    -- where root is the scrutinee register and p is the original pattern
-    -- in the source code.
-      -- let pi = undefined
-      --     cs = undefined -- set of all labeled constructors
-      --     edges = undefined
-      -- in
-      --   undefined
-        
+                    defaults = filter (\ft@(F (i, f)) -> notElem pi (dom f) ||
+                      case patternAt pi ft of
+                        Just (P.Var _) -> True
+                        _ -> False) frontiers
+                  in Test r' edges (if null defaults then Nothing else Just (compile defaults))
+    in compile frontiers
+  in foldl (\t@(Test r edges dfault) (pat, a) ->
+    case dfault of
+      Just _ -> t
+      Nothing ->
+        case pat of
+          P.Wildcard -> Test r edges (Just (Match a E.empty))
+          P.Var x -> Match a (E.bind x r E.empty)
+          P.Apply vcon as ->
+            let
+              lcons = (vcon, length as)
+              t' = decisionTree' initFrontiers (pat, a)
+            in case t' of
+              Test _ edges' _ -> Test r (edges' ++ edges) Nothing
+        ) (Test r [] Nothing) choices
 
 
 {-

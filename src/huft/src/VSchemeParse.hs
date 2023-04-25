@@ -88,11 +88,12 @@ vcon =
     <|> "'()" <$ brackd (tok "quote" *> sat (isEmptyList . valOfSx) SxParse.sx) -- definately wrong
 
 pattern :: Parser P.Pat
-pattern = try (P.Apply <$> vcon <*> many pattern)
+pattern = try (P.Apply <$> vcon <*> return [])
       --  <|> try (P.Int <$> int)
        <|> try (P.Wildcard <$ tok "_")
        <|> try (P.Var <$> name)
-       <|> try (brackd pattern)
+      --  <|> try (brackd pattern)
+       <|> try (brackd (P.Apply <$> vcon <*> many pattern))
 
 formals = many name
 bind = brackd ((,) <$> name <*> expr)
