@@ -3,7 +3,9 @@ module MatchViz where
 
 import qualified MatchCompiler as MC
 
--- import qualified Data.GraphViz as GV
+import qualified Data.GraphViz as GV
+
+
 
 type Tree = MC.Tree
 
