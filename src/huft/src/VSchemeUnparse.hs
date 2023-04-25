@@ -69,12 +69,17 @@ exp (S.Lambda xs body) = P.nest 3 $ kw "lambda" [wrap (map P.pretty xs), exp bod
 
 -- module 12 case expressions
 exp (S.Case (Case.T e choices)) = 
-    let choice p e = P.nest 6 (wraps [pat p, exp e])
-        cn = P.pretty " ->"
-    in P.nest 3 (kw "case" [exp e, P.vsep undefined]) --[exp e, P.seq cn choice choices])
-    -- where cn = P.pretty " ->" -- very not sure about this
+    let choice (p, e) = P.nest 6 (wraps [pat p, exp e])
+        -- cn = P.pretty " ->"
+    in P.nest 3 (kw "case" [exp e, P.vsep $ map choice choices]) --[exp e, P.seq cn choice choices])
 exp (S.VCon "'()") = P.pretty "'()"
-exp (S.VCon k) = P.pretty ("'" <> k) -- append
+exp (S.VCon k) = P.pretty $ "'" <> k -- append
+exp (S.Cond qas) =
+    let qa (q, a) = P.nest 6 (wraps [exp q, exp a])
+     in P.nest 3 (kw "cond" [on, P.vsep $ map qa qas])
+    where
+        on = P.pretty " "
+--   val on = te " " ++ P.Line.optional
 
 def d = case d of
     (S.Val x e) -> P.nest 3 $ kw "val" [P.pretty x, exp e]

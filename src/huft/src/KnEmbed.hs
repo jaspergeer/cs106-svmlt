@@ -86,14 +86,24 @@ def e = S.Exp (exp e)
                         body' = exp body
                     in S.LetX S.LetRec bindings' body'
                 K.Block xs -> S.Apply (S.Var "block") (map S.Var xs)
-                K.SwitchVCon x choices e ->
-                  let
-                    lastQa = [S.Literal (S.Bool True), exp e]
-                    isCon vcon arity =
-                      S.Apply (S.Var "matches-vcon-arity?")
-                        [S.Var x, S.Literal (S.Sym vcon), (S.Literal . S.Int) arity]
-                    qa c e = (isCon c, exp e)
-                  in undefined
+                K.SwitchVCon x choices e -> 
+                    let lastQa = [(S.Literal (S.Bool True), exp e)]
+                        isCon (vcon, arity) = S.Apply (S.Var "marches-vcon-arity?") [S.Var x, S.Literal (S.Sym vcon), S.Literal (S.Int arity)]
+                        qa (c, e) = (isCon c, exp e)
+                     in S.Cond (map qa choices ++ lastQa)
 
 -- What will happen if the offset of the VMOPL is not a string in getglobal case:
 -- Ans: impossible, should have some error message for debugging,
+
+
+-- Embed the SWITCH_VCON and BLOCK forms. In file knembed.sml, update your K-normal form embedding to handle the new syntactic forms. Feel free to adapt my code:
+
+-- | embed (K.BLOCK xs) = S.APPLY (S.VAR "block", map S.VAR xs)
+-- | embed (K.SWITCH_VCON (x, choices, e)) =
+--     let val lastQa = [(S.LITERAL (S.BOOLV true), embed e)]
+--         fun isCon (vcon, arity) =
+--               S.APPLY (S.VAR "matches-vcon-arity?",
+--                        [S.VAR x, S.LITERAL (S.SYM vcon), (S.LITERAL o S.INT) arity])
+--         fun qa (c, e) = (isCon c, embed e)
+--     in  S.COND (map qa choices @ lastQa)
+--     end

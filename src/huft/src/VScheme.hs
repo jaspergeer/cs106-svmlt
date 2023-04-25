@@ -16,6 +16,7 @@ data Exp = Literal Value
          | Lambda  [Name] Exp
          | VCon    P.VCon
          | Case    (Case.T Exp)
+         | Cond    [(Exp, Exp)] -- for embedding only
          deriving Show
 
 data LetKind = Let | LetRec deriving Show
