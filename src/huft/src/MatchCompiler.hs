@@ -176,7 +176,13 @@ compile scrutinee frontiers@(front@(F (a, constraints)):_) =
        pi@(REGISTER r) : _ ->
         let
           dom constraints = [pi' | (pi', _) <- constraints]
-          cs = [(cons, length pats) | (_, P.Apply cons pats) <- constraints] -- TODO fix
+          cs = mapMaybe (\ft@(F (i, f)) ->
+            if pi `elem` dom f then Nothing
+            else do
+              pat <- patternAt pi ft
+              case pat of
+                P.Apply cons pats -> Just (cons, length pats)
+                _ -> Nothing) frontiers
           refineFrontiers reg lcons = mapMaybe (refineFrontier reg lcons)
           edges = map (\lcons ->
             let
@@ -203,23 +209,6 @@ decisionTree scrutinee choices =
                     P.Apply {} -> True
                     _ -> False) choices
     initFrontiers = map (\(pat, a) -> F (a, [(REGISTER scrutinee, pat)])) choices
-    -- cases = map (\(pat, a) -> compile scrutinee [F (a, [(REGISTER scrutinee, pat)])]) applys
-
-  -- in foldl (\t@(Test r edges dfault) (pat, a) ->
-  --   case dfault of
-  --     Just _ -> t
-  --     Nothing ->
-  --       case pat of
-  --         P.Wildcard -> Test r edges (Just (Match a E.empty))
-  --         P.Var x -> Match a (E.bind x r E.empty)
-  --         P.Apply vcon as ->
-  --           let
-  --             initFrontier = [F (a, [(REGISTER r, pat)])]
-  --             t' = compile r initFrontier
-  --           in case t' of
-  --             Test _ edges' _ -> Test r (edges ++ edges') Nothing
-  --             _ -> error (show (vcon, as))
-  --       ) (Test scrutinee [] Nothing) choices
   in compile scrutinee initFrontiers
 
 {-
