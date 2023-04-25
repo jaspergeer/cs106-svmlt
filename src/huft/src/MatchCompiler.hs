@@ -181,5 +181,3 @@ decisionTree scrutinee choices =
   let
     initFrontiers = map (\(pat, a) -> F (a, [(REGISTER scrutinee, pat)])) choices
   in compile scrutinee initFrontiers
-
-
