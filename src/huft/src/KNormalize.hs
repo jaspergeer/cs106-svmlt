@@ -70,7 +70,7 @@ exp rho a e =
         (K.VMOPGLO P.setglobal [t] (O.String n))
         (K.Name t))
     (C.Begin []) -> K.Literal $ O.Bool False
-    (C.Begin es) -> 
+    (C.Begin es) ->
       let mkSequence [e] = exp rho a e
           mkSequence (e:es) = K.Seq (exp rho a e) (mkSequence es)
       in mkSequence es
@@ -95,7 +95,7 @@ exp rho a e =
         -- NEED TO CHECK the justification of the `funcode` helper function
         (args, funbody) = funcode (C.FunCode formals body)
       in K.FunCode args funbody
-    (C.ClosureX (C.Closure formals body captured)) -> 
+    (C.ClosureX (C.Closure formals body captured)) ->
       let
         -- if the captured vars is not empty, they must be put in regs by nbRegsWith
       in
@@ -126,13 +126,13 @@ exp rho a e =
     (C.Constructed (CONS.T "#f" [])) -> K.Literal (O.Bool False)
     (C.Constructed (CONS.T "cons" [x, y])) -> nbRegs bindAnyReg a [x, y] (K.VMOP P.cons)
     (C.Constructed (CONS.T "'()" [])) -> K.Literal O.EmptyList
-    (C.Constructed c) -> error $ show e -- module 12
+    (C.Constructed (CONS.T cons es)) -> nbRegs bindAnyReg a (C.Literal (O.String cons) : es) K.Block
     (C.Case (Case.T e choices)) -> bindAnyReg a (exp rho a e)
      (\t ->
-      let 
+      let
           treeGen :: RegSet -> MC.Tree C.Exp -> K.Exp Reg
           treeGen a (MC.Test r edgeList (Just defalt)) = K.SwitchVCon r (fmap (\(MC.E c t) -> (c, treeGen a t)) edgeList) (treeGen a defalt)
-          treeGen a (MC.LetChild (r, i)  k) = bindAnyReg a (K.VMOPGLO P.getblockslot [r] (O.Int i)) 
+          treeGen a (MC.LetChild (r, i)  k) = bindAnyReg a (K.VMOPGLO P.getblockslot [r] (O.Int i))
                                                            (\t -> treeGen (a \\ t) (k t))
           treeGen a (MC.Match e env) = exp (E.union env rho) a e -- dont you add union rho and env?
           a' = a \\ t
@@ -175,7 +175,7 @@ funcode :: C.FunCode -> K.Funcode Reg
 funcode (C.FunCode formals body) =
   let
       args = [1..length formals]
-      (funenv, regset) = foldl (\(rho, a) n -> 
+      (funenv, regset) = foldl (\(rho, a) n ->
                 (E.bind n (smallest a) rho, a \\ smallest a)) (E.empty, RS 1) formals
       funbody = exp funenv regset body
   in (args, funbody)
@@ -221,7 +221,7 @@ def e = case e of
 -- bindSmallest behaves just like bindAnyReg, except it doesn’t 
 -- optimize for the case of an expression already in a register. 
 bindSmallest :: RegSet -> Exp -> (Reg -> Exp) -> Exp
-bindSmallest a e k = let t = smallest a 
+bindSmallest a e k = let t = smallest a
                       in K.Let t e (k t)
 
 bindAnyReg :: RegSet -> Exp -> (Reg -> Exp) -> Exp
