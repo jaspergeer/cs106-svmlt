@@ -89,9 +89,6 @@ compatibilityConcat = foldr (\a b -> case (a, b) of
 {----------- DIRTY TRICKS -------------}
 --  allow integer literals to masquerade as value constructors
 
--- maybeConstructed (π, p) 
---           = SOME (π, vcon, pats), when p is equivalent to P.APPLY (vcon, pats)
---           = NONE                  otherwise
 maybeConstructed :: Constraint -> Maybe (Path, P.VCon, [Pat])
 maybeConstructed (pi, P.Apply vcon pats) = Just (pi, vcon, pats)
 maybeConstructed _ = Nothing
@@ -124,30 +121,7 @@ refineConstraint r lcon constraint =
       -> COMPATIBLE $ zipWith (\i p -> (CHILD (r, i), p)) [1..(length ps)] ps
     _ -> INCOMPATIBLE
 
-
--- refineFrontier :: Register -> LabeledConstructor -> Frontier a -> Maybe (Frontier a)
--- -- returns the refinement of the given frontier, if compatible
--- -- I assume r ~ pi / c' ~ C / i ~ i / constraints ~ f
--- -- I hope this is what the 
--- refineFrontier r lcon@(con, arity) frontier@(F (i, constraints)) =
---   case patternAt (REGISTER r) frontier of
---     Just (P.Apply vcon ps) | con == vcon && length ps == arity
---       -> let newcon = concat $ mapCompatible (refineConstraint r lcon) constraints
---           -- what if newcon is INCOMPATIBLE?
---           in Just $ F (i, newcon)
---     Just _ -> Nothing
---     _ -> Just frontier
-
 refineFrontier :: Register -> LabeledConstructor -> Frontier a -> Maybe (Frontier a)
--- refineFrontier r lcon@(con, arity) frontier@(F (i, constraints)) =
---   case patternAt (REGISTER r) frontier of
---     Just (P.Apply vcon ps) | con == vcon && length ps == arity
---       -> let newcon = concat $ mapCompatible (refineConstraint r lcon) constraints
---           -- what if newcon is INCOMPATIBLE?
---           in Just $ F (i, newcon)
---     Just _ -> Nothing
---     _ -> Just frontier
-
 refineFrontier r lcon@(con, arity) frontier@(F (i, constraints)) = 
   case patternAt (REGISTER r) frontier of
     Nothing -> Nothing
@@ -201,9 +175,15 @@ split p l =
     split' p as (b:bs) = if p b then split' p (b:as) bs else (as, b:bs)
   in split' p [] l
 
-decisionTree :: Register -> [(Pat, a)] -> Tree a
--- register argument is the register that will hold the value of the scrutinee
+{-
+  Now implement function decisionTree. The TEST and MATCH nodes are described in the paper. 
+  When your match compiler produces a node of the form LET_CHILD ((r, i), k), 
+  you define continuation k. The continuation expects a new, temporary register, 
+  and it updates all the frontiers, substituting the new register for the 
+  old path CHILD (r, i). Perform the substitution using function forPath.
+-}
 
+decisionTree :: Register -> [(Pat, a)] -> Tree a
 decisionTree scrutinee choices =
   let
     (applys, rest) = split
@@ -214,10 +194,3 @@ decisionTree scrutinee choices =
   in compile scrutinee initFrontiers
 
 
-{-
-  Now implement function decisionTree. The TEST and MATCH nodes are described in the paper. 
-  When your match compiler produces a node of the form LET_CHILD ((r, i), k), 
-  you define continuation k. The continuation expects a new, temporary register, 
-  and it updates all the frontiers, substituting the new register for the 
-  old path CHILD (r, i). Perform the substitution using function forPath.
--}
