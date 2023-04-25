@@ -1,6 +1,6 @@
 (define figure-6 (arg)
   (case arg
-    [C1 'one]
+    [(C1 C2) 'one]
     [(C1 x C4)  'two]
     [(C1 x C5)  'three]
     [_          'four]))
