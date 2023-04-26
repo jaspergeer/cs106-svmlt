@@ -111,10 +111,10 @@ mkblock :: Reg -> Reg -> Int -> Instruction
 mkblock rX rY n = i $ O.RegsInt "mkblock" [rX, rY] n
 
 setblkslot :: Reg -> Int -> Reg -> Instruction
-setblkslot rX n rY = i $ O.RegsInt "setblkslot" [rX, rY] n
+setblkslot rX n rY = i $ O.RegsInt "setblockslot" [rX, rY] n
 
 getblkslot :: Reg -> Reg -> Int -> Instruction
-getblkslot rX rY n = i $ O.RegsInt "getblkslot" [rX, rY] n
+getblkslot rX rY n = i $ O.RegsInt "getblockslot" [rX, rY] n
 
 captured :: Reg -> Int -> Instruction
 captured rA n = getclslot rA 0 n

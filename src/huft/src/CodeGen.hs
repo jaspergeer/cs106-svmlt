@@ -10,6 +10,8 @@ import qualified MatchCompiler as M
 import Data.Char (isDigit)
 import Data.Foldable (foldrM, foldlM)
 
+import Debug.Trace
+
 
 type Reg = O.Reg
 type Instruction = A.Instr
@@ -60,13 +62,14 @@ conLiteral lcons = case lcons of
 switchVcon :: Generator Code -> Code -> (Reg, [(M.LabeledConstructor, Exp)], Exp) -> U.UniqueLabelState Code
 switchVcon gen finish (r, choices, fallthru) = do
   (table, cases) <- foldlM (\(table, cases) ((cons, arity), e) ->
-    do 
+    do
       l <- U.newLabel
       body <- gen e
-      return ((conLiteral (cons, arity), arity, l): table, cases . s (U.deflabel l) . body . finish))
+      return ((conLiteral (cons, arity), arity, l) : table,
+        s (U.deflabel l) . body . finish . cases))
       ([], empty) choices
   dfault <- gen fallthru
-  return $ s (A.GotoVCon r table) . cases . dfault
+  return $ s (A.GotoVCon r table) . dfault . cases
 
 -- Each subexpression is translated using gen, and its translation is followed by (a copy of) finish.
 
@@ -84,6 +87,7 @@ toReg' dest e = case e of
     K.Name a -> return $ s $ U.copyreg dest a
     K.VMOP prim@(P.SetsRegister _) rs -> return $ s $ U.setReg dest prim rs
     K.VMOP {} -> forEffect' e <.> return (s $ U.reglit "loadliteral" dest O.Nil) -- "undefined behavior"
+    K.VMOPGLO (P.SetsRegister (P.Base "getblockslot" 2)) [r] (O.Int i) -> return $ s $ U.getblkslot dest r i
     K.VMOPGLO prim@(P.SetsRegister _) _ lit -> return $ s $ U.setRegLit dest prim lit -- the [r1] list disappears here, is that right?
     K.VMOPGLO {} -> forEffect' e
     K.FunCall funreg args -> return $ s $ U.call dest funreg args
@@ -102,9 +106,10 @@ toReg' dest e = case e of
                s (U.mkclosure dest dest (length captured)) .
                l (mapi (U.setclslot dest) captured)
     K.LetRec bindings body -> letrec (toReg' dest) bindings body
-    K.Block es ->
-      return $ s (U.mkblock dest dest (length es)) .
-               l (mapi (U.setblkslot dest) es)
+    K.Block (r:rs) ->
+      return $ s (U.mkblock dest r (length (r:rs))) .
+               l (mapi (\n -> U.setblkslot dest (n + 1)) rs)
+    K.Block [] -> error "empty block"
     K.SwitchVCon x cases dfault -> do
       exit <- U.newLabel
       switchVcon (toReg' dest) (s (U.goto exit)) (x, cases, dfault) <.>
@@ -128,13 +133,6 @@ forEffect' e = case e of
   -- otherwise
   K.VMOP _ _ -> return empty
   K.VMOPGLO (P.HasEffect (P.Base op _)) args v -> return $ s $
-  {- assume args only have one argument -}
-  {- assume args only have one argument -}
-  {- assume args only have one argument -}
-  {- assume args only have one argument -}
-  {- assume args only have one argument -}
-  {- assume args only have one argument -}
-  {- assume args only have one argument -}
   {- assume args only have one argument -} A.ObjectCode (O.RegLit op (head args) v)
   -- here we did not catch getglo because it is a SetRegister Primitive
   -- the O.RegLit is also worrysome

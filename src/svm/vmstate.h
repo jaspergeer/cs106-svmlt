@@ -55,6 +55,9 @@ struct VMState {
   Activation call_stack[CALL_STACK_SIZE];
   Activation *stack_ptr; // points to youngest activation
 
+  // cons
+  int cons_sym_slot;
+
   Value awaiting_expect;
 };
 

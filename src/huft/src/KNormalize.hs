@@ -137,8 +137,9 @@ exp rho a e =
     (C.Constructed (CONS.T "#f" [])) -> K.Literal (O.Bool False)
     (C.Constructed (CONS.T "cons" [x, y])) -> nbRegs bindAnyReg a [x, y] (K.VMOP P.cons)
     (C.Constructed (CONS.T "'()" [])) -> K.Literal O.EmptyList
-    (C.Constructed (CONS.T cons es)) -> inLocalVar a
-      (\t -> nbRegs bindAnyReg (a \\ t) (C.Literal (O.String cons) : es) K.Block)
+    (C.Constructed (CONS.T cons [])) -> K.Literal (O.String cons)
+    (C.Constructed (CONS.T cons rs)) -> inLocalVar a
+      (\t -> nbRegs bindAnyReg (a \\ t) (C.Literal (O.String cons) : rs) K.Block)
     (C.Case (Case.T e choices)) -> bindAnyReg a (exp rho a e)
      (
       let
@@ -148,9 +149,9 @@ exp rho a e =
                            (treeGen a dfalt)
           treeGen a (MC.Test r edgeList Nothing) = 
             K.SwitchVCon r (fmap (\(MC.E c tree') -> (c, treeGen a tree')) edgeList) 
-                           (K.VMOP P.err [r])
+                           (K.Seq (K.Assign r (K.Literal $ O.String "pattern matches exhausted"))  (K.VMOP P.err [r]))
           treeGen a (MC.LetChild (r, i)  k) = 
-            bindAnyReg a (K.VMOPGLO P.getblockslot [r] (O.Int i))
+            bindAnyReg a (K.VMOPGLO P.getblkslot [r] (O.Int i))
                           (\t' -> treeGen (a \\ t') (k t'))
           treeGen a (MC.Match e env) = exp (E.union env rho) a e
        in      

@@ -93,8 +93,10 @@ instruction_info instructions[] = {
   
   // module 12
   { "mkblock", MkBlock, parseR2U8, "$rX := block[$rY,Z]"},
-  { "getblkslot", GetBlkSlot, parseR2U8, "rX := rY@Z" },
-  { "setblkslot", SetBlkSlot, parseR2U8, "rX@Z := rY" },
+  { "getblockslot", GetBlkSlot, parseR2U8, "rX := rY@Z" },
+  { "setblockslot", SetBlkSlot, parseR2U8, "rX@Z := rY" },
+  { "goto-vcon", GotoVcon, parseR1U8, "goto-vcon rX [Y slots]" },
+  { "if-vcon-match", IfVconMatch, parseU8LIT, "if vcon == LIT/X then" },
 
   { "gc", GC, parseR0, "gc" },
   { "halt", Return, parseR0, "halt" }

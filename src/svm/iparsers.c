@@ -100,6 +100,14 @@ static void initnames(void) {
 
 static Value get_literal(Tokens* litp, const char* input);
 
+Instruction parseU8LIT(VMState vm, Opcode opcode, Tokens operands, unsigned *maxreg) {
+  (void)vm;
+  (void)maxreg;
+  uint8_t u8 = tokens_get_byte(&operands, NULL);
+  Value literal = get_literal(&operands, NULL);
+  return eR1U16(opcode, u8, literal_slot(vm, literal));
+}
+
 // <opcode> <register> <literal>
 Instruction parseR1LIT(VMState vm, Opcode opcode, Tokens operands, unsigned* maxreg) {
   (void) maxreg;
