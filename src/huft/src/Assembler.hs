@@ -4,6 +4,17 @@ import qualified Asm as A
 import qualified ObjectCode as O
 import Error
 import qualified Env as E
+import Data.Foldable (foldrM)
+
+unGotoVcon :: [A.Instr] -> [A.Instr]
+unGotoVcon = foldr 
+  (\i is ->
+    case i of 
+      (A.GotoVCon reg choices) ->
+        A.ObjectCode (O.RegsInt "goto-vcon" [reg] (length choices)) :
+        foldr (\(lit, r, n) code ->
+          A.ObjectCode (O.RegLit "if-vcon-match" r lit) : A.GotoLabel n : code) is choices
+      _ -> i : is) []
 
 foldrInstrStream :: (Int -> A.Instr -> a -> a) -> a -> [A.Instr] -> a
 foldrInstrStream f e instrs = let
@@ -12,8 +23,9 @@ foldrInstrStream f e instrs = let
     (ct + case i of
       A.IfGotoLabel {} -> 2
       A.DefLabel _ -> 0
+      A.GotoVCon _ choices -> 1 + 2 * length choices
       _ -> 1))
-  in fris f e instrs 0 
+  in fris f e instrs 0
 
 lift3 :: (a -> b -> c -> Error c) -> a -> b -> Error c -> Error c
 lift3 f a b ce = ce >>= f a b
@@ -42,15 +54,16 @@ labelElim instrs env = let
     A.LoadFunc reg arity body -> (:) <$>
       (O.LoadFunc reg arity <$> translate body) <*> is
     -- goto
-    A.GotoLabel n -> 
+    A.GotoLabel n ->
       E.find n env >>= \x -> (O.Goto (x - pos - 1) :) <$> is
-    A.IfGotoLabel r1 n -> 
+    A.IfGotoLabel r1 n ->
       E.find n env >>= \x -> ([O.Regs "cskip" [r1], O.Goto (x - pos - 2)] ++) <$> is
     -- base cases
     A.ObjectCode o -> (o :) <$> is
     A.DefLabel _ -> is
-    A.GotoVCon {} -> error "Left as Exercise"
+    A.GotoVCon {} -> error "goto-vcon"
   in foldrInstrStream f (Error $ Right []) instrs
 
 translate :: [A.Instr] -> Error [O.Instr]
-translate instrs = labelEnv instrs >>= labelElim instrs
+translate instrs =
+  labelEnv instrs >>= labelElim (unGotoVcon instrs)

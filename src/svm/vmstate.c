@@ -30,6 +30,7 @@ VMState newstate(void) {
   vm->pc = 0;
   vm->num_globals = 0;
   vm->literals = LPool_new();
+  vm->cons_sym_slot = literal_slot(vm, mkStringValue(Vmstring_newc("cons")));
   vm->stack_ptr = vm->call_stack - 1;
   vm->awaiting_expect = nilValue;
   for (int i = 0; i < 256; ++i) {

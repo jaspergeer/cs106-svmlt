@@ -30,9 +30,15 @@
 #include "string.h"
 #include "loader.h"
 
-#define RX reg0[uX(instr)]
-#define RY reg0[uY(instr)]
-#define RZ reg0[uZ(instr)]
+#define X uX(instr)
+#define Y uY(instr)
+#define Z uZ(instr)
+
+#define RX reg0[X]
+#define RY reg0[Y]
+#define RZ reg0[Z]
+
+
 
 #define LIT LPool_get(literals, uYZ(instr))
 #define GLO LPool_get(literals, uYZ(instr))
@@ -56,6 +62,7 @@ static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm);
   running = vm->running; \
   code = running->instructions; \
   pc = vm->pc; \
+  cons_symbol = LPool_get(vm->literals, vm->cons_sym_slot); \
 }
 
 #define GC() \
@@ -155,6 +162,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
   Activation *stack_ptr;
   struct VMFunction *running;
   Instruction *code;
+  Value cons_symbol;
 
   vm->running = fun;
 
@@ -163,6 +171,9 @@ void vmrun(VMState vm, struct VMFunction* fun) {
   // for debugging
   const char *dump_decode = svmdebug_value("decode");
   const char *dump_call   = svmdebug_value("call");
+  const char *dump_case = svmdebug_value("case");
+  (void) dump_case;
+
   (void) dump_call;
   
   // invariant is vm->registers always points to the start of the registers?
@@ -171,7 +182,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
 
     if (CANDUMP && dump_decode) {
       idump(stderr, vm, vm->pc, instr, reg0 - &vm->registers[0],
-            reg0+uX(instr), reg0+uY(instr), reg0+uZ(instr));
+            reg0+X, reg0+Y, reg0+Z);
     }
 
     switch (opcode(instr)) {
@@ -265,9 +276,9 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       {
         if (gc_needed)
           GC();
-        uint8_t destreg = uX(instr);
-        uint8_t funreg = uY(instr);
-        uint8_t lastarg = uZ(instr);
+        uint8_t destreg = X;
+        uint8_t funreg = Y;
+        uint8_t lastarg = Z;
         uint8_t arity = lastarg - funreg;
 
         struct VMFunction *caller = running;
@@ -299,8 +310,8 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       {
         if (gc_needed)
           GC();
-        uint8_t funreg = uX(instr);
-        uint8_t lastarg = uY(instr);
+        uint8_t funreg = X;
+        uint8_t lastarg = Y;
         uint8_t arity = lastarg - funreg;
 
         VMSAVE();
@@ -402,14 +413,14 @@ void vmrun(VMState vm, struct VMFunction* fun) {
 
     // S-Expressions
     case Cons:
-      {
-        VMNEW(struct VMBlock *, block, vmsize_block(2));
-        block->nslots = 2;
-        block->slots[0] = RY;
-        block->slots[1] = RZ;
-        RX = mkConsValue(block);
-      }
+    {
+      VMNEW(struct VMBlock *, block, vmsize_block(2));
+      block->nslots = 2;
+      block->slots[0] = RY;
+      block->slots[1] = RZ;
+      RX = mkConsValue(block);
       break;
+    }
     case Car:
       RX = AS_CONS_CELL(vm, RY)->slots[0];
       break;
@@ -443,7 +454,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
     // closure (module 10)
 
     case MkClosure:
-      {
+    {
         struct VMFunction *f = NULL;
         if (isVMFunction(RY)) {
           f = AS_VMFUNCTION(vm, RY);
@@ -451,25 +462,83 @@ void vmrun(VMState vm, struct VMFunction* fun) {
           f = AS_CLOSURE(vm, RY)->f;
         }
         
-        VMNEW(struct VMClosure *, closure, vmsize_closure(uZ(instr)));
+        VMNEW(struct VMClosure *, closure, vmsize_closure(Z));
         closure->forwarded = NULL;
 
         closure->f = f;
-        closure->nslots = uZ(instr);
+        closure->nslots = Z;
         closure->arity = f->arity;
         closure->base = closure;
         closure->args = NULL;
         RX = mkClosureValue(closure);
         break;
-      }
+    }
 
     case SetClSlot:
-        AS_CLOSURE(vm, RX)->captured[uZ(instr)] = RY;
+        AS_CLOSURE(vm, RX)->captured[Z] = RY;
         break;
     case GetClSlot:
-        RX = AS_CLOSURE(vm, RY)->captured[uZ(instr)];
+        RX = AS_CLOSURE(vm, RY)->captured[Z];
         break;
+    
+    case MkBlock:
+    {
+      VMNEW(struct VMBlock *, b, vmsize_block(Z));
+      b->forwarded = NULL;
+      b->nslots = Z;
+      b->slots[0] = RY;
+      break;
+    }
+    case GetBlkSlot:
+    {
+      struct VMBlock *block = RY.block;
+      if (RY.tag == ConsCell) {
+          switch (Z) {
+          case 0: RX = cons_symbol; break;
+          case 1: case 2: RX = block->slots[Z - 1]; break;
+          default: runerror(vm, "A cons cell does not have a slot %d", Z);
+          }
+      } else {
+          assert(RY.tag == Block);
+          assert(block->nslots > Z);
+          RX = block->slots[Z];
+      }
+      break;
+    }
+    case SetBlkSlot:
+      AS_BLOCK(vm, RX)->slots[Z] = RY;
+      break;
 
+    case GotoVcon:
+    {
+      // RX ?
+      Value cons = RX;
+      int arity = 0;
+      if (RX.tag == ConsCell) {
+        cons = cons_symbol;
+        arity = 2;
+      } else if (RX.tag == Block) {
+        struct VMBlock *b = AS_BLOCK(vm, RX);
+        arity = b->nslots - 1;
+        cons = b->slots[0];
+      } else {
+        arity = 0;
+      }
+      ++pc;
+      for (int i = 0; i < Y; ++i) {
+        Instruction curr = *(code + pc);
+        Value entry_cons = LPool_get(literals, uYZ(curr));
+        int entry_arity = uX(curr);
+        if (eqvalue(entry_cons, cons) && entry_arity == arity)
+          break;
+        pc += 2;
+      }
+      --pc;
+      break;
+    }
+
+    case IfVconMatch:
+      break;
     }
     ++pc;
   }
@@ -506,6 +575,8 @@ static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm) {
   Activation *stack_ptr;
   struct VMFunction *running;
   Instruction *code;
+  Value cons_symbol;
+  (void) cons_symbol;
 
   VMLOAD();
 
@@ -541,6 +612,8 @@ static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm) {
       CALLSTACK_POP(mkClosureValue(new_closure));
     }
   }
+
+  
 
   VMSAVE();
 }
