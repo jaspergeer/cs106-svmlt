@@ -17,12 +17,13 @@ if [[ $# -eq 0 ]]; then
                -v -v   shows even more info
                -bin    says where uft and svm are located
 
-       A test comprises these files
+       A test comprises these files:
          *.scm          vScheme source
          *.es           eScheme source
          *.1            Output expected on standard output, if any
          *.2            Output expected on standard error, if any
-         *.argv         Arguments to be passed in global variable argv, if any"
+         *.argv         Arguments to be passed in global variable argv, if any
+         *.x            Expected exit status if different from zero"
   exit 1
 fi
 
@@ -33,6 +34,7 @@ predefvo=$(mktemp)
 
 testout=$(mktemp)
 testerr=$(mktemp)
+testexit=$(mktemp)
 ufterr=$(mktemp)
 vo=$(mktemp)
 
@@ -49,6 +51,7 @@ while [[ $# -gt 0 ]]; do
           fi
           ;;
     -v) verbose="$verbose"yes ; shift ;;
+    -es) scmtx="es-vo" ; shift ;;
     -*) die "unknown option" ;;
     *) break ;;
   esac
@@ -116,6 +119,18 @@ function check_stderr {
   fi
 }
 
+function check_exit {
+  typeset expected=0
+  if [[ -r "$2" ]]; then expected="$(cat "$2")"; fi
+  typeset seen="$(cat "$3")"
+
+  if [[ "$seen" != "$expected" ]]; then
+    if [[ -z "$failure" &&  -n "$verbose" ]]; then
+      echo "$1 expected to exit $expected but exits $seen"
+    fi
+    fails "$1" "exit code"
+  fi
+}
 
 function large_object_failure  {
   typeset testerr="$(cat "$1")"
@@ -168,8 +183,9 @@ do
        cat $ufterr
      fi
   else
-    ( "${command[@]}" < $vo > $testout 2>$testerr || false ) 2> /dev/null
-    testexit=$?
+    ( "${command[@]}" < $vo > $testout 2>$testerr
+       echo "$?" > $testexit
+    ) 2> /dev/null
 
     if large_object_failure $testerr; then
       echo "$i cannot be run: heap pages aren't big enough"
@@ -177,7 +193,7 @@ do
     else
       check_stderr $i $stderr $testerr
       check_stdout $i $stdout $testout
-      # check_exit $i $exit $testexit
+      check_exit $i $exit $testexit
     fi
   fi
 
