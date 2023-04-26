@@ -67,6 +67,7 @@ exp' e locals =
         S.IfX e1 e2 e3 -> X.IfX (exp e1) (exp e2) (exp e3)
         S.WhileX e1 e2 -> X.WhileX (exp e1) (exp e2)
         S.Begin es -> X.Begin (map exp es)
+        S.Apply (S.VCon con) es -> X.Constructed (Constructed.T con (map exp es))
         S.Apply e es -> case e of
           S.Var x -> case referent x locals of
             Primitive p -> if P.arity p == length es

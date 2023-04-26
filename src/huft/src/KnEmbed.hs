@@ -6,6 +6,8 @@ import qualified VScheme as S
 import qualified Primitives as P
 import qualified ObjectCode as O
 
+import Debug.Trace
+
 -- The value function is actually a projection, not an embedding: 
 -- the VM code supports floating-point values, string values and nil, 
 -- neither of which can be written as vScheme literals. Nonetheless, 

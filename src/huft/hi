@@ -1,0 +1,82 @@
+FunCode [1] (SwitchVCon 1 [(("C1",2),Let 2 (VMOPGLO (SetsRegister (Base "getblkslot" 2)) [1] (Int 1)) (SwitchVCon 2 [(("C2",0),Let 3 (VMOPGLO (SetsRegister (Base "getblkslot" 2)) [1] (Int 2)) (SwitchVCon 3 [(("C3",0),Literal (String "one")),(("C4",0),Literal (String "two")),(("C5",0),Literal (String "three"))] (Literal (String "four"))))] (Let 3 (VMOPGLO (SetsRegister (Base "getblkslot" 2)) [1] (Int 2)) (SwitchVCon 3 [(("C4",0),Literal (String "two")),(("C5",0),Literal (String "three"))] (Literal (String "four"))))))] (Literal (String "four")))
+ClosureX (Closure [1] (SwitchVCon 1 [(("C1",2),Let 2 (VMOPGLO (SetsRegister (Base "getblkslot" 2)) [1] (Int 1)) (SwitchVCon 2 [(("C2",0),Let 3 (VMOPGLO (SetsRegister (Base "getblkslot" 2)) [1] (Int 2)) (SwitchVCon 3 [(("C3",0),Literal (String "one")),(("C4",0),Literal (String "two")),(("C5",0),Literal (String "three"))] (Literal (String "four"))))] (Let 3 (VMOPGLO (SetsRegister (Base "getblkslot" 2)) [1] (Int 2)) (SwitchVCon 3 [(("C4",0),Literal (String "two")),(("C5",0),Literal (String "three"))] (Literal (String "four"))))))] (Literal (String "four"))) [])
+VMOPGLO (SetsRegister (Base "getblkslot" 2)) [1] (Int 1)
+VMOPGLO (SetsRegister (Base "getblkslot" 2)) [1] (Int 2)
+Literal (String "two")
+Literal (String "one")
+Literal (String "three")
+Literal (String "four")
+VMOPGLO (SetsRegister (Base "getblkslot" 2)) [1] (Int 2)
+Literal (String "two")
+Literal (String "three")
+Literal (String "four")
+Literal (String "four")
+Let 0 (VMOPGLO (SetsRegister (Base "getglobal" 1)) [] (String "figure-6")) (Let 1 (Let 1 (Assign 1 (Let 2 (Literal (String "C1")) (Block [2]))) (Let 2 (Literal (Int 3)) (Let 3 (Assign 3 (Let 4 (Literal (String "C4")) (Block [4]))) (FunCall 1 [2,3])))) (FunCall 0 [1]))
+VMOPGLO (SetsRegister (Base "getglobal" 1)) [] (String "figure-6")
+Let 1 (Let 1 (Assign 1 (Let 2 (Literal (String "C1")) (Block [2]))) (Let 2 (Literal (Int 3)) (Let 3 (Assign 3 (Let 4 (Literal (String "C4")) (Block [4]))) (FunCall 1 [2,3])))) (FunCall 0 [1])
+Let 1 (Assign 1 (Let 2 (Literal (String "C1")) (Block [2]))) (Let 2 (Literal (Int 3)) (Let 3 (Assign 3 (Let 4 (Literal (String "C4")) (Block [4]))) (FunCall 1 [2,3])))
+Assign 1 (Let 2 (Literal (String "C1")) (Block [2]))
+Let 2 (Literal (String "C1")) (Block [2])
+Literal (String "C1")
+Block [2]
+Name 1
+Let 2 (Literal (Int 3)) (Let 3 (Assign 3 (Let 4 (Literal (String "C4")) (Block [4]))) (FunCall 1 [2,3]))
+Literal (Int 3)
+Let 3 (Assign 3 (Let 4 (Literal (String "C4")) (Block [4]))) (FunCall 1 [2,3])
+Assign 3 (Let 4 (Literal (String "C4")) (Block [4]))
+Let 4 (Literal (String "C4")) (Block [4])
+Literal (String "C4")
+Block [4]
+Name 3
+FunCall 1 [2,3]
+FunCall 0 [1]
+Literal (String "two")
+$r0 := fun 1 {
+	switch $r1 {   case "C1" (2): goto L0 }
+	def L0
+	getblkslot $r2 1
+	switch $r2 {   case "C2" (0): goto L1 }
+	def L1
+	getblkslot $r3 2
+	switch $r3 {   case "C5" (0): goto L4   case "C4" (0): goto L3   case "C3" (0): goto L2 }
+	def L2
+	$r0 := "one"
+	return $r0
+	def L3
+	$r0 := "two"
+	return $r0
+	def L4
+	$r0 := "three"
+	return $r0
+	$r0 := "four"
+	return $r0
+	getblkslot $r3 2
+	switch $r3 {   case "C5" (0): goto L6   case "C4" (0): goto L5 }
+	def L5
+	$r0 := "two"
+	return $r0
+	def L6
+	$r0 := "three"
+	return $r0
+	$r0 := "four"
+	return $r0
+	$r0 := "four"
+	return $r0
+}
+$r0 := closure[$r0,0]
+setglobal $r0 "figure-6"
+getglobal $r0 "figure-6"
+$r2 := "C1"
+$r1 := block[$r1,1]
+block $r1.0 := $r2
+copy $r1 $r1
+$r2 := 3
+$r4 := "C4"
+$r3 := block[$r3,1]
+block $r3.0 := $r4
+copy $r3 $r3
+$r1 := call $r1 $r3
+$r0 := call $r0 $r1
+check $r0 "(figure-6 ('C1 3 'C4))"
+$r0 := "two"
+expect $r0 "'two"

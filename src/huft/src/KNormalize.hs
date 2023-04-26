@@ -137,7 +137,9 @@ exp rho a e =
     (C.Constructed (CONS.T "#f" [])) -> K.Literal (O.Bool False)
     (C.Constructed (CONS.T "cons" [x, y])) -> nbRegs bindAnyReg a [x, y] (K.VMOP P.cons)
     (C.Constructed (CONS.T "'()" [])) -> K.Literal O.EmptyList
-    (C.Constructed (CONS.T cons es)) -> inLocalVar a
+    (C.Constructed (CONS.T es [])) -> K.Literal (O.String es)
+    (C.Constructed (CONS.T cons es)) -> 
+      inLocalVar a
       (\t -> nbRegs bindAnyReg (a \\ t) (C.Literal (O.String cons) : es) K.Block)
     (C.Case (Case.T e choices)) -> bindAnyReg a (exp rho a e)
      (

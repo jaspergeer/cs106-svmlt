@@ -10,6 +10,7 @@ import qualified MatchCompiler as M
 import Data.Char (isDigit)
 import Data.Foldable (foldrM, foldlM)
 
+import Debug.Trace
 
 type Reg = O.Reg
 type Instruction = A.Instr
@@ -78,7 +79,7 @@ switchVcon gen finish (r, choices, fallthru) = do
 -- in any order, each of which is preceded by the definition of its corresponding label.
 
 toReg' :: Reg -> Generator Code
-toReg' dest e = case e of
+toReg' dest e = trace (show e) $ case e of
     -- forms with direct translation
     K.Literal lit -> return $ s $ U.reglit "loadliteral" dest lit
     K.Name a -> return $ s $ U.copyreg dest a

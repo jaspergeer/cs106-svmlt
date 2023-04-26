@@ -49,7 +49,7 @@ labelElim instrs env = let
     -- base cases
     A.ObjectCode o -> (o :) <$> is
     A.DefLabel _ -> is
-    A.GotoVCon {} -> error "Left as Exercise"
+    A.GotoVCon r es -> error "Left as Exercise"
   in foldrInstrStream f (Error $ Right []) instrs
 
 translate :: [A.Instr] -> Error [O.Instr]
