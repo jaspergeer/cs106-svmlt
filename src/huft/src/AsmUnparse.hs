@@ -49,7 +49,9 @@ unparseObj1 i = case i of
   (O.RegsInt "mkclosure" [r1, r2] u8) -> unwords [reg r1, ":= closure["++reg r2 ++ "," ++ show u8 ++ "]"]
   (O.RegsInt "getclslot" [r1, r2] u8) -> unwords [reg r1, ":=", reg r2 ++ "." ++ show u8]
   (O.RegsInt "setclslot" [r1, r2] u8) -> unwords [reg r1 ++ "."++ show u8, ":=", reg r2]
-  _ -> show i
+  (O.RegsInt "mkblock"   [r1, r2] u8) -> unwords [reg r1, ":= block[" ++ reg r2 ++ "," ++ show u8 ++ "]"]
+  (O.RegsInt "setblkslot" [r1, r2] u8) -> unwords ["block", reg r1 ++ "."++ show u8, ":=", reg r2]
+  -- _ -> show i
 
 unparse1 :: A.Instr -> String
 unparse1 (A.ObjectCode instr) = unparseObj1 instr
