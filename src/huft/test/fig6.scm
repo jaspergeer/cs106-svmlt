@@ -32,8 +32,10 @@
 (check-expect (figure-6 (C1 3 C4)) 'two)
 
 
-;; (check-expect (figure-6 (C1 3 C4)) 'three)
+;; ;; (check-expect (figure-6 (C1 3 C4)) 'three)
 
+;; (define f (x)
+;; (case x [C1 'one] [_ 'four])
+;; )
 
-;; (case x [C1 3 C4])
-;; (figure-6 (C1 3 C4))
+;; (check-expect (f C1) 'one)
