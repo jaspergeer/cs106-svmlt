@@ -141,22 +141,20 @@ exp rho a e =
     (C.Constructed (CONS.T cons rs)) -> inLocalVar a
       (\t -> nbRegs bindAnyReg (a \\ t) (C.Literal (O.String cons) : rs) K.Block)
     (C.Case (Case.T e choices)) -> bindAnyReg a (exp rho a e)
-     (
-      let
-          treeGen :: RegSet -> MC.Tree C.Exp -> K.Exp Reg
-          treeGen a (MC.Test r edgeList (Just dfalt)) =
-            K.SwitchVCon r (map (\(MC.E c tree') -> (c, treeGen a tree')) edgeList) 
-                           (treeGen a dfalt)
-          treeGen a (MC.Test r edgeList Nothing) = 
-            K.SwitchVCon r (fmap (\(MC.E c tree') -> (c, treeGen a tree')) edgeList) 
-                           (K.Seq (K.Assign r (K.Literal $ O.String "pattern matches exhausted"))  (K.VMOP P.err [r]))
-          treeGen a (MC.LetChild (r, i)  k) = 
-            bindAnyReg a (K.VMOPGLO P.getblkslot [r] (O.Int i))
-                          (\t' -> treeGen (a \\ t') (k t'))
-          treeGen a (MC.Match e env) = exp (E.union env rho) a e
-       in      
-        (\t -> treeGen (a \\ t) (id (MC.decisionTree t choices))))
-       -- import VUScheme latter for HLS to work
+      (\t->    -- the only case t should be call is loading the error message
+        let
+            treeGen :: RegSet -> MC.Tree C.Exp -> K.Exp Reg
+            treeGen a (MC.Test r edgeList (Just dfalt)) =
+              K.SwitchVCon r (map (\(MC.E c tree') -> (c, treeGen a tree')) edgeList) 
+                            (treeGen a dfalt)
+            treeGen a (MC.Test r edgeList Nothing) = 
+              K.SwitchVCon r (fmap (\(MC.E c tree') -> (c, treeGen a tree')) edgeList) 
+                            (K.Seq (K.Assign r (K.Literal $ O.String "Non-Exhaustive Patterns"))  (K.VMOP P.err [r]))
+            treeGen a (MC.LetChild (r, i)  k) = 
+              bindAnyReg a (K.VMOPGLO P.getblkslot [r] (O.Int i))
+                            (\t' -> treeGen (a \\ t') (k t'))
+            treeGen a (MC.Match e env) = exp (E.union env rho) a e
+        in treeGen (a \\ t) (trace (show (MC.decisionTree t choices)) $ (MC.decisionTree t choices)))       -- import VUScheme latter for HLS to work
 
 
 
