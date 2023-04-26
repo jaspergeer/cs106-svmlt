@@ -1,0 +1,51 @@
+CS 106 Homework Submission
+
+What person or group is submitting this homework?
+
+  - Jasper Geer, Alex Bai
+
+What work are you proud of?
+
+  - getting some match-compiler / K-normalization to work
+
+What code would you like help improving?  Are there bugs you'd like
+help finding during code review?
+
+  - DecisionTree function, TreeGen
+
+What code, if any, would you especially like the course staff to
+review?  Why?
+
+  - DecisionTree
+
+In this course, all code may be shared freely.  Aside from code that
+is distributed with the assignment, does your submission contain any
+other code that you got from someone else?  If so, what code is it
+(file names and line numbers please) and who supplied it?
+
+  - No
+
+In response to last week's code review, have you made any material
+changes?  What were they?  By file name and line number, where are
+they found in the code?  If you remember, who helped you during code
+review?
+
+  - No
+
+
+We have a plenary code review tomorrow.  Are you willing to present
+(as a group, if applicable)?
+
+  - No. Japser might be too ill to come to class today.
+
+Supposing you are not selected to present at tomorrow's plenary code
+review, what code would you like to see presented?  What would you
+learn the most from?
+
+  - DecisionTree, TreeGen
+
+Again supposing you are not selected to present, are you willing to
+serve on the review panel? (Or if there are more than one of you, who
+is willing to serve?)
+
+  - Both of us
