@@ -11,6 +11,7 @@ import qualified Data.List as L
 import Data.Maybe
 import qualified Data.Sequence as Env
 import Asm (Label)
+import Debug.Trace
 
 -- basic data sturctures
 
@@ -26,7 +27,12 @@ data Tree a = Test Register [Edge a] (Maybe (Tree a))
 
 data Path = REGISTER Register
           | CHILD (Register, Int)
-          deriving (Eq, Show)
+          deriving (Eq)
+
+instance Show Path where
+  show (REGISTER r) = "$r" ++ show r
+  show (CHILD (r, i)) = "$r" ++ show r ++ "[" ++ show i ++ "]"
+
 -- in order to match block slots, children should be numbered from 1
 
 type Constraint = (Path, Pat)
@@ -35,7 +41,10 @@ type Constraint = (Path, Pat)
 newtype Frontier a = F (a, [Constraint])
 
 instance Show (Frontier a) where
-  show (F (_, cs)) = show cs
+  show (F (_, cs)) = show (map constraintString cs)
+
+constraintString (pi, p) = show p ++ " @ " ++ show pi
+
 {-
     A frontier holds a set of constraints that apply to the scrutinee.
 
@@ -143,7 +152,7 @@ refineConstraint :: Register -> LabeledConstructor -> Constraint -> Compatibilit
 refineConstraint r lcon (pi', pat) =
     case (pi' `isRegister` r, argumentsOfIn lcon pat, pat) of
       (True, Just pats, _) -> COMPATIBLE 
-                                (filter (notWildCard . snd) 
+                                (filter (notWildCard . snd)
                                         (zipWith (\i p -> (CHILD (r, i), p)) [1..] pats)
                                 )
       (True, _, P.Apply {}) -> INCOMPATIBLE
@@ -176,7 +185,7 @@ refineFrontier :: Register -> LabeledConstructor -> Frontier a -> Maybe (Frontie
 refineFrontier r con f@(F (rule, pairs)) =
   case compatibilityConcat (map (refineConstraint r con) pairs) of
     INCOMPATIBLE -> Nothing
-    COMPATIBLE newpairs -> Just $ F (rule, newpairs)
+    COMPATIBLE pairs -> Just $ F (rule, pairs)
 
 match :: Frontier a -> Tree a
 match (F (a, constraints)) = Match a (foldr (\(pi, pat) env ->
@@ -229,7 +238,7 @@ asReg (CHILD (r, i)) k = LetChild (r, i) k
 registerize :: [Constraint] -> (E.Env Register -> Tree a) -> Tree a
 registerize [] k = k E.empty
 registerize ((pi, P.Var x) : pairs) k = 
-  asReg pi (\t -> registerize pairs (\env -> k (E.bind x t env))) -- not true
+  asReg pi (\t -> registerize pairs (\env -> k (E.bind x t env)))
 registerize ((_, pat) : _) _ = error $ ("non-VAR" ++ show pat ++ "at MATCH")
 
 {-
@@ -267,14 +276,14 @@ anyApplication (F (_, pairs)) = join $ L.find isSome (map maybeConstructed pairs
 
 compile :: [Frontier a] -> Tree a
 compile [] = error "no frontiers"
-compile frontiers@(first:_) = 
+compile frontiers@(first : _) =
   case anyApplication first of
     Just (CHILD (r, i), _, _) ->     -- wants a test node; needs a register
-          LetChild (r, i) (\r ->
+          LetChild (r, i) (\t ->
             let
-              frontiers' = map (REGISTER r `forPath` CHILD (r, i)) frontiers
+              frontiers' = map (REGISTER t `forPath` CHILD (r, i)) frontiers
             in compile frontiers')
-    Just (pi@(REGISTER r), _, _) ->
+    Just (pi@(REGISTER r), _, _) ->  -- test node
         let cons = nub (mapPartial (constructorAppliedAt pi) frontiers)
             subtreeAt con = compile (mapPartial (refineFrontier r con) frontiers)
             edges = map (\con -> E con (subtreeAt con)) cons
@@ -282,7 +291,7 @@ compile frontiers@(first:_) =
             defaultTree = if null defaults 
                           then Nothing
                           else Just (compile defaults)
-        in Test r edges defaultTree
+        in  Test r edges defaultTree
     Nothing ->      -- match node
       let F (rule, pairs) = first
        in registerize pairs (\env -> Match rule env)
@@ -302,5 +311,6 @@ constructorAppliedAt pi frontier =
 uncontrainedAt :: Path -> Frontier a -> Bool
 uncontrainedAt pi frontier = 
   case patternAt pi frontier of
-    Just (P.Apply {}) -> False
-    _ -> True
+    Nothing -> True
+    Just (P.Var _) -> True
+    _ -> False
