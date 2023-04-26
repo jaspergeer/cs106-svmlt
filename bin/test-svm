@@ -9,13 +9,16 @@ function die {
 
 arg0=$(basename "$0")
 
+scmtx="ho-vo"
+
 if [[ $# -eq 0 ]]; then
   base=$(basename $0)
-  echo "Usage: $base [-v [-v]] [-bin directory] *.scm *.es
+  echo "Usage: $base [-v [-v]] [-bin directory] [-es] *.scm *.es
     or find . -name '*.scm' -exec $base [-v [-v]] [-bin directory] '{}' ';'
          where -v      shows more info
                -v -v   shows even more info
                -bin    says where uft and svm are located
+               -es     forces *.scm to be treated as eScheme
 
        A test comprises these files:
          *.scm          vScheme source
@@ -155,7 +158,7 @@ do
   failure=
 
   case $i in
-    *.scm) lang=ho-vo ;;
+    *.scm) lang="$scmtx" ;;
     *.es)  lang=es-vo ;;
     *) die "$arg0: I don't know how to run test file '$i'" ;;
   esac
