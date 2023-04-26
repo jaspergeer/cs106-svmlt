@@ -1,0 +1,33 @@
+#!/bin/ksh
+
+BIN="$(dirname "$0")"
+BUILD="$(dirname "$BIN")"/build
+
+flavor=$(basename "$0" -with-predef)
+flavor=${flavor#run-}
+
+PREDEF=$BUILD/predef-$flavor.vo
+
+if [[ $flavor = hox ]]; then
+  PREDEF=$BUILD/predef-ho.vo
+fi
+
+if [[ ! -r "$PREDEF" ]]; then
+  echo "Cannot run until $PREDEF is built.  Try making 'predef' in vscheme dir."
+  exit 1
+elif [[ "$BIN/uft" -nt "$PREDEF" ]]; then
+  echo 'UFT is newer than compiled predefined functions. `make predef` in vscheme dir.'
+  exit 1
+fi
+
+set -o pipefail
+
+case $# in
+  0) cat ;;
+  *) cat "$@" ;;
+esac | 
+fgrep -v  'check-error' |
+"$BIN/uft" $flavor-vo |
+"$BIN/svm" $PREDEF -
+
+exit $?
