@@ -49,6 +49,9 @@ unparseObj1 i = case i of
   (O.RegsInt "mkclosure" [r1, r2] u8) -> unwords [reg r1, ":= closure["++reg r2 ++ "," ++ show u8 ++ "]"]
   (O.RegsInt "getclslot" [r1, r2] u8) -> unwords [reg r1, ":=", reg r2 ++ "." ++ show u8]
   (O.RegsInt "setclslot" [r1, r2] u8) -> unwords [reg r1 ++ "."++ show u8, ":=", reg r2]
+  (O.RegsInt "mkblock"   [r1, r2] u8) -> unwords [reg r1, ":= block[" ++ reg r2 ++ "," ++ show u8 ++ "]"]
+  (O.RegsInt "setblkslot" [r1, r2] u8) -> unwords ["block", reg r1 ++ "."++ show u8, ":=", reg r2]
+  -- _ -> show i
 
 unparse1 :: A.Instr -> String
 unparse1 (A.ObjectCode instr) = unparseObj1 instr
@@ -56,8 +59,18 @@ unparse1 i = case i of
   A.DefLabel label -> unwords ["def", label]
   A.GotoLabel label -> unwords ["goto", label]
   A.IfGotoLabel r label -> unwords ["if", reg r, "goto", label]
-  A.GotoVCon r ls -> error "implement me (module 12)"
+  A.GotoVCon r choices ->
+    let choice (v, arity, lbl) = unwords ["  case", unparseLit v, "(" ++ show arity ++ "):", "goto", lbl]
+            in unwords ["switch", reg r, "{", unwords (map choice choices), "}"]
+            -- : map choice choices ++ ["}"] ++ unparse instructions
   _ -> error "IMPOSSIBLE: unknown assembly instruction"
+
+-- | unparse (A.GOTO_VCON (r, choices) :: instructions) =
+--     let fun choice (v, arity, lbl) =
+--            spaceSep ["  case", lit v, "(" ^ int arity ^ "):", "goto", lbl]
+--     in  spaceSep ["switch", reg r, "{"] :: map choice choices @ "}" ::
+--         unparse instructions
+--     end
 
 unparse :: [A.Instr] -> [String]
 unparse (i:is) = case i of

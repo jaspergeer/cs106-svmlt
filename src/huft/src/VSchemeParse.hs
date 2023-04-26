@@ -202,7 +202,7 @@ def :: Parser [S.Def]
 def = let
   def' = S.Val <$> try (tok "val " *> name) <*> expr
      <|> S.Define <$> try (tok "define " *> name) <*> brackd formals <*> expr
-     <|> S.CheckExpect <$> try (tok "check-expect" *> expr) <*> expr
+     <|> S.CheckExpect <$> try (tok "check-expect" *> expr) <*> try expr
      <|> S.CheckAssert <$> try (tok "check-assert" *> expr)
      <|> S.Use <$> try  (tok "use " *> name)
   in try (brackd (single <$> def'

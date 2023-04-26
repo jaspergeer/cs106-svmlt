@@ -20,7 +20,7 @@ import qualified MatchViz as MV
 import qualified CSUtil
 import qualified Constructed as CONS
 -- import qualified VSchemeUnparse as VU
-
+import Debug.Trace
 import AsmUtils (i)
 -- needa somehow figure out MatchViz here
 
@@ -140,22 +140,21 @@ exp rho a e =
     (C.Constructed (CONS.T cons es)) -> inLocalVar a
       (\t -> nbRegs bindAnyReg (a \\ t) (C.Literal (O.String cons) : es) K.Block)
     (C.Case (Case.T e choices)) -> bindAnyReg a (exp rho a e)
-     (\t ->
+     (
       let
-          a' = a \\ t
           treeGen :: RegSet -> MC.Tree C.Exp -> K.Exp Reg
-          treeGen a (MC.Test r edgeList (Just dfalt)) = 
-            K.SwitchVCon r (fmap (\(MC.E c tree') -> (c, treeGen a' tree')) edgeList) 
-                           (treeGen a' dfalt)
+          treeGen a (MC.Test r edgeList (Just dfalt)) =
+            K.SwitchVCon r (map (\(MC.E c tree') -> (c, treeGen a tree')) edgeList) 
+                           (treeGen a dfalt)
           treeGen a (MC.Test r edgeList Nothing) = 
-            K.SwitchVCon r (fmap (\(MC.E c tree') -> (c, treeGen a' tree')) edgeList) 
+            K.SwitchVCon r (fmap (\(MC.E c tree') -> (c, treeGen a tree')) edgeList) 
                            (K.VMOP P.err [r])
           treeGen a (MC.LetChild (r, i)  k) = 
             bindAnyReg a (K.VMOPGLO P.getblockslot [r] (O.Int i))
-                          (\t' -> treeGen (a \\ t') (k t))
+                          (\t' -> treeGen (a \\ t') (k t'))
           treeGen a (MC.Match e env) = exp (E.union env rho) a e
-
-       in treeGen a' (id (MC.decisionTree t choices))) 
+       in      
+        (\t -> treeGen (a \\ t) (id (MC.decisionTree t choices))))
        -- import VUScheme latter for HLS to work
 
 

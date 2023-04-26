@@ -63,10 +63,19 @@ switchVcon gen finish (r, choices, fallthru) = do
     do 
       l <- U.newLabel
       body <- gen e
-      return ((conLiteral (cons, arity), arity, l): table, cases . s (U.deflabel l) . body))
+      return ((conLiteral (cons, arity), arity, l): table, cases . s (U.deflabel l) . body . finish))
       ([], empty) choices
   dfault <- gen fallthru
   return $ s (A.GotoVCon r table) . cases . dfault
+
+-- Each subexpression is translated using gen, and its translation is followed by (a copy of) finish.
+
+-- Every subexpression except fallthru is preceded by the definition of a fresh label.
+
+-- The code returned by switchVcon starts with an AssemblyCode.GOTO_VCON form,
+-- which contains a jump table. That form is followed by the translation of fallthru. 
+-- And that translation is followed by the translations of all the other expressions 
+-- in any order, each of which is preceded by the definition of its corresponding label.
 
 toReg' :: Reg -> Generator Code
 toReg' dest e = case e of
@@ -100,7 +109,7 @@ toReg' dest e = case e of
       exit <- U.newLabel
       switchVcon (toReg' dest) (s (U.goto exit)) (x, cases, dfault) <.>
         return (s (U.deflabel exit))
-    _ -> error $ show e
+    -- _ -> error $ show e
 -- Using A.mkclosure, allocate the closure into that register.
 -- Initialize the slots by emitting a sequence of instructions created using A.setclslot.
 

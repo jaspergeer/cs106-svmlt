@@ -6,9 +6,15 @@ type Name = String
 data Pat = Apply VCon [Pat]
          | Var Name
          | Wildcard
-         deriving (Eq, Show)
+         deriving (Eq)
     --    N.B. a pattern for literal integer k is represented
     --    as APPLY (Int.toString k, [])
+
+instance Show Pat where
+  show (Apply vcon []) = vcon
+  show (Apply vcon pats) = "(" ++ vcon ++ " " ++ show pats ++ ")"
+  show (Var x) = x
+  show Wildcard = "_"
 
 instance Ord Pat where
   Wildcard <= _ = True

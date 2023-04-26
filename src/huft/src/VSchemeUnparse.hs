@@ -55,6 +55,7 @@ exp (S.Set x e) = P.nest 3 $ kw "set" [P.pretty x, exp e]
 exp (S.IfX e1 e2 e3) = P.nest 3 $ kw "if" [exp e1, exp e2, exp e3]
 exp (S.WhileX e1 e2) = P.nest 3 $ kw "while" [exp e1, exp e2]
 exp (S.Begin es) = P.group $ P.nest 3 $ P.parens $ P.pretty"begin" <+> P.vsep (map exp es)
+exp (S.Apply (S.VCon k) []) = P.pretty k
 exp (S.Apply e es) = P.nest 3 $ wrap (exp e : map exp es)
 -- not sure how to use this
 -- exp (S.LetX S.LET [(x, e')], e)
@@ -66,7 +67,6 @@ exp (S.LetX lk bs e) = case lk of
         bindings = [P.pretty "[" <> P.pretty x <+> exp e <> P.pretty "]" | (x, e) <- bs]
 -- ignore other letkinds because i dont quite get what wppscheme is trying to do
 exp (S.Lambda xs body) = P.nest 3 $ kw "lambda" [wrap (map P.pretty xs), exp body]
-
 -- module 12 case expressions
 exp (S.Case (Case.T e choices)) = 
     let choice (p, e) = P.nest 6 (wraps [pat p, exp e])
