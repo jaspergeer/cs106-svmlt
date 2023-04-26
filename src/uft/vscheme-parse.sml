@@ -239,7 +239,11 @@ struct
 
        <|> bracket "||"        (orSugar <$> many exp) 
        <|> bracket "&&"        (andSugar <$> many exp) 
-       <|> bracket "case" (curry S.CASE <$> exp <*> many (exactList "[pattern exp]" (pair <$> pattern <*> exp)))
+       <|> bracket "case" (
+             if useVcons then
+               curry S.CASE <$> exp <*> many (exactList "[pattern exp]" (pair <$> pattern <*> exp))
+             else
+               P.perror "`case` expressions are not supported in this input language")
        <|> oflist eos >> P.perror "empty list as Scheme expression"
        <|> realExp <$> sxreal
        <|> S.LITERAL <$> (    kw "#t" >> P.succeed (S.BOOLV true)
