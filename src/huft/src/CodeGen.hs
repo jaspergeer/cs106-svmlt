@@ -60,16 +60,18 @@ conLiteral lcons = case lcons of
   (cons, _) -> O.String cons
 
 switchVcon :: Generator Code -> Code -> (Reg, [(M.LabeledConstructor, Exp)], Exp) -> U.UniqueLabelState Code
-switchVcon gen finish (r, choices, fallthru) = do
-  (table, cases) <- foldlM (\(table, cases) ((cons, arity), e) ->
-    do
-      l <- U.newLabel
-      body <- gen e
-      return ((conLiteral (cons, arity), arity, l) : table,
-        s (U.deflabel l) . body . finish . cases))
-      ([], empty) choices
-  dfault <- gen fallthru
-  return $ s (A.GotoVCon r table) . dfault . cases
+switchVcon gen finish (r, choices, fallthru) = 
+  do
+    (table, cases) <- foldlM f  ([], empty) choices
+    dfault         <- gen fallthru
+    return $ s (A.GotoVCon r table) . dfault . cases
+  where
+    (table, cases) `f` ((cons, arity), e) =
+        do
+          l <- U.newLabel
+          body <- gen e
+          return ((conLiteral (cons, arity), arity, l) : table,
+                  s (U.deflabel l) . body . finish . cases)
 
 -- Each subexpression is translated using gen, and its translation is followed by (a copy of) finish.
 
@@ -119,10 +121,13 @@ toReg' dest e = case e of
 -- Initialize the slots by emitting a sequence of instructions created using A.setclslot.
 
 mapi :: (Int -> a -> b) -> [a] -> [b]
-mapi f xs =
-  let go i [] = []
-      go i (x:xs) = f i x : go (i+1) xs
-  in go 0 xs
+-- mapi f xs =
+--   let go i [] = []
+--       go i (x:xs) = f i x : go (i+1) xs
+--   in go 0 xs
+
+-- for mapi, you might want to use ZipWith (that have access to an infinite list)
+mapi f  = zipWith f [0 ..]
 
 forEffect' :: Generator Code
 forEffect' e = case e of
@@ -203,8 +208,6 @@ letrec gen bindings body =
         toReg' f_i (K.FunCode formals body) <.> return (s (U.mkclosure f_i f_i (length captures)))
       init (f_i, K.Closure formals body captures) = l (mapi (U.setclslot f_i) captures)
   in foldr (\b l -> alloc b <.> l) (return empty) bindings <.> return (hconcat (map init bindings)) <.> gen body
-
--- for mapi, you might want to use ZipWith (that have access to an infinite list)
 
 -- fun letrec gen (bindings, body) =
 --    let val _ = letrec : (reg K.exp ‑> instruction hughes_list)
