@@ -10,6 +10,8 @@ import qualified MatchCompiler as M
 import Data.Char (isDigit)
 import Data.Foldable (foldrM, foldlM)
 
+import Debug.Trace
+
 
 type Reg = O.Reg
 type Instruction = A.Instr
@@ -85,7 +87,7 @@ toReg' dest e = case e of
     K.Name a -> return $ s $ U.copyreg dest a
     K.VMOP prim@(P.SetsRegister _) rs -> return $ s $ U.setReg dest prim rs
     K.VMOP {} -> forEffect' e <.> return (s $ U.reglit "loadliteral" dest O.Nil) -- "undefined behavior"
-    K.VMOPGLO (P.SetsRegister (P.Base "getblkslot" 2)) [r] (O.Int i) -> return $ s $ U.getblkslot dest r i
+    K.VMOPGLO (P.SetsRegister (P.Base "getblockslot" 2)) [r] (O.Int i) -> return $ s $ U.getblkslot dest r i
     K.VMOPGLO prim@(P.SetsRegister _) _ lit -> return $ s $ U.setRegLit dest prim lit -- the [r1] list disappears here, is that right?
     K.VMOPGLO {} -> forEffect' e
     K.FunCall funreg args -> return $ s $ U.call dest funreg args
@@ -105,8 +107,8 @@ toReg' dest e = case e of
                l (mapi (U.setclslot dest) captured)
     K.LetRec bindings body -> letrec (toReg' dest) bindings body
     K.Block (r:rs) ->
-      return $ s (U.mkblock dest r (length rs)) .
-               l (mapi (U.setblkslot dest) rs)
+      return $ s (U.mkblock dest r (length (r:rs))) .
+               l (mapi (\n -> U.setblkslot dest (n + 1)) rs)
     K.Block [] -> error "empty block"
     K.SwitchVCon x cases dfault -> do
       exit <- U.newLabel

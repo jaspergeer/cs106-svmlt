@@ -149,7 +149,7 @@ exp rho a e =
                            (treeGen a dfalt)
           treeGen a (MC.Test r edgeList Nothing) = 
             K.SwitchVCon r (fmap (\(MC.E c tree') -> (c, treeGen a tree')) edgeList) 
-                           (K.VMOP P.err [r])
+                           (K.Seq (K.Assign r (K.Literal $ O.String "pattern matches exhausted"))  (K.VMOP P.err [r]))
           treeGen a (MC.LetChild (r, i)  k) = 
             bindAnyReg a (K.VMOPGLO P.getblkslot [r] (O.Int i))
                           (\t' -> treeGen (a \\ t') (k t'))

@@ -172,7 +172,6 @@ void vmrun(VMState vm, struct VMFunction* fun) {
   const char *dump_decode = svmdebug_value("decode");
   const char *dump_call   = svmdebug_value("call");
   const char *dump_case = svmdebug_value("case");
-  (void) dump_case;
 
   (void) dump_call;
   
@@ -214,7 +213,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       RX = RY;
       break;
     case Err:
-      runerror(vm, "%v", RX);
+      runerror(vm, "%s", AS_CSTRING(vm, RX));
       break;
 
     // Printing
@@ -487,6 +486,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       b->forwarded = NULL;
       b->nslots = Z;
       b->slots[0] = RY;
+      RX = mkBlockValue(b);
       break;
     }
     case GetBlkSlot:
@@ -525,10 +525,15 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         arity = 0;
       }
       ++pc;
+      if (dump_case)
+        print("scrutinee: %v, cons: %v, arity: %d\n", RX, cons, arity);
+
       for (int i = 0; i < Y; ++i) {
         Instruction curr = *(code + pc);
         Value entry_cons = LPool_get(literals, uYZ(curr));
         int entry_arity = uX(curr);
+        if (dump_case)
+          print("check cons %v with arity %d\n", entry_cons, entry_arity);
         if (eqvalue(entry_cons, cons) && entry_arity == arity)
           break;
         pc += 2;
