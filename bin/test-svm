@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# shellcheck disable=SC2086
 
 function die {
   echo "$*" >&2
@@ -167,7 +168,7 @@ do
        cat $ufterr
      fi
   else
-    ( ${command[@]} < $vo > $testout 2>$testerr || false ) 2> /dev/null
+    ( "${command[@]}" < $vo > $testout 2>$testerr || false ) 2> /dev/null
     testexit=$?
 
     if large_object_failure $testerr; then
