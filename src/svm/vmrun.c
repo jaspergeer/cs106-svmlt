@@ -429,7 +429,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
 
     // type predicates
     case IsFunc:
-      RX = mkBooleanValue(isFunction(RY));
+      RX = mkBooleanValue(isVMClosure(RY));
       break;
     case IsPair:
       RX = mkBooleanValue(isPair(RY));
