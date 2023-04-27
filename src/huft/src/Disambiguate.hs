@@ -55,7 +55,7 @@ value v = case v of
   S.Sym x -> X.Literal (X.Sym x)
 
 exp' :: S.Exp -> Environment -> X.Exp
-exp' e locals =
+exp' e locals = -- trace (show e) $
   let exp e = case e of
         S.Literal v -> value v
         S.Var x -> case referent x locals of

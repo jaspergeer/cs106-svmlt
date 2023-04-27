@@ -57,7 +57,7 @@ inLocalVar rs k =
   in K.Assign t (k t)
 
 exp :: E.Env Reg -> RegSet -> C.Exp -> Exp
-exp rho a e =
+exp rho a e = -- trace (show e) $
   let nbRegs = nbRegsWith (exp rho)
   in case e of
     (C.PrimCall p es) -> nbRegs bindAnyReg a es (K.VMOP p)
@@ -148,7 +148,7 @@ exp rho a e =
           treeGen a (MC.Test r edgeList (Just dfalt)) =
             K.SwitchVCon r (map (\(MC.E c tree') -> (c, treeGen a tree')) edgeList) 
                            (treeGen a dfalt)
-          treeGen a (MC.Test r edgeList Nothing) = 
+          treeGen a (MC.Test r edgeList Nothing) =
             K.SwitchVCon r (fmap (\(MC.E c tree') -> (c, treeGen a tree')) edgeList) 
                            (K.Seq (K.Assign r (K.Literal $ O.String "Non-Exhaustive Patterns"))  (K.VMOP P.err [r]))
           treeGen a (MC.LetChild (r, i)  k) = 
@@ -160,6 +160,7 @@ exp rho a e =
           ---add this if you want the tree to be visualized
           --- somewhat it does not work on fig6-extended
           --  trace (show (MC.decisionTree t choices)) $
+    -- _ -> error "hi"
 
 
 

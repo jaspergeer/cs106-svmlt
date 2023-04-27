@@ -94,7 +94,7 @@ pattern = try (P.Apply <$> vcon <*> return [])
       --  <|> try (P.Int <$> int)
        <|> try (P.Wildcard <$ tok "_")
        <|> try (P.Var <$> name)
-       <|> try (P.Var <$> tok "'()") -- short fix for me
+       <|> try (P.Apply <$> tok "'()" <*> return []) -- short fix for me
       --  <|> try (brackd pattern)
        <|> try (brackd (P.Apply <$> vcon <*> many pattern))
 
