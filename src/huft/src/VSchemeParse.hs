@@ -28,6 +28,8 @@ import Text.Parsec ( between,
                      try, many, manyTill, anyChar, spaces, endOfLine, sepBy, skipMany, eof, satisfy )
 import Data.Char (isSpace, isDigit)
 
+import Debug.Trace
+
 rwords =
   [ "set", "if", "while", "begin", "let", "let*", "letrec", "lambda",
     "quote","val", "define", "case", "data", "implicit-data",
@@ -92,6 +94,7 @@ pattern = try (P.Apply <$> vcon <*> return [])
       --  <|> try (P.Int <$> int)
        <|> try (P.Wildcard <$ tok "_")
        <|> try (P.Var <$> name)
+       <|> try (P.Var <$> tok "'()") -- short fix for me
       --  <|> try (brackd pattern)
        <|> try (brackd (P.Apply <$> vcon <*> many pattern))
 

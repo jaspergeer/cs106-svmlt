@@ -8,6 +8,8 @@ import qualified Case
 import qualified Constructed
 import qualified Pattern
 
+import Debug.Trace
+
 data Referent = Local | Primitive P.Primitive | OtherGlobal
 
 type Name = String
