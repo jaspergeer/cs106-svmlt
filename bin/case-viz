@@ -7,6 +7,9 @@ do
   dot="$dir/$base.dot"
   pdf="$dir/$base.pdf"
 
+  rm -f "$dot.bak" "$pdf.bak"
+  /bin/mv "$dot" "$dot.bak"
+  /bin/mv "$pdf" "$pdf.bak"
   env MATCHVIZ="$dot" uft es-kn "$i" > /dev/null
   dot -Tpdf -o "$pdf" "$dot"
   open "$pdf"
