@@ -25,7 +25,18 @@ import Text.Parsec.Token ( symbol )
 import Text.Parsec ( between,
                      char,
                      (<|>),
-                     try, many, manyTill, anyChar, spaces, endOfLine, sepBy, skipMany, eof, satisfy )
+                     try,
+                     many,
+                     manyTill,
+                     anyChar,
+                     spaces,
+                     endOfLine,
+                     sepBy,
+                     skipMany,
+                     eof,
+                     satisfy,
+                     digit,
+                     many1 )
 import Data.Char (isSpace, isDigit)
 
 rwords =
@@ -89,21 +100,48 @@ vcon =
 
 pattern :: Parser P.Pat
 pattern = try (P.Apply <$> vcon <*> return [])
-      --  <|> try (P.Int <$> int)
+       <|> try (P.Apply <$> (show <$> int) <*> return [])
        <|> try (P.Wildcard <$ tok "_")
        <|> try (P.Var <$> name)
       --  <|> try (brackd pattern)
        <|> try (brackd (P.Apply <$> vcon <*> many pattern))
 
+formals :: Parser [String]
 formals = many name
+
+bind :: Parser (String, S.Exp)
 bind = brackd ((,) <$> name <*> expr)
+
+fresh :: S.Exp -> [Char]
+fresh e =
+  let attempt n = let 
+                    x = "x" ++ show n
+                  in 
+                    if freeIn e x then attempt (n + 1) else x
+    in attempt 1
+
+orSugar :: [S.Exp] -> S.Exp
+orSugar ez = case ez of
+    [] -> S.Literal (S.Bool False)
+    [e] -> e
+    (e1:es) ->
+        let e2 = orSugar es
+            x = fresh e2
+        in  S.LetX S.Let [(x, e1)] (S.IfX (S.Var x) (S.Var x) e2)
+
+andSugar :: [S.Exp] -> S.Exp
+andSugar ez = case ez of
+  [] -> S.Literal (S.Bool True)
+  [e] -> e
+  (e:es) -> S.IfX e (andSugar es) (S.Literal (S.Bool False))
+
 expr :: Parser S.Exp
 expr = let
   letstar [] e = e
   letstar ((x, e') : bs) e = S.LetX S.Let [(x, e')] (letstar bs e)
   letKind = try (S.LetRec <$ tok "letrec")
         <|> S.Let <$ try (tok "let")
-  
+
   expr' = S.Set <$> try (tok "set " *> name) <*> expr
       <|> S.IfX <$> try (tok "if" *> expr) <*> expr <*> expr
       <|> S.WhileX <$> try (tok "while" *> expr) <*> expr
@@ -115,6 +153,8 @@ expr = let
         caset = Case.T <$> expr <*> many choice
         in S.Case <$> try (tok "case" *> caset)
       <|> S.LetX <$> letKind <*> brackd (many bind) <*> expr
+      <|> tok "||" *> (orSugar <$> many expr)
+      <|> tok "&&" *> (andSugar <$> many expr)
       <|> S.Apply <$> expr <*> many expr
   in
     brackd expr'
@@ -142,7 +182,7 @@ desugarRecord recname fieldnames =
               formals = map ("the-" ++) fieldnames
               body = S.Apply (S.VCon con) (map S.Var formals)
           in S.Define con formals body
-        recordPredicate recname fieldnames = 
+        recordPredicate recname fieldnames =
           let tag = S.Sym ("make-" ++ recname)
               predname = recname ++ "?"
               r = S.Var "r"
@@ -217,3 +257,28 @@ parse = spaces *> (concat <$> manyTill def eof)
 
 -- defs :: Parser [S.Def]
 -- defs = many def -- ????
+
+freeIn exp y =
+  let member y [] = False
+      member y (z:zs) = y == z || member y zs
+      hasY e = case e of
+        S.Literal _ -> False
+        S.Var x -> x == y
+        S.Set x e -> x == y || hasY e
+        S.IfX e1 e2 e3 -> any hasY [e1, e2, e3]
+        S.WhileX e1 e2 -> any hasY [e1, e2]
+        S.Begin es -> any hasY es
+        S.Apply e es -> any hasY (e:es)
+        S.LetX S.Let bs e -> any rhsHasY bs || hasY e
+        S.LetX S.LetRec bs e -> notElem y (map fst bs) && hasY e
+        S.Lambda xs e -> notElem y xs && hasY e
+        S.VCon _ -> False
+        S.Case (Case.T e choices) -> hasY e || any choiceHasY choices
+        S.Cond qas -> any (\(q, a) -> hasY q || hasY a) qas
+      choiceHasY (pat, exp) = not (bindsY pat) && hasY exp
+      bindsY pat = case pat of
+        P.Var x -> x == y
+        P.Wildcard -> False
+        P.Apply _ pats -> any bindsY pats
+      rhsHasY (_, e) = hasY e
+  in hasY exp
