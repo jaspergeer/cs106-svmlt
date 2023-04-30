@@ -227,9 +227,23 @@ struct
        <|> bracket "letrec"    (letx S.LETREC <$> lbindings <*> exp)
        <|> bracket "quote"     (      (quoted o sexp) <$> one)
        <|> bracket "lambda"    (curry S.LAMBDA <$> oflist (many name) <*> exp) 
+       <|> bracket "cond" 
+               (let fun addQa ((question, answer), rest) = S.IFX (question, answer, rest)
+                    val qa = exactList "[question answer]" (pair <$> exp <*> exp)
+                    val condError =
+                        S.APPLY (S.VAR "error", [S.LITERAL (S.SYM "cond:-all-question-results-were-false")])
+                    fun desugarCond [] = condError
+                      | desugarCond ((q, a) :: qas) = S.IFX (q, a, desugarCond qas)
+                in  desugarCond <$> many qa
+                end)
+
        <|> bracket "||"        (orSugar <$> many exp) 
        <|> bracket "&&"        (andSugar <$> many exp) 
-       <|> bracket "case" (curry S.CASE <$> exp <*> many (exactList "[pattern exp]" (pair <$> pattern <*> exp)))
+       <|> bracket "case" (
+             if useVcons then
+               curry S.CASE <$> exp <*> many (exactList "[pattern exp]" (pair <$> pattern <*> exp))
+             else
+               P.perror "`case` expressions are not supported in this input language")
        <|> oflist eos >> P.perror "empty list as Scheme expression"
        <|> realExp <$> sxreal
        <|> S.LITERAL <$> (    kw "#t" >> P.succeed (S.BOOLV true)

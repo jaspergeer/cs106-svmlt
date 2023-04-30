@@ -29,6 +29,10 @@ data Path = REGISTER Register
           | CHILD (Register, Int)
           deriving (Eq)
 
+instance Show Path where
+  show (REGISTER r) = "$r" ++ show r
+  show (CHILD (r, i)) = "$r" ++ show r ++ "[" ++ show i ++ "]"
+
 instance (Show a) => Show (Edge a) where
   show (E lcon tree) = "[--" ++ show lcon ++ "-->]" ++ show tree
 
@@ -37,10 +41,6 @@ instance (Show a) => Show (Tree a) where
   show (Match a env) = "[MATCH," ++ show a ++ show env ++ " END MATCH]"
   show (LetChild (block, i) k) =  "[let " ++ show (k 1) ++ " := " ++ "$r3[" ++ show i ++ "]]"
 
-
-instance Show Path where
-  show (REGISTER r) = "$r" ++ show r
-  show (CHILD (r, i)) = "$r" ++ show r ++ "[" ++ show i ++ "]"
 
 -- in order to match block slots, children should be numbered from 1
 

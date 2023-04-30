@@ -135,19 +135,13 @@ struct
             before app eprint ["finished ", what, "\n"]
 
 
-  fun sexp tokens =
-    let val sexp = P.ofFunction sexp
-        val parser = 
-
+  val sexp = P.fix (fn sexp =>
        P.check (readName <$> name)
    <|> Sx.INT     <$> int
    <|> Sx.BOOL    <$> booltok
    <|> leftCurly  >> P.perror "curly brackets may not be used in S-expressions"
    <|> Sx.LIST    <$> liberalBracket ("list of S-expressions", many sexp)
-   <|> (fn v => Sx.LIST [Sx.SYM "quote", v]) <$> (quote >> sexp)
-    in  P.asFunction parser tokens
-    end
-  val sexp = P.ofFunction sexp : Sx.sx parser
+   <|> (fn v => Sx.LIST [Sx.SYM "quote", v]) <$> (quote >> sexp))
 
   local
     infix 0 >> >=>

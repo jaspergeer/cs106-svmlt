@@ -7,14 +7,14 @@ import qualified Env as E
 import Data.Foldable (foldrM)
 
 unGotoVcon :: [A.Instr] -> [A.Instr]
-unGotoVcon = foldr 
-  (\i is ->
-    case i of 
-      (A.GotoVCon reg choices) ->
-        A.ObjectCode (O.RegsInt "goto-vcon" [reg] (length choices)) :
-        foldr (\(lit, r, n) code ->
-          A.ObjectCode (O.RegLit "if-vcon-match" r lit) : A.GotoLabel n : code) is choices
-      _ -> i : is) []
+unGotoVcon = let
+  (A.GotoVCon reg choices) `f` is = 
+      let test = A.ObjectCode (O.RegsInt "goto-vcon" [reg] (length choices))
+          genChoice (lit, r, n) code = A.ObjectCode (O.RegLit "if-vcon-match" r lit) : A.GotoLabel n : code
+      in test : foldr genChoice is choices
+  i `f` is = i : is
+  in foldr f []
+
 
 foldrInstrStream :: (Int -> A.Instr -> a -> a) -> a -> [A.Instr] -> a
 foldrInstrStream f e instrs = let
