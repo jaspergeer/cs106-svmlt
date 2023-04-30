@@ -156,7 +156,7 @@ exp rho a e = -- trace (show e) $
                           (\t' -> treeGen (a \\ t') (k t'))
           treeGen a (MC.Match e env) = exp (E.union env rho) a e
        in      
-          treeGen (a \\ t) ( (MC.decisionTree t choices))))       -- import VUScheme latter for HLS to work
+         treeGen (a \\ t) ( (MC.decisionTree t choices))))       -- import VUScheme latter for HLS to work
           ---add this if you want the tree to be visualized
           --- somewhat it does not work on fig6-extended
           --  trace (show (MC.decisionTree t choices)) $

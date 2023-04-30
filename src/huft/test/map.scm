@@ -8,7 +8,7 @@
 
 ;; ;; (case xs [C     C])
 
-;; (define some (a)
-;;     (case a
-;;         [C1     1]
-;;         [C2     2]))
+(define theta (c)
+    (case c
+        [C1     #t]
+        [C2     #f]))
