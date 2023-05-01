@@ -73,12 +73,20 @@ static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm);
   VMLOAD(); \
 } while (0)
 
+/* 
+ * "atomically" update the currently running function to
+ * VM function `f` and the current code to `f`'s code
+ */
 #define CHRUNNING(f) \
 { \
   running = f; \
   code = running->instructions; \
 }
 
+/*
+ * if VM value `v` contains a closure, bind it to variable `callee`.
+ * Otherwise throw an appropriate error.
+ */
 #define CHECK_SET_CALLABLE(v, callee) \
   if (isVMClosure(v)) { \
     callee = AS_CLOSURE(vm, v); \
@@ -88,6 +96,10 @@ static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm);
     runerror(vm, "Tried to call non-function"); \
   }
 
+/*
+ * push onto the callstack an activation containing VM function `fun`,
+ * destination register `destreg` and block of suspended arguments `suspended`.
+ */
 #define CALLSTACK_PUSH(fun, destreg, suspended) \
 { \
   if (stack_ptr == vm->call_stack + (CALL_STACK_SIZE - 1)) \
@@ -100,6 +112,10 @@ static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm);
   top->suspended = suspended; \
 }
 
+/*
+ * pop the activation on the top of the call stack off and transfer control to
+ * its suspended function, placing `return_value` in the destination register.
+ */
 #define CALLSTACK_POP(return_value) \
 { \
   Activation *top = stack_ptr--; \
@@ -111,6 +127,14 @@ static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm);
   reg0 = top->reg0; \
 }
 
+/*
+ * preconditions:
+ * the function we intend to call is located at `funreg`.
+ * the arguments we intend to pass to it occupy registers `funreg` + 1
+ * to `funreg` + `arity`.
+ * 
+ * 
+ */
 #define SETUP_CALL(funreg, arity, shift, callee, suspended) \
 { \
   int nargs = arity; \
@@ -158,8 +182,9 @@ void vmrun(VMState vm, struct VMFunction* fun) {
   LPool_T literals = vm->literals;
   Value *globals = vm->globals;
 
-  Value *reg0;
-  uint32_t pc;
+  Value *reg0;  // reg0 in the current window
+  uint32_t pc;  // program counter, relative to the start of the current
+                // register window
   Activation *stack_ptr;
   struct VMFunction *running;
   Instruction *code;
@@ -270,7 +295,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         pc += offset ;
       }
       break;
-    
+
     // Function Calls
     case Call:
       {
@@ -306,6 +331,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         }
       }
       break;
+
     case TailCall:
       {
         if (gc_needed)
