@@ -47,6 +47,7 @@
 
 static inline struct VMClosure *partial_apply(struct VMClosure *closure, Value *args, int nargs);
 static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm);
+
 #define VMSAVE() \
 { \
   vm->running = running; \
