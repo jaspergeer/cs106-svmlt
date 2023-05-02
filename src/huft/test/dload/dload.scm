@@ -1,22 +1,16 @@
 ;; really should implement that list syntax
 ;;
-(let ([$r0 (lambda ($r1)
-  (let* ([$r2 '()]
-         [$r1 (cons $r1 $r2)]
-         [$r2 'ho-vo]
-         [$r1 (cons $r2 $r1)]
-         [$r2 'huft]
-         [$r1 (cons $r2 $r1)]
-         [$r1 (popen $r1)]
-         [$r1 (dload $r1)])
-          ($r1)))])
-  (set use $r0))
+(define use (filename)
+  (let* ([cmd (cons 'huft (cons 'es-vo (cons filename '())))]
+         [fd (popen cmd)]
+         [module (dload fd)])
+         (module)))
 
 ;; this should be overwritten when we load loadme.kn
 (let ([$r1 'load-failure])
   (set message $r1))
 
-(use 'test/loadme.kn)
+(use 'test/dload/loadme.scm)
 
 (let ([$r1 message])
   (println $r1))

@@ -53,17 +53,17 @@
     (car xs)
     (nth (- n 1) (cdr xs))))
 
-(define getblockslot (block k) (nth block k))
-(define CAPTURED-IN (i xs) (nth (+ i 1) xs))
-(define list-of-length? (v k)
-  (if (= k 0)
-      (null? v)
-      (&& (pair? v) (list-of-length? (cdr v) (- k 1)))))
-(define matches-vcon-arity? (v con k)
-  (if (= k 0)
-      (= v con)
-      (&& (list-of-length? v (+ k 1))
-          (= (car v) con))))
+;; (define getblockslot (block k) (nth block k))
+;; (define CAPTURED-IN (i xs) (nth (+ i 1) xs))
+;; (define list-of-length? (v k)
+;;   (if (= k 0)
+;;       (null? v)
+;;       (&& (pair? v) (list-of-length? (cdr v) (- k 1)))))
+;; (define matches-vcon-arity? (v con k)
+;;   (if (= k 0)
+;;       (= v con)
+;;       (&& (list-of-length? v (+ k 1))
+;;           (= (car v) con))))
 ;; (define getblockslot (v k) (nth k v))
 ;; ;  definitions of predefined uScheme functions [[and]], [[or]], and [[not]] 97a 
 ;; (define and (b c) (if b  c  b))
@@ -102,89 +102,89 @@
 ;  predefined uScheme functions 125a 
 ;  predefined uScheme functions 126b 
 ;  predefined uScheme functions 129a 
-;; (define filter (p? xs)
-;;   (if (null? xs)
-;;     '()
-;;     (if (p? (car xs))
-;;       (cons (car xs) (filter p? (cdr xs)))
-;;       (filter p? (cdr xs)))))
-;; ;  predefined uScheme functions 129b 
-;; (define map (f xs)
-;;   (if (null? xs)
-;;     '()
-;;     (cons (f (car xs)) (map f (cdr xs)))))
-;; ;  predefined uScheme functions 130a 
-;; (define app (f xs)
-;;   (if (null? xs)
-;;     #f
-;;     (begin (f (car xs)) (app f (cdr xs)))))
-;; ;  predefined uScheme functions 130b 
-;; (define exists? (p? xs)
-;;   (if (null? xs)
-;;     #f
-;;     (if (p? (car xs)) 
-;;       #t
-;;       (exists? p? (cdr xs)))))
-;; (define all? (p? xs)
-;;   (if (null? xs)
-;;     #t
-;;     (if (p? (car xs))
-;;       (all? p? (cdr xs))
-;;       #f)))
-;; ;  predefined uScheme functions 130d 
-;; (define foldr (op zero xs)
-;;   (if (null? xs)
-;;     zero
-;;     (op (car xs) (foldr op zero (cdr xs)))))
-;; (define foldl (op zero xs)
-;;   (if (null? xs)
-;;     zero
-;;     (foldl op (op (car xs) zero) (cdr xs))))
-;; ;  predefined uScheme functions S150c 
-;; (val newline      10)   (val left-round    40)
-;; (val space        32)   (val right-round   41)
-;; (val semicolon    59)   (val left-curly   123)
-;; (val quotemark    39)   (val right-curly  125)
-;;                         (val left-square   91)
-;;                         (val right-square  93)
-;; ;  predefined uScheme functions S150d 
-;; (define <= (x y) (not (> x y)))
-;; (define >= (x y) (not (< x y)))
-;; (define != (x y) (not (= x y)))
-;; ;  predefined uScheme functions S150e 
-;; (define max (x y) (if (> x y) x y))
-;; (define min (x y) (if (< x y) x y))
-;; ;  predefined uScheme functions S151a 
-;; (define negated (n) (- 0 n))
-;; (define mod (m n) (- m (* n (idiv m n))))
-;; (define gcd (m n) (if (= n 0) m (gcd n (mod m n))))
-;; (define lcm (m n) (if (= m 0) 0 (* m (idiv n (gcd m n)))))
-;; ;  predefined uScheme functions S151e 
-;; (define list4 (x y z a)         (cons x (list3 y z a)))
-;; (define list5 (x y z a b)       (cons x (list4 y z a b)))
-;; (define list6 (x y z a b c)     (cons x (list5 y z a b c)))
-;; (define list7 (x y z a b c d)   (cons x (list6 y z a b c d)))
-;; (define list8 (x y z a b c d e) (cons x (list7 y z a b c d e)))
-;; (define assoc (v pairs)
-;;   (if (null? pairs)
-;;       #f
-;;       (let* ([first (car pairs)]
-;;             [rest (cdr pairs)])
-;;         (if (equal? v (car first))
-;;             first
-;;             (assoc v rest)))))
+(define filter (p? xs)
+  (if (null? xs)
+    '()
+    (if (p? (car xs))
+      (cons (car xs) (filter p? (cdr xs)))
+      (filter p? (cdr xs)))))
+;  predefined uScheme functions 129b 
+(define map (f xs)
+  (if (null? xs)
+    '()
+    (cons (f (car xs)) (map f (cdr xs)))))
+;  predefined uScheme functions 130a 
+(define app (f xs)
+  (if (null? xs)
+    #f
+    (begin (f (car xs)) (app f (cdr xs)))))
+;  predefined uScheme functions 130b 
+(define exists? (p? xs)
+  (if (null? xs)
+    #f
+    (if (p? (car xs)) 
+      #t
+      (exists? p? (cdr xs)))))
+(define all? (p? xs)
+  (if (null? xs)
+    #t
+    (if (p? (car xs))
+      (all? p? (cdr xs))
+      #f)))
+;  predefined uScheme functions 130d 
+(define foldr (op zero xs)
+  (if (null? xs)
+    zero
+    (op (car xs) (foldr op zero (cdr xs)))))
+(define foldl (op zero xs)
+  (if (null? xs)
+    zero
+    (foldl op (op (car xs) zero) (cdr xs))))
+;  predefined uScheme functions S150c 
+(val newline      10)   (val left-round    40)
+(val space        32)   (val right-round   41)
+(val semicolon    59)   (val left-curly   123)
+(val quotemark    39)   (val right-curly  125)
+                        (val left-square   91)
+                        (val right-square  93)
+;  predefined uScheme functions S150d 
+(define <= (x y) (not (> x y)))
+(define >= (x y) (not (< x y)))
+(define != (x y) (not (= x y)))
+;  predefined uScheme functions S150e 
+(define max (x y) (if (> x y) x y))
+(define min (x y) (if (< x y) x y))
+;  predefined uScheme functions S151a 
+(define negated (n) (- 0 n))
+(define mod (m n) (- m (* n (idiv m n))))
+(define gcd (m n) (if (= n 0) m (gcd n (mod m n))))
+(define lcm (m n) (if (= m 0) 0 (* m (idiv n (gcd m n)))))
+;  predefined uScheme functions S151e 
+(define list4 (x y z a)         (cons x (list3 y z a)))
+(define list5 (x y z a b)       (cons x (list4 y z a b)))
+(define list6 (x y z a b c)     (cons x (list5 y z a b c)))
+(define list7 (x y z a b c d)   (cons x (list6 y z a b c d)))
+(define list8 (x y z a b c d e) (cons x (list7 y z a b c d e)))
+(define assoc (v pairs)
+  (if (null? pairs)
+      #f
+      (let* ([first (car pairs)]
+            [rest (cdr pairs)])
+        (if (equal? v (car first))
+            first
+            (assoc v rest)))))
 
-;; (define Table.new ()
-;;   (cons nil '()))
+(define Table.new ()
+  (cons nil '()))
 
-;; (define Table.get (t k)
-;;   (let ([pair (assoc k (cdr t))])
-;;     (if pair
-;;         (cdr pair)
-;;         nil)))
+(define Table.get (t k)
+  (let ([pair (assoc k (cdr t))])
+    (if pair
+        (cdr pair)
+        nil)))
 
-;; (define Table.put (t k v)
-;;   (let ([pair (assoc k (cdr t))])
-;;     (if pair
-;;         (set-cdr! pair v)
-;;         (set-cdr! t (cons (cons k v) (cdr t))))))
+(define Table.put (t k v)
+  (let ([pair (assoc k (cdr t))])
+    (if pair
+        (set-cdr! pair v)
+        (set-cdr! t (cons (cons k v) (cdr t))))))
