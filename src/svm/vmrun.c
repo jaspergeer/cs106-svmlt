@@ -38,8 +38,6 @@
 #define RY reg0[Y]
 #define RZ reg0[Z]
 
-
-
 #define LIT LPool_get(literals, uYZ(instr))
 #define GLO LPool_get(literals, uYZ(instr))
 
@@ -272,7 +270,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       char command[256] = "";
       for (Value curr = RY
           ; !isNull(curr)
-          ; curr = AS_CONS_CELL(vm, curr)->slots[1]){
+          ; curr = AS_CONS_CELL(vm, curr)->slots[1]) {
         strcat(command, " ");
         struct VMBlock *currcell = AS_CONS_CELL(vm, curr);
         strcat(command, AS_CSTRING(vm, currcell->slots[0]));
@@ -286,7 +284,9 @@ void vmrun(VMState vm, struct VMFunction* fun) {
     case DynLoad: // load module at fd stored in RY into RX
       {
         FILE *input = fdopen(AS_NUMBER(vm, RY), "r");
+        VMSAVE();
         struct VMFunction *module = loadmodule(vm, input); 
+        VMLOAD();
         if (!module)
           runerror(vm, "Missing or malformed module");
         // load module as a closure
@@ -295,7 +295,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         c->nslots = 0;
         c->arity = 0;
         c->args = NULL;
-        c->base = NULL;
+        c->base = c;
         RX = mkClosureValue(c);
         fclose(input);
       }

@@ -1,18 +1,10 @@
-;; really should implement that list syntax
-;;
-(let ([$r0 (lambda ($r1)
-  (let* ([$r2 '()]
-         [$r1 (cons $r1 $r2)]
-         [$r2 'es-vo]
-         [$r1 (cons $r2 $r1)]
-         [$r2 'uft]
-         [$r1 (cons $r2 $r1)]
-         [$r1 (popen $r1)]
-         [$r1 (dload $r1)])
-          ($r1)))])
-  (set use $r0))
+(define use (filename)
+  (let* ([cmd (cons './bin/uft (cons 'es-vo (cons filename '())))]
+         [fd (popen cmd)]
+         [module (dload fd)])
+         (module)))
 
-(use 'test/dload/predef.scm)
+(use 'src/depth/dload/predef.scm)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;
@@ -27,16 +19,16 @@
 ;;   (is_prefix? (cons v vs) '(cons w ws)) = (and (equal? v w) 
 ;;                                                (is_prefix? vs ws))
 
-;; (define is_prefix? (xs ys)
-;;     (if (null? xs)
-;;         #t
-;;         (if (null? ys)
-;;             #f
-;;             (and (equal? (car xs) (car ys)) (is_prefix? (cdr xs) (cdr ys))))))
+(define is_prefix? (xs ys)
+    (if (null? xs)
+        #t
+        (if (null? ys)
+            #f
+            (and (equal? (car xs) (car ys)) (is_prefix? (cdr xs) (cdr ys))))))
 
-;;         (check-assert (is_prefix? '(a b) '(a b c)))
-;;         (check-assert (not (is_prefix? '(a b) '(c a b))))
-;;         (check-assert (is_prefix? '() '(a b c)))
+        (check-assert (is_prefix? '(a b) '(a b c)))
+        (check-assert (not (is_prefix? '(a b) '(c a b))))
+        (check-assert (is_prefix? '() '(a b c)))
 
 
 

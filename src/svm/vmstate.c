@@ -14,6 +14,8 @@
 #include "value.h"
 #include "vmerror.h"
 
+#include "print.h"
+
 void freestatep(VMState* sp) {
   assert(sp && *sp);
 
@@ -41,6 +43,7 @@ VMState newstate(void) {
 }
 
 int literal_slot(VMState state, Value literal) {
+  print("numlits: %d\n", LPool_nlits(state->literals));
   return LPool_put(state->literals, literal);
 }
 
@@ -55,6 +58,7 @@ int literal_count(VMState state) {
 #include "print.h"
 
 int global_slot(VMState state, Value global) {
+    print("numglo: %d\n", state->num_globals);
     // (void) AsCString
     Name name = strtoname(AS_CSTRING(state, global));
     int slot;

@@ -21,8 +21,8 @@
 #define GLOBALS_SIZE 16
 #define CALL_STACK_SIZE 32
 #else
-#define LITERALS_SIZE 256
-#define GLOBALS_SIZE 256
+#define LITERALS_SIZE 512
+#define GLOBALS_SIZE 512
 #define CALL_STACK_SIZE 5000
 #endif
 
