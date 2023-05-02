@@ -166,6 +166,7 @@ expr = let
       case v of
         S.EmptyList -> return (S.VCon "'()")
         _ -> return (S.Literal v))
+    -- swapping these two lines is the difference between es/ho
     <|> S.VCon <$> try vcon
     <|> S.Var <$> try name
 

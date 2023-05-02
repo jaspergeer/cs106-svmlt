@@ -1,0 +1,26 @@
+## Demonstration for Dynamic Loading
+
+Module 7
+
+Curried functions [5 points]. You implement automatic currying as described in the handout on understanding procedure calls.
+
+It can implement a partial-application semantics in which functions are automatically curried:
+
+If there are extra actual parameters, the VM calls the function with only as many parameters as it is expecting, then applies the result to the extra parameters.
+
+If there are missing actual parameters, the VM creates a closure that expects to receive the missing parameters, then activates the original function.
+
+This is the semantics of Haskell and OCaml; it is available to implement for depth points.
+
+https://github.com/jaspergeer/cs106-svmlt/commit/1dbb1541e92658626f2a5628f362935118bafe98
+
+- Changes
+
+In SVM:
+
+In UFT:
+
+- Examples and Use Cases
+
+
+

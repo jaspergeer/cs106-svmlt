@@ -7,6 +7,9 @@ import Prelude hiding ( exp )
 import qualified ClScheme as C
 import qualified FOScheme as F
 
+import qualified Case
+import qualified Constructed
+
 exp :: F.Exp -> C.Exp
 exp e = 
     let binding (x, e) = (x, exp e)
@@ -22,6 +25,9 @@ exp e =
     (F.SetLocal x e) -> C.SetLocal x (exp e)
     (F.SetGlobal x e) -> C.SetGlobal x (exp e)
     (F.WhileX c body) -> C.WhileX (exp c) (exp body)
+    (F.Case c) -> C.Case (fmap exp c)
+    (F.Constructed (Constructed.T con es)) -> C.Constructed (Constructed.T con (map exp es))
+
 
 def :: F.Def -> C.Def
 def d = case d of

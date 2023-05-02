@@ -47,6 +47,9 @@
 
 static inline struct VMClosure *partial_apply(struct VMClosure *closure, Value *args, int nargs);
 static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm);
+
+// module 11 GC macros
+
 #define VMSAVE() \
 { \
   vm->running = running; \
@@ -55,6 +58,10 @@ static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm);
   vm->pc = pc; \
 }
 
+/*
+ * macro restores the currently running function and also a pointer to that 
+ * function’s instructions, which is cached. 
+ */
 #define VMLOAD() \
 { \
   reg0 = vm->reg0; \
@@ -72,12 +79,22 @@ static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm);
   VMLOAD(); \
 } while (0)
 
+/* Automatic Currying Macros */
+
+/* 
+ * "atomically" update the currently running function to
+ * VM function `f` and the current code to `f`'s code
+ */
 #define CHRUNNING(f) \
 { \
   running = f; \
   code = running->instructions; \
 }
 
+/*
+ * if VM value `v` contains a closure, bind it to variable `callee`.
+ * Otherwise throw an appropriate error.
+ */
 #define CHECK_SET_CALLABLE(v, callee) \
   if (isVMClosure(v)) { \
     callee = AS_CLOSURE(vm, v); \
@@ -87,6 +104,10 @@ static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm);
     runerror(vm, "Tried to call non-function"); \
   }
 
+/*
+ * push onto the callstack an activation containing VM function `fun`,
+ * destination register `destreg` and block of suspended arguments `suspended`.
+ */
 #define CALLSTACK_PUSH(fun, destreg, suspended) \
 { \
   if (stack_ptr == vm->call_stack + (CALL_STACK_SIZE - 1)) \
@@ -99,6 +120,10 @@ static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm);
   top->suspended = suspended; \
 }
 
+/*
+ * pop the activation on the top of the call stack off and transfer control to
+ * its suspended function, placing `return_value` in the destination register.
+ */
 #define CALLSTACK_POP(return_value) \
 { \
   Activation *top = stack_ptr--; \
@@ -110,6 +135,14 @@ static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm);
   reg0 = top->reg0; \
 }
 
+/*
+ * preconditions:
+ * the function we intend to call is located at `funreg`.
+ * the arguments we intend to pass to it occupy registers `funreg` + 1
+ * to `funreg` + `arity`.
+ * 
+ * 
+ */
 #define SETUP_CALL(funreg, arity, shift, callee, suspended) \
 { \
   int nargs = arity; \
@@ -153,19 +186,25 @@ static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm);
   VMLOAD(); \
 }
 
+
+
 void vmrun(VMState vm, struct VMFunction* fun) {
   LPool_T literals = vm->literals;
   Value *globals = vm->globals;
 
-  Value *reg0;
-  uint32_t pc;
-  Activation *stack_ptr;
+  Value *reg0;  // reg0 in the current window
+  Activation *stack_ptr;  // stack pointer always point to the top of the
+                          // call stack
+  
   struct VMFunction *running;
-  Instruction *code;
-  Value cons_symbol;
+  
+  Instruction *code;  // is the first instruction in the running funciton
+  uint32_t pc;  // program counter, relative to the start of the current
+                // register window
 
-  vm->running = fun;
+  Value cons_symbol;  // module 12, used to access literal cons
 
+  vm->running = fun;  // set up for initialization
   VMLOAD();
 
   // for debugging
@@ -250,7 +289,14 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         struct VMFunction *module = loadmodule(vm, input); 
         if (!module)
           runerror(vm, "Missing or malformed module");
-        RX = mkVMFunctionValue(module);
+        // load module as a closure
+        VMNEW(struct VMClosure *, c, vmsize_closure(0));
+        c->f = module;
+        c->nslots = 0;
+        c->arity = 0;
+        c->args = NULL;
+        c->base = NULL;
+        RX = mkClosureValue(c);
         fclose(input);
       }
       break;
@@ -269,7 +315,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         pc += offset ;
       }
       break;
-    
+
     // Function Calls
     case Call:
       {
@@ -305,6 +351,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         }
       }
       break;
+
     case TailCall:
       {
         if (gc_needed)
@@ -508,6 +555,8 @@ void vmrun(VMState vm, struct VMFunction* fun) {
     case SetBlkSlot:
       AS_BLOCK(vm, RX)->slots[Z] = RY;
       break;
+
+    // module 12 (pattern matching)
 
     case GotoVcon:
     {
