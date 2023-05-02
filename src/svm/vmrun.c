@@ -48,6 +48,8 @@
 static inline struct VMClosure *partial_apply(struct VMClosure *closure, Value *args, int nargs);
 static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm);
 
+// module 11 GC macros
+
 #define VMSAVE() \
 { \
   vm->running = running; \
@@ -56,6 +58,10 @@ static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm);
   vm->pc = pc; \
 }
 
+/*
+ * macro restores the currently running function and also a pointer to that 
+ * function’s instructions, which is cached. 
+ */
 #define VMLOAD() \
 { \
   reg0 = vm->reg0; \
@@ -72,6 +78,8 @@ static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm);
   gc(vm); \
   VMLOAD(); \
 } while (0)
+
+/* Automatic Currying Macros */
 
 /* 
  * "atomically" update the currently running function to
@@ -178,20 +186,25 @@ static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm);
   VMLOAD(); \
 }
 
+
+
 void vmrun(VMState vm, struct VMFunction* fun) {
   LPool_T literals = vm->literals;
   Value *globals = vm->globals;
 
   Value *reg0;  // reg0 in the current window
+  Activation *stack_ptr;  // stack pointer always point to the top of the
+                          // call stack
+  
+  struct VMFunction *running;
+  
+  Instruction *code;  // is the first instruction in the running funciton
   uint32_t pc;  // program counter, relative to the start of the current
                 // register window
-  Activation *stack_ptr;
-  struct VMFunction *running;
-  Instruction *code;
-  Value cons_symbol;
 
-  vm->running = fun;
+  Value cons_symbol;  // module 12, used to access literal cons
 
+  vm->running = fun;  // set up for initialization
   VMLOAD();
 
   // for debugging
@@ -276,7 +289,14 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         struct VMFunction *module = loadmodule(vm, input); 
         if (!module)
           runerror(vm, "Missing or malformed module");
-        RX = mkVMFunctionValue(module);
+        // load module as a closure
+        VMNEW(struct VMClosure *, c, vmsize_closure(0));
+        c->f = module;
+        c->nslots = 0;
+        c->arity = 0;
+        c->args = NULL;
+        c->base = NULL;
+        RX = mkClosureValue(c);
         fclose(input);
       }
       break;
@@ -535,6 +555,8 @@ void vmrun(VMState vm, struct VMFunction* fun) {
     case SetBlkSlot:
       AS_BLOCK(vm, RX)->slots[Z] = RY;
       break;
+
+    // module 12 (pattern matching)
 
     case GotoVcon:
     {

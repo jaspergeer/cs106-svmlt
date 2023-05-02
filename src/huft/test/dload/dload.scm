@@ -16,9 +16,7 @@
 (let ([$r1 'load-failure])
   (set message $r1))
 
-(let* ([$r3 'test/loadme.kn]
-       [$r2 use])
-  ($r2 $r3))
+(use 'test/loadme.kn)
 
 (let ([$r1 message])
   (println $r1))
