@@ -1,3 +1,13 @@
+(define callme ()
+  (println 'load-success))
+
+(define filter (p? xs)
+  (if (null? xs)
+    '()
+    (if (p? (car xs))
+      (cons (car xs) (filter p? (cdr xs)))
+      (filter p? (cdr xs)))))
+
 ;  predefined uScheme functions 96a 
 (define caar (xs) (car (car xs)))
 (define cadr (xs) (car (cdr xs)))
@@ -64,29 +74,31 @@
       (= v con)
       (&& (list-of-length? v (+ k 1))
           (= (car v) con))))
-;; (define getblockslot (v k) (nth k v))
-;; ;  definitions of predefined uScheme functions [[and]], [[or]], and [[not]] 97a 
-;; (define and (b c) (if b  c  b))
-;; (define or  (b c) (if b  b  c))
-;; (define not (b)   (if b #f #t))
-;; ;  predefined uScheme functions 102c 
-;; (define atom? (x) (or (symbol? x) (or (number? x) (or (boolean? x) (null? x)))))
-;; ;  predefined uScheme functions 103b 
-;; (define equal? (sx1 sx2)
-;;   (if (atom? sx1)
-;;     (= sx1 sx2)
-;;     (if (atom? sx2)
-;;         #f
-;;         (and (equal? (car sx1) (car sx2))
-;;              (equal? (cdr sx1) (cdr sx2))))))
-;; ;  predefined uScheme functions 105c 
-;; (define mk-alist-pair (k a) (list2 k a))
-;; (define alist-pair-key        (pair)  (car  pair))
-;; (define alist-pair-attribute  (pair)  (cadr pair))
-;; ;  predefined uScheme functions 105d 
-;; (define alist-first-key       (alist) (alist-pair-key       (car alist)))
+(define getblockslot (v k) (nth k v))
+;  definitions of predefined uScheme functions [[and]], [[or]], and [[not]] 97a 
+(define and (b c) (if b  c  b))
+(define or  (b c) (if b  b  c))
+(define not (b)   (if b #f #t))
+;  predefined uScheme functions 102c 
+(define atom? (x) (or (symbol? x) (or (number? x) (or (boolean? x) (null? x)))))
+;  predefined uScheme functions 103b 
+(define equal? (sx1 sx2)
+  (if (atom? sx1)
+    (= sx1 sx2)
+    (if (atom? sx2)
+        #f
+        (and (equal? (car sx1) (car sx2))
+             (equal? (cdr sx1) (cdr sx2))))))
+;  predefined uScheme functions 105c 
+(define mk-alist-pair (k a) (list2 k a))
+(define alist-pair-key        (pair)  (car  pair))
+(define alist-pair-attribute  (pair)  (cadr pair))
+;  predefined uScheme functions 105d 
+(define alist-first-key       (alist) (alist-pair-key       (car alist)))
+(val x nil)
+;; (val yz 1)
 ;; (define alist-first-attribute (alist) (alist-pair-attribute (car alist)))
-;; ;  predefined uScheme functions 106a 
+;  predefined uScheme functions 106a 
 ;; (define bind (k a alist)
 ;;   (if (null? alist)
 ;;     (list1 (mk-alist-pair k a))
@@ -118,7 +130,7 @@
 ;;   (if (null? xs)
 ;;     #f
 ;;     (begin (f (car xs)) (app f (cdr xs)))))
-;; ;  predefined uScheme functions 130b 
+;  predefined uScheme functions 130b 
 ;; (define exists? (p? xs)
 ;;   (if (null? xs)
 ;;     #f
@@ -147,7 +159,7 @@
 ;; (val quotemark    39)   (val right-curly  125)
 ;;                         (val left-square   91)
 ;;                         (val right-square  93)
-;; ;  predefined uScheme functions S150d 
+;  predefined uScheme functions S150d 
 ;; (define <= (x y) (not (> x y)))
 ;; (define >= (x y) (not (< x y)))
 ;; (define != (x y) (not (= x y)))
@@ -159,7 +171,7 @@
 ;; (define mod (m n) (- m (* n (idiv m n))))
 ;; (define gcd (m n) (if (= n 0) m (gcd n (mod m n))))
 ;; (define lcm (m n) (if (= m 0) 0 (* m (idiv n (gcd m n)))))
-;; ;  predefined uScheme functions S151e 
+;  predefined uScheme functions S151e 
 ;; (define list4 (x y z a)         (cons x (list3 y z a)))
 ;; (define list5 (x y z a b)       (cons x (list4 y z a b)))
 ;; (define list6 (x y z a b c)     (cons x (list5 y z a b c)))
@@ -177,14 +189,14 @@
 ;; (define Table.new ()
 ;;   (cons nil '()))
 
-;; (define Table.get (t k)
-;;   (let ([pair (assoc k (cdr t))])
-;;     (if pair
-;;         (cdr pair)
-;;         nil)))
+(define Table.get (t k)
+  (let ([pair (assoc k (cdr t))])
+    (if pair
+        (cdr pair)
+        nil)))
 
-;; (define Table.put (t k v)
-;;   (let ([pair (assoc k (cdr t))])
-;;     (if pair
-;;         (set-cdr! pair v)
-;;         (set-cdr! t (cons (cons k v) (cdr t))))))
+(define Table.put (t k v)
+  (let ([pair (assoc k (cdr t))])
+    (if pair
+        (set-cdr! pair v)
+        (set-cdr! t (cons (cons k v) (cdr t))))))
