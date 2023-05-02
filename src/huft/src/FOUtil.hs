@@ -16,8 +16,13 @@ import qualified KnEmbed as KNE
 import qualified VScheme as C
 import qualified Primitives as P
 
+import qualified Case
+import qualified Constructed
+
 -- nr used local keyword for exp and def
 -- I'm just changing it to exp' and def' for embedding
+
+import Debug.Trace
 
 -- projection
 exp :: X.Exp -> E.Error F.Exp
@@ -35,6 +40,9 @@ exp e = case e of
     X.LetX X.Let bs body -> F.Let <$> bindings bs <*> exp body
     X.LetX X.LetRec _ _ -> E.Error $ Left "letrec"
     X.LambdaX (X.Lambda args e) -> E.Error $ Left "lambda in code"
+    X.Case c -> F.Case <$>  Case.liftError (fmap exp c)
+    X.Constructed (Constructed.T con es) -> F.Constructed . Constructed.T con <$> E.list (fmap exp es)
+    -- _ -> error $ show e
     where bindings = mapM (\(x, e) -> (,) x <$> exp e)
 
 def :: X.Def -> E.Error F.Def
