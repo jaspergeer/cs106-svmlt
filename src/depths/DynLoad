@@ -33,20 +33,33 @@ DynLoad opens the file, loads the module, and make that module a closure.
 
 In UFT:
 
-We create a special definition in Vscheme AST (Use Name), but disambiguate such a name to a function call to function `use` (which should be in the initial bases). In another life, we might want to change `dload` and `pipeopen` as different primitives, and get rid of the definition of `use` in scheme.
+We create a special definition in Vscheme AST (Use Name), but disambiguate such 
+a name to a function call to function `use` (which should be in the initial 
+bases).
+
+ In another life, we might want to change `dload` and `pipeopen` as 
+ different primitives, and get rid of the definition of `use` in scheme.
 
 We introduce two new primitives `popen` and `dload` in `Primitives.hs`
 
 - Demonstration on the example
 
-The examples assumes you have `huft` as a global command, and you are currently located in `src/huft` directory. You can change the initial basis function to acoomodate other commands (like `uft`, or `./bin/uft`).
+The examples assumes you have `huft` as a global command, and you are 
+currently located in `src/huft` directory. 
+You can change the initial basis function to acoomodate other commands 
+(like `uft`, or `./bin/uft`).
 
 In ./test/doad/ directory. There are 3 examples. 
 
-`dload.scm` loads `loadme.scm`, and it should change global variable `message` from 'load-failure to 'load-success.
+`dload.scm` loads `loadme.scm`, and it should change global 
+variable `message` from 'load-failure to 'load-success.
 
-`good.scm` loads `goodload.scm` which contains predefined functions like `filter` and `map`. `good.scm` then runs funcitons that are defined in the `goodload.scm` file.
+`good.scm` loads `goodload.scm` which contains predefined functions 
+like `filter` and `map`. `good.scm` then runs funcitons that are defined 
+in the `goodload.scm` file.
 
 
-`scheme105.scm` loads `predef.scm`, which should load all the predefined functions and run 105 homework 3 code. The `predef.scm` is a shortened version since our dload seems incapable of loading that many new global variables.
+`scheme105.scm` loads `predef.scm`, which should load all the predefined 
+functions and run 105 homework 3 code. The `predef.scm` is a shortened version 
+since our dload seems incapable of loading that many new global variables.
 

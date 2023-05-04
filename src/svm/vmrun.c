@@ -38,8 +38,6 @@
 #define RY reg0[Y]
 #define RZ reg0[Z]
 
-
-
 #define LIT LPool_get(literals, uYZ(instr))
 #define GLO LPool_get(literals, uYZ(instr))
 
@@ -58,10 +56,6 @@ static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm);
   vm->pc = pc; \
 }
 
-/*
- * macro restores the currently running function and also a pointer to that 
- * function’s instructions, which is cached. 
- */
 #define VMLOAD() \
 { \
   reg0 = vm->reg0; \
@@ -194,8 +188,11 @@ void vmrun(VMState vm, struct VMFunction* fun) {
 
   Value *reg0;  // reg0 in the current window
   Activation *stack_ptr;  // stack pointer always point to the top of the
-                          // call stack
-  
+                          // call stack, so when we push a function to call
+                          // stack, it is top is ++stack_ptr
+                          // when we pop a function from call stack,
+                          // top is stack_ptr--
+
   struct VMFunction *running;
   
   Instruction *code;  // is the first instruction in the running funciton

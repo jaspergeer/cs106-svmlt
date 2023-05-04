@@ -34,6 +34,11 @@
 
 ;; extra args
 
+(define f (x) (+ x))
+
+(check-expect (f 1 2) 3)
+(check-assert (function? (f 1)))
+
 (define needmore1 (x y) (* (+ x y)))
 
 (check-expect (needmore1 1 2 3) 9)
