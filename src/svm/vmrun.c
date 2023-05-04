@@ -285,6 +285,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       break;
     case DynLoad: // load module at fd stored in RY into RX
       {
+        VMSAVE();
         FILE *input = fdopen(AS_NUMBER(vm, RY), "r");
         struct VMFunction *module = loadmodule(vm, input); 
         if (!module)
@@ -295,9 +296,10 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         c->nslots = 0;
         c->arity = 0;
         c->args = NULL;
-        c->base = NULL;
+        c->base = c;
         RX = mkClosureValue(c);
         fclose(input);
+        VMLOAD();
       }
       break;
 
