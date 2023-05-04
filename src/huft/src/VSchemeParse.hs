@@ -44,7 +44,7 @@ import Debug.Trace
 rwords =
   [ "set", "if", "while", "begin", "let", "let*", "letrec", "lambda",
     "quote","val", "define", "case", "data", "implicit-data",
-    "check-principal-type*", "record", "check-type", ":" ]
+    "check-principal-type*", "record", "check-type", ":", "use" ]
 
 reserved x = x `elem` rwords
 
@@ -168,7 +168,7 @@ expr = let
         _ -> return (S.Literal v))
     -- swapping these two lines is the difference between es/ho
     <|> S.VCon <$> try vcon
-    <|> S.Var <$> try name
+    <|> S.Var <$> try (sat (not . reserved) name)
 
 -- record desugaring
 
@@ -248,7 +248,7 @@ def = let
      <|> S.Define <$> try (tok "define " *> name) <*> brackd formals <*> expr
      <|> S.CheckExpect <$> try (tok "check-expect" *> expr) <*> try expr
      <|> S.CheckAssert <$> try (tok "check-assert" *> expr)
-     <|> S.Use <$> try  (tok "use " *> name)
+     <|> S.Use <$> try (tok "use " *> name)
   in try (brackd (single <$> def'
  <|> desugarRecord <$> (tok "record" *> name) <*> brackd (many name)))
  <|> single . S.Exp <$> expr

@@ -1,50 +1,48 @@
-### Demonstration for Dynamic Loading
+### Dynamic Loading
 
-Module 2:
+Dynamic compilation and loading [2 points].
 
-Dynamic compilation and loading [2 points]. 
-μScheme and vScheme both have a use syntactic form, which tells the interpreter
-to load and run code. This goal is to implement two machine instructions, 
-one to call popen and read from a pipe, and one to load a list of modules 
-from an open file descriptor. These two instructions can then eventually 
-be used to call the compiler and load the results. 
-These instructions can be tested now, and then by the time of module 4, 
-they can be used to implement a use function.
+We introduce the `use` syntactic form to eScheme and vScheme, which
+calls the compiler to compile a specified file, loads the code into a
+function in the SVM, and calls the function for its side effects.
 
-- Changes
+To do so, we introduce two new SVM instrutions: `popen` and `dload`.
+`popen`, given a register and list of symbols, creates a new process with the
+command specified by interpreting those symbols as tokens and opens a pipe
+between the new process and the SVM. It then places the file descriptor for
+the read end of the pipe in the register.
 
-We define `use` as a function in the initial bases of scheme.
+`dload`, given a destination register and a register containing a file
+descriptor, reads from the associated file, passing its contents to the loader.
+The resulting VM function is wrapped in a closure and placed in the destination
+register.
 
+Both `popen` and `dload` become register-setting primitives in the UFT.
+
+Using these new primitives, we define `use` as a function in the initial basis.
+
+```
 (define use (filename)
-  (let* ([cmd (cons 'huft (cons 'es-vo (cons filename '())))]
+  (let* ([cmd (cons 'uft (cons 'es-vo (cons filename '())))]
          [fd (popen cmd)]
          [module (dload fd)])
          (module)))
+```
 
-In SVM:
+That is, popen is used to call the compiler, open a pipe, and get the file
+descriptor, dload is used to produce a VM function from the file, and the
+function, `module`, is called to produce its side effects.
 
-Two new VM opcode: PipeOpen and DynLoad
-
-pipeOpen is a unary operator "$rX := popen $rY" that concatenates the command
-`huft es-vo filename` and get a descriptor to the stream (the translated vo).
-PipeOpen tehn embed the descriptor as a VMValue (number).
-
-DynLoad opens the file, loads the module, and make that module a closure.
-
-In UFT:
-
-We create a special definition in Vscheme AST (Use Name), but disambiguate such 
-a name to a function call to function `use` (which should be in the initial 
-bases).
+This is fine if we are okay with `use` used as any other expression would, but
+μScheme only allows it as a definition form. Thus, we have made `use` a
+reserved keyword, preventing it from being referenced as a global. Instead,
+we create an addition syntactic form in vScheme (Use Name), which is desugared
+to a call to function `use` during disambiguation.
 
  In another life, we might want to change `dload` and `pipeopen` as 
  different primitives, and get rid of the definition of `use` in scheme.
 
-We introduce two new primitives `popen` and `dload` in `Primitives.hs`
-
-- Demonstration on the example
-
-The examples assumes you have `huft` as a global command, and you are 
+The examples assumes you have `uft` as an alias for the UFT binary, and you are
 currently located in `src/huft` directory. 
 You can change the initial basis function to acoomodate other commands 
 (like `uft`, or `./bin/uft`).
