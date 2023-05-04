@@ -103,7 +103,7 @@ def d = case d of
   S.Exp e -> X.Exp (exp' e [])
   S.CheckExpect e e' -> X.CheckExpect (U.ppexp e) (exp' e []) (U.ppexp e') (exp' e' [])
   S.CheckAssert e -> X.CheckAssert (U.ppexp e) (exp' e [])
-  _ -> error $ "def: " ++ show d
+  S.Use x -> X.Exp (X.FunCall (X.Global "use") [X.Literal (X.Sym x)])
 
 disambiguate :: S.Def -> X.Def
 disambiguate = def

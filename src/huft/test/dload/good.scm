@@ -8,7 +8,7 @@
          [module (dload fd)])
          (module)))
 
-(use 'test/dload/goodload.scm)
+(use test/dload/goodload.scm)
 
 (check-expect (filter (= 1) '(1 0 1 0 1 )) '(1 1 1))
 
