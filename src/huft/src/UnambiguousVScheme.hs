@@ -47,7 +47,6 @@ instance Show Value where
 data Def = Val Name Exp
          | Define Name [Name] Exp
          | Exp Exp
-         | Use Name
          | CheckExpect String Exp String Exp
          | CheckAssert String Exp
          deriving Show

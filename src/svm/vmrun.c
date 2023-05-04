@@ -56,10 +56,6 @@ static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm);
   vm->pc = pc; \
 }
 
-/*
- * macro restores the currently running function and also a pointer to that 
- * function’s instructions, which is cached. 
- */
 #define VMLOAD() \
 { \
   reg0 = vm->reg0; \
@@ -192,8 +188,11 @@ void vmrun(VMState vm, struct VMFunction* fun) {
 
   Value *reg0;  // reg0 in the current window
   Activation *stack_ptr;  // stack pointer always point to the top of the
-                          // call stack
-  
+                          // call stack, so when we push a function to call
+                          // stack, it is top is ++stack_ptr
+                          // when we pop a function from call stack,
+                          // top is stack_ptr--
+
   struct VMFunction *running;
   
   Instruction *code;  // is the first instruction in the running funciton
@@ -283,6 +282,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       break;
     case DynLoad: // load module at fd stored in RY into RX
       {
+        VMSAVE();
         FILE *input = fdopen(AS_NUMBER(vm, RY), "r");
         VMSAVE();
         struct VMFunction *module = loadmodule(vm, input); 
@@ -298,6 +298,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         c->base = c;
         RX = mkClosureValue(c);
         fclose(input);
+        VMLOAD();
       }
       break;
 

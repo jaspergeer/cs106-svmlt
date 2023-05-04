@@ -1,26 +1,58 @@
-## Demonstration for Dynamic Loading
+## Demonstration for Automatic Currying
 
 Module 7
 
-Curried functions [5 points]. You implement automatic currying as described in the handout on understanding procedure calls.
+Curried functions [5 points]. You implement automatic currying as described in 
+the handout on understanding procedure calls.
 
-It can implement a partial-application semantics in which functions are automatically curried:
+It can implement a partial-application semantics in which functions are 
+automatically curried:
 
-If there are extra actual parameters, the VM calls the function with only as many parameters as it is expecting, then applies the result to the extra parameters.
+If there are extra actual parameters, the VM calls the function with only as 
+many parameters as it is expecting, then applies the result to the extra 
+parameters.
 
-If there are missing actual parameters, the VM creates a closure that expects to receive the missing parameters, then activates the original function.
+If there are missing actual parameters, the VM creates a closure that expects 
+to receive the missing parameters, then activates the original function.
 
-This is the semantics of Haskell and OCaml; it is available to implement for depth points.
+The strategy I recommend is called “eval/apply” and is described by 
+Simon Marlow and Simon Peyton Jones in a landmark 2006 paper. 
+The paper has way more detail than you need, but the important bits will 
+involve what new species of value and what new species of activation record 
+are useful for implementing curried functions.
 
 https://github.com/jaspergeer/cs106-svmlt/commit/1dbb1541e92658626f2a5628f362935118bafe98
 
 - Changes
 
-In SVM:
-
 In UFT:
 
+Not a lot of changes are done in the UFT.
+
+In disambiguation, we etaExpand a primitive if the the number of actual
+parameters does not match the arity of the primitive.
+
+In codegen, we generate FunCode to a closure instead of loading a function 
+(in toReg).
+
+In SVM
+
+We add a field `suspended` for every activation record to store the extra
+arguments that can pass in a function.
+
+We add extra fields in the VMClosure value such that it has a `base` closure
+pointer, `int` filed indicating arity, a VMBlock storing the arguments.
+
+In VMRUN:
+
+The return instruction checks if there are suspended arguments on the top
+of the stack, if so, we continue apply 
+
+
+
 - Examples and Use Cases
+
+test/curry/curry.scm has cases for both partial applicatio, and extra parameter.
 
 
 
