@@ -269,7 +269,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       char command[256] = "";
       for (Value curr = RY
           ; !isNull(curr)
-          ; curr = AS_CONS_CELL(vm, curr)->slots[1]){
+          ; curr = AS_CONS_CELL(vm, curr)->slots[1]) {
         strcat(command, " ");
         struct VMBlock *currcell = AS_CONS_CELL(vm, curr);
         strcat(command, AS_CSTRING(vm, currcell->slots[0]));
@@ -284,7 +284,9 @@ void vmrun(VMState vm, struct VMFunction* fun) {
       {
         VMSAVE();
         FILE *input = fdopen(AS_NUMBER(vm, RY), "r");
+        VMSAVE();
         struct VMFunction *module = loadmodule(vm, input); 
+        VMLOAD();
         if (!module)
           runerror(vm, "Missing or malformed module");
         // load module as a closure
