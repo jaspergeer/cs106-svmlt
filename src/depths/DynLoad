@@ -11,29 +11,42 @@ be used to call the compiler and load the results.
 These instructions can be tested now, and then by the time of module 4, 
 they can be used to implement a use function.
 
-https://github.com/jaspergeer/cs106-svmlt/commit/78836c29d26a0247c0b3e4b81bb4e228724ea79e#diff-8761bb5eb33c13ee4b7b3ecbbadc1392ccc674dab6f84ab43fb33912ffbb48c9
-
-
 - Changes
+
+We define `use` as a function in the initial bases of scheme.
+
+(define use (filename)
+  (let* ([cmd (cons 'huft (cons 'es-vo (cons filename '())))]
+         [fd (popen cmd)]
+         [module (dload fd)])
+         (module)))
 
 In SVM:
 
 Two new VM opcode: PipeOpen and DynLoad
 
-pipeOpen is a unary operator "$rX := popen $rY" that puts the file descriptor
-of file rY (represented by a VMString)
+pipeOpen is a unary operator "$rX := popen $rY" that concatenates the command
+`huft es-vo filename` and get a descriptor to the stream (the translated vo).
+PipeOpen tehn embed the descriptor as a VMValue (number).
 
-PipeOpen read in the file descriptor from the command string (a VMValue that
-is a string) and embed the descriptor as a VMValue
-(number).
-
-DynLoad opens the file, load the module
+DynLoad opens the file, loads the module, and make that module a closure.
 
 In UFT:
 
-new primitive
+We create a special definition in Vscheme AST (Use Name), but disambiguate such a name to a function call to function `use` (which should be in the initial bases). In another life, we might want to change `dload` and `pipeopen` as different primitives, and get rid of the definition of `use` in scheme.
+
+We introduce two new primitives `popen` and `dload` in `Primitives.hs`
 
 - Demonstration on the example
 
-(we need an initial basis for use)
+The examples assumes you have `huft` as a global command, and you are currently located in `src/huft` directory. You can change the initial basis function to acoomodate other commands (like `uft`, or `./bin/uft`).
+
+In ./test/doad/ directory. There are 3 examples. 
+
+`dload.scm` loads `loadme.scm`, and it should change global variable `message` from 'load-failure to 'load-success.
+
+`good.scm` loads `goodload.scm` which contains predefined functions like `filter` and `map`. `good.scm` then runs funcitons that are defined in the `goodload.scm` file.
+
+
+`scheme105.scm` loads `predef.scm`, which should load all the predefined functions and run 105 homework 3 code. The `predef.scm` is a shortened version since our dload seems incapable of loading that many new global variables.
 
