@@ -139,7 +139,8 @@ static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm);
  */
 #define SETUP_CALL(funreg, arity, shift, callee, suspended) \
 { \
-  int nargs = arity; \      // probably jsut change nargs to arity in the first place
+  /* probably jsut change nargs to arity in the first place*/ \
+  int nargs = arity; \
   suspended = NULL; \
   int nsuspended = 0; \
   Value *arg0 = &reg0[funreg + 1]; \

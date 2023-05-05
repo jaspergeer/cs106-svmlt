@@ -66,7 +66,4 @@ static inline size_t vmsize_cons(void) {
 
 
 
-  
-
-
 #endif /* VMSIZES_INCLUDED */
