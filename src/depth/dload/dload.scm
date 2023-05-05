@@ -1,19 +1,12 @@
-(define use (filename)
-  (let* ([cmd (cons './bin/uft (cons 'es-vo (cons filename '())))]
-         [fd (popen cmd)]
-         [module (dload fd)])
-         (module)))
+;; simple test, checks that basic dload functionality and literal
+;; pool gc are working
 
-;; (define callme ()
-;;   (println 'bad-load))
+;; this will be redefined in loadme.scm
+(define callme () 'bad-load)
 
-(use 'src/depth/dload/stress.scm)
+(use stress.scm)
 
-;; (println (filter (= 1) '(1 2 3 4 5)))
+(use loadme.scm)
 
-(val x77 'v77)
-(val x78 'v78)
-(val x79 'v79)
-(val x770 'v737)
-(val x7-1 'v718)
-(val x739 'v739)
+(check-expect (callme) 'load-success)
+

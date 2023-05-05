@@ -5,69 +5,20 @@ Module 7
 Curried functions [5 points]. You implement automatic currying as described in 
 the handout on understanding procedure calls.
 
-It can implement a partial-application semantics in which functions are 
-automatically curried:
+Here, we introduce Haskell/ML-style automatic currying to eScheme.
 
-If there are extra actual parameters, the VM calls the function with only as 
-many parameters as it is expecting, then applies the result to the extra 
-parameters.
+There are two primary components to our system: partial application and the
+handling of extra parameters.
 
-If there are missing actual parameters, the VM creates a closure that expects 
-to receive the missing parameters, then activates the original function.
+At a glance, when a function is applied to too few arguments, they are captured
+in its closure. When a function is applied to too many arguments, the extra
+arguments are stored as a continuation on the callstack.
 
-The strategy I recommend is called “eval/apply” and is described by 
-Simon Marlow and Simon Peyton Jones in a landmark 2006 paper. 
-The paper has way more detail than you need, but the important bits will 
-involve what new species of value and what new species of activation record 
-are useful for implementing curried functions.
-
-https://github.com/jaspergeer/cs106-svmlt/commit/1dbb1541e92658626f2a5628f362935118bafe98
-
-TODO: arity in a lot of function may need a better name (nparam, or some
-thing distinguishing the arity of a function and the number of actual
-parameters)
-
-- Changes
-
-In UFT:
-
-Not a lot of changes are done in the UFT.
-
-In disambiguation, we etaExpand a primitive if the the number of actual
-parameters does not match the arity of the primitive.
-
-In codegen, we generate FunCode to a closure instead of loading a function 
-(in toReg).
-
-In SVM
-
-We add a field `suspended` for every activation record to store the extra
-arguments that can pass in a function.
-
-We add extra fields in the VMClosure value such that it has a `base` closure
-pointer, `int` filed indicating arity (questionable?), a VMBlock storing the arguments.
-
-In VMRUN:
-
-The Return instruction checks if there are suspended arguments on the top
-of the stack, if so, we continue applying the function that is just evaluated 
-(so apply the closure in the destination register to the suspended arguments 
-in the caller).
-
-The Call instruction suspends extra arguments (defined in SETUP_CALL).
-If there are less arguments, we put a new_closure to the destination
-register with decreased arity (partial_apply function provides the
-new closure)
-
-In Tailcall instruction, the difference is that when we have less
-actual parameter, we get the new closure by partial_apply. Then, we
-check if there are any suspended argument on the stack, and resume
-application if there are any. Otherwise we just return the new closure
-by putting it in the destination register and pop off the stack.
-
-- Examples and Use Cases
-
-test/curry/curry.scm has cases for both partial applicatio, and extra parameter.
-
-
+Perhaps our most significant (and controversial) change is unifying all
+callable objects under the VM closure. Three fields are added to the closure:
+`arity`, `base`, and `args`. The `arity` of a closure is the number of
+additional arguments that must be supplied to it before we may call its
+VM function. `args` is a VM block storing any arguments that have already
+been passed to the closure, and `base` points to a copy of the closure
+without any stored arguments.
 

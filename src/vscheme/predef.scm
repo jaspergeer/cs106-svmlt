@@ -180,3 +180,9 @@
     (if pair
         (set-cdr! pair v)
         (set-cdr! t (cons (cons k v) (cdr t))))))
+
+;; (define use (filename)
+;;   (let* ([cmd (cons '${BIN_DIR}/uft (cons 'es-vo (cons filename '())))]
+;;          [fd (popen cmd)]
+;;          [module (dload fd)])
+;;          (module)))

@@ -5,18 +5,9 @@
 
 #define INIT_LITERALS_SIZE 1024
 
-#define L LPool_T
-
-struct L {
-  VTable_T keys;
-  Value *literals;
-  uint16_t nlits;
-  size_t litcap;
-};
-
-L LPool_new(void) {
-  L pool = malloc(sizeof(struct L));
-  pool->keys = VTable_new(43);
+LPool LPool_new(void) {
+  LPool pool = malloc(sizeof(struct LPool));
+  pool->keys = VTable_new(42);
   pool->literals = calloc(INIT_LITERALS_SIZE, sizeof(Value));
 
   pool->litcap = INIT_LITERALS_SIZE;
@@ -26,13 +17,13 @@ L LPool_new(void) {
   return pool;
 }
 
-Value LPool_get(L pool, uint16_t key) {
+Value LPool_get(LPool pool, uint16_t key) {
   if (key == 0)
     return nilValue;
   return pool->literals[key];
 }
 
-uint16_t LPool_put(L pool, Value v) {
+uint16_t LPool_put(LPool pool, Value v) {
   if (isNil(v))
     return 0;
   Value key = VTable_get(pool->keys, v);
@@ -52,15 +43,11 @@ uint16_t LPool_put(L pool, Value v) {
   return pool->nlits++;
 }
 
-void LPool_free(L *pool) {
+void LPool_free(LPool *pool) {
   free((*pool)->literals);
   free(*pool);
 }
 
-int LPool_nlits(L pool) {
+int LPool_nlits(LPool pool) {
   return pool->nlits;
-}
-
-Value *LPool_getlits(L pool) {
-  return pool->literals;
 }

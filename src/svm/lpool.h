@@ -3,16 +3,21 @@
 
 #include <stdint.h>
 #include "value.h"
+#include "vtable.h"
 
-#define L LPool_T
+typedef struct LPool* LPool;
 
-typedef struct L *L;
+struct LPool {
+  VTable_T keys;
+  Value *literals;
+  uint16_t nlits;
+  size_t litcap;
+};
 
-L LPool_new(void);
-Value LPool_get(L pool, uint16_t key);
-uint16_t LPool_put(L pool, Value v);
-void LPool_free(L *pool);
-int LPool_nlits(L pool);
-Value *LPool_getlits(L pool);
+LPool LPool_new(void);
+Value LPool_get(LPool pool, uint16_t key);
+uint16_t LPool_put(LPool pool, Value v);
+void LPool_free(LPool *pool);
+int LPool_nlits(LPool pool);
 
 #endif

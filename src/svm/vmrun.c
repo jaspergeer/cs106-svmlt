@@ -139,7 +139,7 @@ static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm);
  */
 #define SETUP_CALL(funreg, arity, shift, callee, suspended) \
 { \
-  int nargs = arity; \      // probably jsut change nargs to arity in the first place
+  int nargs = arity; \
   suspended = NULL; \
   int nsuspended = 0; \
   Value *arg0 = &reg0[funreg + 1]; \
@@ -147,7 +147,7 @@ static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm);
   /* suspend extra arguments */ \
   if (nargs > callee->arity) { \
     nsuspended = nargs - callee->arity; \
-    VMNEW(,suspended, vmsize_block(nsuspended)); \
+    VMNEW(, suspended, vmsize_block(nsuspended)); \
     suspended->nslots = nsuspended; \
     memcpy(suspended->slots, arg0 + callee->arity, nsuspended * sizeof(struct Value)); \
     nargs = callee->arity; \
@@ -169,9 +169,9 @@ static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm);
 }
 
 /* 
- * takes in a callee and put it in reg0
- * copy the suspended arguments into  reg0 + 1 .. reg0 + nsuspended, 
- * and tailcall the callee (so no register window shift)
+ * conceptually, calls the resume continuation stored on the callstack.
+ * hands control over to the callee, applying it to the arguments suspended
+ * in the topmost activation.
  */
 #define RESUME_APPLY(callee) \
 { \
@@ -185,10 +185,8 @@ static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm);
   VMLOAD(); \
 }
 
-
-
 void vmrun(VMState vm, struct VMFunction* fun) {
-  LPool_T literals = vm->literals;
+  LPool literals = vm->literals;
   Value *globals = vm->globals;
 
   Value *reg0;  // reg0 in the current window
@@ -271,27 +269,27 @@ void vmrun(VMState vm, struct VMFunction* fun) {
     // Dynamic Loading
     case PipeOpen: // open pipe, store file descriptor
       {
-      char command[256] = "";
+      const size_t cmd_max_len = 256;
+      char cmd[cmd_max_len] = "";
       for (Value curr = RY
           ; !isNull(curr)
           ; curr = AS_CONS_CELL(vm, curr)->slots[1]) {
-        strcat(command, " ");
+        strncat(cmd, " ", cmd_max_len - strlen(cmd));
         struct VMBlock *currcell = AS_CONS_CELL(vm, curr);
-        strcat(command, AS_CSTRING(vm, currcell->slots[0]));
+        strncat(cmd, AS_CSTRING(vm, currcell->slots[0]), cmd_max_len - strlen(cmd));
       }
 
-      FILE *input = popen(command, "r");
+      FILE *input = popen(cmd, "r");
+      assert(input);
+
       RX = mkNumberValue(dup(fileno(input)));
       pclose(input);
       }
       break;
     case DynLoad: // load module at fd stored in RY into RX
       {
-        VMSAVE();
         FILE *input = fdopen(AS_NUMBER(vm, RY), "r");
-        VMSAVE();
         struct VMFunction *module = loadmodule(vm, input); 
-        VMLOAD();
         if (!module)
           runerror(vm, "Missing or malformed module");
         // load module as a closure
@@ -303,7 +301,6 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         c->base = c;
         RX = mkClosureValue(c);
         fclose(input);
-        VMLOAD();
       }
       break;
 
@@ -681,8 +678,6 @@ static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm) {
       CALLSTACK_POP(mkClosureValue(new_closure));
     }
   }
-
-  
 
   VMSAVE();
 }

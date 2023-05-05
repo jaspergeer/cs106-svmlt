@@ -23,41 +23,45 @@ Using these new primitives, we define `use` as a function in the initial basis.
 
 ```
 (define use (filename)
-  (let* ([cmd (cons 'uft (cons 'es-vo (cons filename '())))]
+  (let* ([cmd (cons '${BIN_DIR}/uft (cons 'es-vo (cons filename '())))]
          [fd (popen cmd)]
          [module (dload fd)])
          (module)))
 ```
 
-That is, popen is used to call the compiler, open a pipe, and get the file
-descriptor, dload is used to produce a VM function from the file, and the
-function, `module`, is called to produce its side effects.
+We have added to the SVM `main` function, code that captures the path to the
+directory the `svm` binary is located in. It then sets the `BIN_DIR`
+environment variable to this path.
 
-This is fine if we are okay with `use` used as any other expression would, but
-μScheme only allows it as a definition form. Thus, we have made `use` a
-reserved keyword, preventing it from being referenced as a global. Instead,
-we create an addition syntactic form in vScheme (Use Name), which is desugared
-to a call to function `use` during disambiguation.
+Assuming that the `uft` and `svm` binaries are located in the same directory,
+this allows `popen` is to call the compiler, open a pipe, and get the file
+descriptor. `dload` is then used to produce a VM closure from the file, and
+the function, `module`, is called for its side effects.
 
-In another life, we might want to change `dload` and `pipeopen` as 
-different primitives, and get rid of the definition of `use` in scheme.
+Because `module` is treated like any other function, we retain the guarantees
+of our calling convention. Namely, that dynamically loading code will not
+scribble over any live registers.
 
-The examples assumes you have `uft` as an alias for the UFT binary, and you are
-currently located in `src/huft` directory. 
-You can change the initial basis function to acoomodate other commands 
-(like `uft`, or `./bin/uft`).
+This on its own is fine if we are okay with `use` as an expression,
+but μScheme only allows it as a definition form. Thus, we have made `use` a
+reserved keyword, preventing it from being referenced as a global.
+We add an addition syntactic form in vScheme (Use Name), which is desugared
+into a call to function `use` during disambiguation.
 
-In ./test/doad/ directory. There are 3 examples. 
+We provide 3 examples in this directory. They can all be run using the provided
+`runtests.sh` script. This script pre-compiles `use.scm` and loads it prior
+to each of the three tests so none have to define `use` themselves.
 
-`dload.scm` loads `loadme.scm`, and it should change global 
-variable `message` from 'load-failure to 'load-success.
+`dload.scm` is a sanity check. It defines a function which we expect to be
+overwritten by loadins `loadme.scm`. It then loads `stress.scm`, which declares
+100 new global variables, to ensure that the garbage collection issues we
+had in the past are gone. It then loads `loadme.scm` and verifies that the
+function has been successfully overwritten.
 
-`good.scm` loads `goodload.scm` which contains predefined functions 
-like `filter` and `map`. `good.scm` then runs funcitons that are defined 
-in the `goodload.scm` file.
+`good.scm` is a slightly larger test, loading `goodload.scm` which contains
+predefined functions like `filter` and `map`. It then checks that these
+functions execute without issue. Note the curried `=` on line 13.
 
-
-`scheme105.scm` loads `predef.scm`, which should load all the predefined 
-functions and run 105 homework 3 code. The `predef.scm` is a shortened version 
-since our dload seems incapable of loading that many new global variables.
-
+Our largest test is `scheme105e.scm`. This is a slightly modified version of
+Alex's CS105 HW3 submission which gets the scheme initial basis by dynamically
+loading `predef.scm`.
