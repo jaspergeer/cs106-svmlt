@@ -146,7 +146,8 @@ struct VMClosure {
   GCMETA(VMClosure)
   struct VMFunction *f;
   struct VMClosure *base;
-  int arity;
+  int arity; // number of args expected, 
+             // this will decrease when we partial apply
   struct VMBlock *args;
   int nslots;
   struct Value captured[];
