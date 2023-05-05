@@ -139,7 +139,7 @@ static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm);
  */
 #define SETUP_CALL(funreg, arity, shift, callee, suspended) \
 { \
-  int nargs = arity; \
+  int nargs = arity; \      // probably jsut change nargs to arity in the first place
   suspended = NULL; \
   int nsuspended = 0; \
   Value *arg0 = &reg0[funreg + 1]; \
@@ -168,6 +168,11 @@ static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm);
     runerror(vm, "Register file overflow in Call."); \
 }
 
+/* 
+ * takes in a callee and put it in reg0
+ * copy the suspended arguments into  reg0 + 1 .. reg0 + nsuspended, 
+ * and tailcall the callee (so no register window shift)
+ */
 #define RESUME_APPLY(callee) \
 { \
   assert(stack_ptr->suspended); \
@@ -325,7 +330,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         uint8_t destreg = X;
         uint8_t funreg = Y;
         uint8_t lastarg = Z;
-        uint8_t arity = lastarg - funreg;
+        uint8_t arity = lastarg - funreg; // arity is the number of actual arguments
 
         struct VMFunction *caller = running;
 
@@ -347,6 +352,8 @@ void vmrun(VMState vm, struct VMFunction* fun) {
           pc = -1;
           reg0 += funreg;
         } else {
+          // remember, arity is the number of actual parameters at thsi stge,
+          // which is smaller than the arity of the function
           struct VMClosure *new_closure = partial_apply(callee, &reg0[funreg + 1], arity);
           reg0[destreg] = mkClosureValue(new_closure);
         }
@@ -602,6 +609,10 @@ void vmrun(VMState vm, struct VMFunction* fun) {
 
 // helpers
 
+/* helper funciton  partial_apply
+ * we copy the p
+ * 
+ */
 static inline struct VMClosure *partial_apply(struct VMClosure *closure, Value *args, int nargs) {
   // allocate a new closure which is a copy of the old one
   VMNEW(struct VMClosure *, new_closure, vmsize_closure_payload(closure));
@@ -624,6 +635,10 @@ static inline struct VMClosure *partial_apply(struct VMClosure *closure, Value *
   return new_closure;
 }
 
+/* helper function tailcall
+ * 
+ *
+ */
 static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm) {
   Value *reg0;
   uint32_t pc;
@@ -648,9 +663,8 @@ static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm) {
 
     SETUP_CALL(funreg, arity, 0, callee, suspended);
 
-    CHRUNNING(callee->f);
-
-    pc = -1;
+    CHRUNNING(callee->f);     // change code (first instr in the running fun)
+    pc = -1;                  // in next vmrun, instr will be the first *(code)
   } else {
     if (stack_ptr < vm->call_stack)
       return;

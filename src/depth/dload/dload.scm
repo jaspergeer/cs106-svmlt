@@ -7,7 +7,6 @@
 ;; (define callme ()
 ;;   (println 'bad-load))
 
-;; (use 'src/depth/dload/loadme.scm)
 (use 'src/depth/dload/stress.scm)
 
 ;; (println (filter (= 1) '(1 2 3 4 5)))

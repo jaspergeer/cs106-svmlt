@@ -14,6 +14,8 @@
 ;;                 (cons f (cons g '()))))
 ;;     '()))
 
+(define o (f g) (lambda (x) (f (g x))))
+
 (define qsort (xs)
   (if (null? xs)
       '()

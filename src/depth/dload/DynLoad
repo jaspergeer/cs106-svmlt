@@ -39,8 +39,8 @@ reserved keyword, preventing it from being referenced as a global. Instead,
 we create an addition syntactic form in vScheme (Use Name), which is desugared
 to a call to function `use` during disambiguation.
 
- In another life, we might want to change `dload` and `pipeopen` as 
- different primitives, and get rid of the definition of `use` in scheme.
+In another life, we might want to change `dload` and `pipeopen` as 
+different primitives, and get rid of the definition of `use` in scheme.
 
 The examples assumes you have `uft` as an alias for the UFT binary, and you are
 currently located in `src/huft` directory. 
