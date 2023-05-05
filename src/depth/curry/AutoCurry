@@ -23,6 +23,10 @@ are useful for implementing curried functions.
 
 https://github.com/jaspergeer/cs106-svmlt/commit/1dbb1541e92658626f2a5628f362935118bafe98
 
+TODO: arity in a lot of function may need a better name (nparam, or some
+thing distinguishing the arity of a function and the number of actual
+parameters)
+
 - Changes
 
 In UFT:
@@ -41,14 +45,25 @@ We add a field `suspended` for every activation record to store the extra
 arguments that can pass in a function.
 
 We add extra fields in the VMClosure value such that it has a `base` closure
-pointer, `int` filed indicating arity, a VMBlock storing the arguments.
+pointer, `int` filed indicating arity (questionable?), a VMBlock storing the arguments.
 
 In VMRUN:
 
-The return instruction checks if there are suspended arguments on the top
-of the stack, if so, we continue apply 
+The Return instruction checks if there are suspended arguments on the top
+of the stack, if so, we continue applying the function that is just evaluated 
+(so apply the closure in the destination register to the suspended arguments 
+in the caller).
 
+The Call instruction suspends extra arguments (defined in SETUP_CALL).
+If there are less arguments, we put a new_closure to the destination
+register with decreased arity (partial_apply function provides the
+new closure)
 
+In Tailcall instruction, the difference is that when we have less
+actual parameter, we get the new closure by partial_apply. Then, we
+check if there are any suspended argument on the stack, and resume
+application if there are any. Otherwise we just return the new closure
+by putting it in the destination register and pop off the stack.
 
 - Examples and Use Cases
 
