@@ -22,3 +22,6 @@ VM function. `args` is a VM block storing any arguments that have already
 been passed to the closure, and `base` points to a copy of the closure
 without any stored arguments.
 
+Our Activation data structure also receives a new field, a VM block `suspended`
+representing our continuation.
+

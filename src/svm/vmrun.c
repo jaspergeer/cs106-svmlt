@@ -131,23 +131,25 @@ static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm);
 
 /*
  * preconditions:
- * the function we intend to call is located at `funreg`.
- * the arguments we intend to pass to it occupy registers `funreg` + 1
- * to `funreg` + `arity`.
- * 
+ * - the closure we intend to call is located at `funreg`.
+ * - the arguments we intend to pass to it occupy registers `funreg` + 1
+ *   to `funreg` + `nargs`.
+ * - `shift` contains the intended register window shift.
+ * - if we have extra arguments to suspend, `suspended` will be non-null, with
+ *   enough slots to store them
+ * - cached vm
  * 
  */
-#define SETUP_CALL(funreg, arity, shift, callee, suspended) \
+#define SETUP_CALL(funreg, nargs, shift, suspended) \
 { \
-  int nargs = arity; \
-  suspended = NULL; \
   int nsuspended = 0; \
+  struct VMClosure *callee = AS_CLOSURE(vm, reg0[funreg]); \
   Value *arg0 = &reg0[funreg + 1]; \
   Value *callee_arg0 = &reg0[shift + 1]; \
   /* suspend extra arguments */ \
-  if (nargs > callee->arity) { \
+  if (suspended) { \
+    assert(suspended); \
     nsuspended = nargs - callee->arity; \
-    VMNEW(, suspended, vmsize_block(nsuspended)); \
     suspended->nslots = nsuspended; \
     memcpy(suspended->slots, arg0 + callee->arity, nsuspended * sizeof(struct Value)); \
     nargs = callee->arity; \
@@ -165,7 +167,7 @@ static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm);
   \
   /* register overflow check */ \
   if (reg0 + callee->f->nregs >= vm->registers + (NUM_REGISTERS - 1)) \
-    runerror(vm, "Register file overflow in Call."); \
+    runerror(vm, "Register file overflow."); \
 }
 
 /* 
@@ -327,7 +329,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         uint8_t destreg = X;
         uint8_t funreg = Y;
         uint8_t lastarg = Z;
-        uint8_t arity = lastarg - funreg; // arity is the number of actual arguments
+        uint8_t nargs = lastarg - funreg; // arity is the number of actual arguments
 
         struct VMFunction *caller = running;
 
@@ -337,10 +339,22 @@ void vmrun(VMState vm, struct VMFunction* fun) {
 
         CHECK_SET_CALLABLE(reg0[funreg], callee);
         
-        if (arity >= callee->arity) {
-          struct VMBlock *suspended;
+        if (nargs > callee->arity) { // we must suspend some arguments
+          VMNEW(struct VMBlock *, suspended, vmsize_block(nargs - callee->arity));
 
-          SETUP_CALL(funreg, arity, funreg, callee, suspended);
+          SETUP_CALL(funreg, nargs, funreg, suspended);
+
+          CALLSTACK_PUSH(fun, destreg, suspended);
+
+          CHRUNNING(callee->f);
+
+          pc = -1;
+          reg0 += funreg;
+        } else if (nargs == callee->arity) {
+          // don't allocate a block if we don't need to
+          struct VMBlock *suspended = NULL;
+
+          SETUP_CALL(funreg, nargs, funreg, suspended);
 
           CALLSTACK_PUSH(fun, destreg, suspended);
 
@@ -351,7 +365,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
         } else {
           // remember, arity is the number of actual parameters at thsi stge,
           // which is smaller than the arity of the function
-          struct VMClosure *new_closure = partial_apply(callee, &reg0[funreg + 1], arity);
+          struct VMClosure *new_closure = partial_apply(callee, &reg0[funreg + 1], nargs);
           reg0[destreg] = mkClosureValue(new_closure);
         }
       }
@@ -636,7 +650,7 @@ static inline struct VMClosure *partial_apply(struct VMClosure *closure, Value *
  * 
  *
  */
-static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm) {
+static inline void tailcall(uint8_t funreg, uint8_t nargs, VMState vm) {
   Value *reg0;
   uint32_t pc;
   Activation *stack_ptr;
@@ -655,13 +669,24 @@ static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm) {
 
   Value *arg0 = &reg0[funreg + 1];
 
-  if (arity >= callee->arity) {
-    struct VMBlock *suspended;
+  if (nargs > callee->arity) { // we must suspend some arguments
+    VMNEW(struct VMBlock *, suspended, vmsize_block(nargs - callee->arity));
 
-    SETUP_CALL(funreg, arity, 0, callee, suspended);
+    SETUP_CALL(funreg, nargs, 0, suspended);
 
-    CHRUNNING(callee->f);     // change code (first instr in the running fun)
-    pc = -1;                  // in next vmrun, instr will be the first *(code)
+
+    stack_ptr->suspended = suspended;
+
+    CHRUNNING(callee->f);
+    pc = -1;
+  } else if (nargs == callee->arity) {
+    // don't allocate a block if we don't need to
+    struct VMBlock *suspended = NULL;
+
+    SETUP_CALL(funreg, nargs, 0, suspended);
+
+    CHRUNNING(callee->f);
+    pc = -1;       
   } else {
     if (stack_ptr < vm->call_stack)
       return;
@@ -669,7 +694,7 @@ static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm) {
     if (!stack_ptr->dest_reg)
       runerror(vm, "Tried to return from loading activation");
 
-    struct VMClosure *new_closure = partial_apply(callee, arg0, arity);
+    struct VMClosure *new_closure = partial_apply(callee, arg0, nargs);
 
     int nsuspended = stack_ptr->suspended ? stack_ptr->suspended->nslots : 0;
     if (nsuspended > 0) {
