@@ -3,7 +3,7 @@ BIN="../../../bin"
 # pre-compile `use` function
 ${BIN}/uft es-vo use.scm > use.vo
 
-TESTS=("dload" "good" "scheme105e")
+TESTS=("simple" "recurse" "overcurry" "args")
 
 for t in ${TESTS[@]}
 do

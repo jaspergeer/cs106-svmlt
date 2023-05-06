@@ -132,12 +132,25 @@ static inline void tailcall(uint8_t funreg, uint8_t arity, VMState vm);
 /*
  * preconditions:
  * - the closure we intend to call is located at `funreg`.
- * - the arguments we intend to pass to it occupy registers `funreg` + 1
- *   to `funreg` + `nargs`.
+ * - the arguments we intend to pass to it directly occupy registers 
+ *   funreg` + 1 to `funreg` + `nargs`.
  * - `shift` contains the intended register window shift.
  * - if we have extra arguments to suspend, `suspended` will be non-null, with
  *   enough slots to store them
- * - cached vm
+ * - among the arguments passed directly and those captured in the closure,
+ *   there are enough to call the closure's VM function
+ * - cached vm fields are up to date
+ * 
+ * given these, SETUP_CALL guarantees that:
+ * - there are at exactly enough arguments arranged consecutively beginning at
+ *   register `shift` + 1 to call the closure's VM function
+ * - the arguments stored in the closure appear first, followed by the
+ *   arguments passed directly, previously located at `funreg` + 1
+ * - any extra directly passed arguments are stored in `suspended`
+ * - register `shift` contains the closure's "base"
+ * 
+ * that is, we are free to use the old calling convention to call the
+ * closure now located at `shift`.
  * 
  */
 #define SETUP_CALL(funreg, nargs, shift, suspended) \
@@ -646,9 +659,10 @@ static inline struct VMClosure *partial_apply(struct VMClosure *closure, Value *
   return new_closure;
 }
 
-/* helper function tailcall
- * 
- *
+/*
+ * hands control over to the function stored at `funreg`.
+ * the number of arguments being passed directly must be specified in `nargs`.
+ * vm state must be saved before calling this function and restored afterwards.
  */
 static inline void tailcall(uint8_t funreg, uint8_t nargs, VMState vm) {
   Value *reg0;
@@ -673,7 +687,6 @@ static inline void tailcall(uint8_t funreg, uint8_t nargs, VMState vm) {
     VMNEW(struct VMBlock *, suspended, vmsize_block(nargs - callee->arity));
 
     SETUP_CALL(funreg, nargs, 0, suspended);
-
 
     stack_ptr->suspended = suspended;
 

@@ -6,6 +6,8 @@ We introduce the `use` syntactic form to eScheme and vScheme, which
 calls the compiler to compile a specified file, loads the code into a
 function in the SVM, and calls the function for its side effects.
 
+If you'd like to skip right to the tests, see `runtests.sh`.
+
 To do so, we introduce two new SVM instrutions: `popen` and `dload`.
 `popen`, given a register and list of symbols, creates a new process with the
 command specified by interpreting those symbols as tokens and opens a pipe

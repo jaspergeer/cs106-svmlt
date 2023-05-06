@@ -1,4 +1,4 @@
-## Demonstration for Automatic Currying
+## Automatic Currying
 
 Module 7
 
@@ -6,6 +6,8 @@ Curried functions [5 points]. You implement automatic currying as described in
 the handout on understanding procedure calls.
 
 Here, we introduce Haskell/ML-style automatic currying to eScheme.
+
+If you'd like to skip right to the tests, see `runtests.sh`.
 
 There are two primary components to our system: partial application and the
 handling of extra parameters.
@@ -22,6 +24,86 @@ VM function. `args` is a VM block storing any arguments that have already
 been passed to the closure, and `base` points to a copy of the closure
 without any stored arguments.
 
-Our Activation data structure also receives a new field, a VM block `suspended`
-representing our continuation.
+I would argue that this doesn't add nearly as much overhead as it would
+appear, since in a program that doesn't use the automatic currying feature
+these are handled almost identically to the way VM functions used to be.
+Of course, we pay a small cost in memory and at initialization, but we see
+this as worth it in exchange for ease of implementation.
 
+Our Activation data structure also receives a new field, a VM block `suspended`
+representing the continuation.
+
+We also have a new suite of macros and helper functions for use in the multiple
+places we now must able to call functions, namely to hand control over to the 
+resume continuation when we return but still have arguments to pass.
+
+These are documented in more detail in vmrun.c, but there are two particularly
+important examples.
+
+`SETUP_CALL` is easily the most complex (I will not be surprised if you tear
+it to shreds in the feedback), and turns a call laid out in the register file
+which may contain too many arguments, to a closure that may have its own
+captured arguments, into one following the old calling convention. Any extra
+arguments are "suspended" in a VM block.
+
+`tailcall` essentially makes the entire TailCall instruction into a function.
+Apart from being used in the instruction itself, it is called anytime Return
+sees that there are still arguments suspended on the top of the callstack. In
+this case, the n arguments are copied to registers 1 to n + 1, the top
+activation's `suspended` block is reset, and we hand control to the return
+value, stored in register 0.
+
+The general steps taken to call a function are now as follows:
+
+If we do not have enough arguments among those arranged in the register file
+and those captured in the callee to call the callee's function, capture any
+arguments from the register file in a copy of the callee and return it.
+
+Otherwise...
+
+1. Setup the call. If there are any arguments captured in the callee, copy them
+   into the register file starting at the register following the callee space
+   reg0. Shift any arguments that occupied those registers out of the way. Any
+   of these which put us over the arity of the callee's function are
+   "suspended", copied into a new VM block.
+
+2. If this is a standard Call, push an activation onto the callstack. If we
+   suspended any arguments, place the block into the topmost activation.
+
+3. Reset the PC, shift the register window, and change the running function
+   to the callee's. Nice!
+
+Returning has also changed:
+
+If there are no arguments suspended on the top of the callstack or the
+callstack is empty, behave as before.
+
+Otherwise...
+
+1. Copy the return value (I hope it's a function) to reg0.
+
+2. Copy the arguments suspended in the topmost activation into the register
+   file beginning at register 1. `NULL` out the `suspended` field of that
+   activation. Notice we now have a configuration we can give to `SETUP_CALL`.
+   Invoke our new `tailcall` function to hand control over to the return
+   value, applying it to those suspended arguments.
+
+We have prepared a few tests in this directory, which can all be run using
+`runtests.sh`.
+
+`simple.scm` is mostly a sanity check. It uses the very basic functionality
+of our automatic currying system, creating and applying partially applied
+functions.
+
+`recurse.scm` checks that closures are correctly copied and modified during
+partial application, without unintended side effects in other parts of
+our program.
+
+`args.scm` stresses our system a little more, checking that how we group
+the same set of arguments has no effect on the result of a function call.
+It also checks that we can apply arguments to the result of a function
+call without extra parentheses.
+
+`overcurry.scm` was used to find a particularly difficult bug, in which
+suspended arguments were mishandled. It is designed to use all parts of
+our system in one program.
