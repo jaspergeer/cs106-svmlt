@@ -13,6 +13,8 @@
 //
 // If I've done my job, you don't need to edit this.  Or even look at it.
 
+#define _DEFAULT_SOURCE
+
 #include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -29,6 +31,7 @@
 #include "vmrun.h"
 #include "vmstate.h"
 #include "vmstring.h"
+
 
 static void dofile(struct VMState *vm, FILE *input) { 
   for ( struct VMFunction *module = loadmodule(vm, input)
@@ -56,7 +59,7 @@ int main(int argc, char **argv) {
 
     // set the BIN_DIR environment variable for later use
     const size_t cmd_max_len = 256;
-    char cmd[cmd_max_len] = "BIN_DIR=";
+    char cmd[256] = "BIN_DIR=";
     assert(index_last_fslash + strlen(cmd) < cmd_max_len);
     strncat(cmd, argv[0], index_last_fslash);
     putenv(cmd);

@@ -285,7 +285,7 @@ void vmrun(VMState vm, struct VMFunction* fun) {
     case PipeOpen: // open pipe, store file descriptor
       {
       const size_t cmd_max_len = 256;
-      char cmd[cmd_max_len] = "";
+      char cmd[256] = "";
       for (Value curr = RY
           ; !isNull(curr)
           ; curr = AS_CONS_CELL(vm, curr)->slots[1]) {
