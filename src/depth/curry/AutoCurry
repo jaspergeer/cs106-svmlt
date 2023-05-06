@@ -1,73 +1,109 @@
-## Demonstration for Automatic Currying
+## Automatic Currying
 
 Module 7
 
 Curried functions [5 points]. You implement automatic currying as described in 
 the handout on understanding procedure calls.
 
-It can implement a partial-application semantics in which functions are 
-automatically curried:
+Here, we introduce Haskell/ML-style automatic currying to eScheme.
 
-If there are extra actual parameters, the VM calls the function with only as 
-many parameters as it is expecting, then applies the result to the extra 
-parameters.
+If you'd like to skip right to the tests, see `runtests.sh`.
 
-If there are missing actual parameters, the VM creates a closure that expects 
-to receive the missing parameters, then activates the original function.
+There are two primary components to our system: partial application and the
+handling of extra parameters.
 
-The strategy I recommend is called “eval/apply” and is described by 
-Simon Marlow and Simon Peyton Jones in a landmark 2006 paper. 
-The paper has way more detail than you need, but the important bits will 
-involve what new species of value and what new species of activation record 
-are useful for implementing curried functions.
+At a glance, when a function is applied to too few arguments, they are captured
+in its closure. When a function is applied to too many arguments, the extra
+arguments are stored as a continuation on the callstack.
 
-https://github.com/jaspergeer/cs106-svmlt/commit/1dbb1541e92658626f2a5628f362935118bafe98
+Perhaps our most significant (and controversial) change is unifying all
+callable objects under the VM closure. Three fields are added to the closure:
+`arity`, `base`, and `args`. The `arity` of a closure is the number of
+additional arguments that must be supplied to it before we may call its
+VM function. `args` is a VM block storing any arguments that have already
+been passed to the closure, and `base` points to a copy of the closure
+without any stored arguments.
 
-TODO: arity in a lot of function may need a better name (nparam, or some
-thing distinguishing the arity of a function and the number of actual
-parameters)
+I would argue that this doesn't add nearly as much overhead as it would
+appear, since in a program that doesn't use the automatic currying feature
+these are handled almost identically to the way VM functions used to be.
+Of course, we pay a small cost in memory and at initialization, but we see
+this as worth it in exchange for ease of implementation.
 
-- Changes
+Our Activation data structure also receives a new field, a VM block `suspended`
+representing the continuation.
 
-In UFT:
+We also have a new suite of macros and helper functions for use in the multiple
+places we now must able to call functions, namely to hand control over to the 
+resume continuation when we return but still have arguments to pass.
 
-Not a lot of changes are done in the UFT.
+These are documented in more detail in vmrun.c, but there are two particularly
+important examples.
 
-In disambiguation, we etaExpand a primitive if the the number of actual
-parameters does not match the arity of the primitive.
+`SETUP_CALL` is easily the most complex (I will not be surprised if you tear
+it to shreds in the feedback), and turns a call laid out in the register file
+which may contain too many arguments, to a closure that may have its own
+captured arguments, into one following the old calling convention. Any extra
+arguments are "suspended" in a VM block.
 
-In codegen, we generate FunCode to a closure instead of loading a function 
-(in toReg).
+`tailcall` essentially makes the entire TailCall instruction into a function.
+Apart from being used in the instruction itself, it is called anytime Return
+sees that there are still arguments suspended on the top of the callstack. In
+this case, the n arguments are copied to registers 1 to n + 1, the top
+activation's `suspended` block is reset, and we hand control to the return
+value, stored in register 0.
 
-In SVM
+The general steps taken to call a function are now as follows:
 
-We add a field `suspended` for every activation record to store the extra
-arguments that can pass in a function.
+If we do not have enough arguments among those arranged in the register file
+and those captured in the callee to call the callee's function, capture any
+arguments from the register file in a copy of the callee and return it.
 
-We add extra fields in the VMClosure value such that it has a `base` closure
-pointer, `int` filed indicating arity (questionable?), a VMBlock storing the arguments.
+Otherwise...
 
-In VMRUN:
+1. Setup the call. If there are any arguments captured in the callee, copy them
+   into the register file starting at the register following the callee space
+   reg0. Shift any arguments that occupied those registers out of the way. Any
+   of these which put us over the arity of the callee's function are
+   "suspended", copied into a new VM block.
 
-The Return instruction checks if there are suspended arguments on the top
-of the stack, if so, we continue applying the function that is just evaluated 
-(so apply the closure in the destination register to the suspended arguments 
-in the caller).
+2. If this is a standard Call, push an activation onto the callstack. If we
+   suspended any arguments, place the block into the topmost activation.
 
-The Call instruction suspends extra arguments (defined in SETUP_CALL).
-If there are less arguments, we put a new_closure to the destination
-register with decreased arity (partial_apply function provides the
-new closure)
+3. Reset the PC, shift the register window, and change the running function
+   to the callee's. Nice!
 
-In Tailcall instruction, the difference is that when we have less
-actual parameter, we get the new closure by partial_apply. Then, we
-check if there are any suspended argument on the stack, and resume
-application if there are any. Otherwise we just return the new closure
-by putting it in the destination register and pop off the stack.
+Returning has also changed:
 
-- Examples and Use Cases
+If there are no arguments suspended on the top of the callstack or the
+callstack is empty, behave as before.
 
-test/curry/curry.scm has cases for both partial applicatio, and extra parameter.
+Otherwise...
 
+1. Copy the return value (I hope it's a function) to reg0.
 
+2. Copy the arguments suspended in the topmost activation into the register
+   file beginning at register 1. `NULL` out the `suspended` field of that
+   activation. Notice we now have a configuration we can give to `SETUP_CALL`.
+   Invoke our new `tailcall` function to hand control over to the return
+   value, applying it to those suspended arguments.
 
+We have prepared a few tests in this directory, which can all be run using
+`runtests.sh`.
+
+`simple.scm` is mostly a sanity check. It uses the very basic functionality
+of our automatic currying system, creating and applying partially applied
+functions.
+
+`recurse.scm` checks that closures are correctly copied and modified during
+partial application, without unintended side effects in other parts of
+our program.
+
+`args.scm` stresses our system a little more, checking that how we group
+the same set of arguments has no effect on the result of a function call.
+It also checks that we can apply arguments to the result of a function
+call without extra parentheses.
+
+`overcurry.scm` was used to find a particularly difficult bug, in which
+suspended arguments were mishandled. It is designed to use all parts of
+our system in one program.

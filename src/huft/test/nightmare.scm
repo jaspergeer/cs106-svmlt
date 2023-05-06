@@ -38,3 +38,7 @@
             [_ #f]))
 
 (check-expect (intpat 1) #t)
+
+(record point [x y])
+
+(check-expect (point? (make-point 1 2)) #t)

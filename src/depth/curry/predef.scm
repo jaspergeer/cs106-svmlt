@@ -53,7 +53,18 @@
     (car xs)
     (nth (- n 1) (cdr xs))))
 
+(define getblockslot (block k) (nth block k))
 (define CAPTURED-IN (i xs) (nth (+ i 1) xs))
+(define list-of-length? (v k)
+  (if (= k 0)
+      (null? v)
+      (&& (pair? v) (list-of-length? (cdr v) (- k 1)))))
+(define matches-vcon-arity? (v con k)
+  (if (= k 0)
+      (= v con)
+      (&& (list-of-length? v (+ k 1))
+          (= (car v) con))))
+(define getblockslot (v k) (nth k v))
 ;  definitions of predefined uScheme functions [[and]], [[or]], and [[not]] 97a 
 (define and (b c) (if b  c  b))
 (define or  (b c) (if b  b  c))
@@ -69,7 +80,7 @@
         (and (equal? (car sx1) (car sx2))
              (equal? (cdr sx1) (cdr sx2))))))
 ;  predefined uScheme functions 105c 
-(define make-alist-pair (k a) (list2 k a))
+(define mk-alist-pair (k a) (list2 k a))
 (define alist-pair-key        (pair)  (car  pair))
 (define alist-pair-attribute  (pair)  (cadr pair))
 ;  predefined uScheme functions 105d 
@@ -78,9 +89,9 @@
 ;  predefined uScheme functions 106a 
 (define bind (k a alist)
   (if (null? alist)
-    (list1 (make-alist-pair k a))
+    (list1 (mk-alist-pair k a))
     (if (equal? k (alist-first-key alist))
-      (cons (make-alist-pair k a) (cdr alist))
+      (cons (mk-alist-pair k a) (cdr alist))
       (cons (car alist) (bind k a (cdr alist))))))
 (define find (k alist)
   (if (null? alist)
@@ -89,10 +100,7 @@
       (alist-first-attribute alist)
       (find k (cdr alist)))))
 ;  predefined uScheme functions 125a 
-(define o (f g) (lambda (x) (f (g x))))          ; ((o f g) x) = (f (g x))
 ;  predefined uScheme functions 126b 
-(define curry   (f) (lambda (x) (lambda (y) (f x y))))
-(define uncurry (f) (lambda (x y) ((f x) y)))
 ;  predefined uScheme functions 129a 
 (define filter (p? xs)
   (if (null? xs)
@@ -180,9 +188,3 @@
     (if pair
         (set-cdr! pair v)
         (set-cdr! t (cons (cons k v) (cdr t))))))
-
-;; (define use (filename)
-;;   (let* ([cmd (cons '${BIN_DIR}/uft (cons 'es-vo (cons filename '())))]
-;;          [fd (popen cmd)]
-;;          [module (dload fd)])
-;;          (module)))

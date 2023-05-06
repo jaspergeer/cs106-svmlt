@@ -40,7 +40,7 @@ struct VMState {
   Value *reg0; /* points to reg0 of running */
 
   // literal pool
-  LPool_T literals;
+  LPool literals;
 
   // global variable table
   int num_globals;

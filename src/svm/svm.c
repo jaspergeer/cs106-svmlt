@@ -47,6 +47,20 @@ int main(int argc, char **argv) {
     heap_init();
     VMState vm = newstate();
 
+    // get bin dir path
+    char index_last_fslash = 0;
+    for (int i = 0; argv[0][i] != 0; ++i) {
+      if (argv[0][i] == '/')
+        index_last_fslash = i;
+    }
+
+    // set the BIN_DIR environment variable for later use
+    const size_t cmd_max_len = 256;
+    char cmd[cmd_max_len] = "BIN_DIR=";
+    assert(index_last_fslash + strlen(cmd) < cmd_max_len);
+    strncat(cmd, argv[0], index_last_fslash);
+    putenv(cmd);
+
     int input_file_limit; // one beyond last input file
     for (input_file_limit = 1; input_file_limit < argc; input_file_limit++)
       if (!strcmp(argv[input_file_limit], "--"))

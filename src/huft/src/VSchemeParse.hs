@@ -61,8 +61,12 @@ valOfSx s = case s of
   Sx.Bool b -> S.Bool b
   Sx.Sym x -> S.Sym x
   Sx.Real n -> S.Real n
+  -- Sx.List (Sx.Sym x : xs) | isVcon x -> undefined
+  -- Sx.List ((Sx.Sym x):xs) | isVcon x -> S.Apply (S.VCon x) (listOfVal (valOfSx xs))
   Sx.List (x:xs) -> S.Pair (valOfSx x) (valOfSx (Sx.List xs))
   Sx.List [] -> S.EmptyList
+  where
+
 
 deComment xs = let
   inComment xs = case xs of
@@ -81,10 +85,7 @@ int = ParseUtils.int
 double = ParseUtils.double
 bool = ParseUtils.bool
 name = SxParse.name
-
-brackd :: Parser a -> Parser a
-brackd p = tok "[" *> p <* tok "]"
-        <|> tok "(" *> p <* tok ")"
+brackd = SxParse.brackd
 
 sat :: (Show a) => (a -> Bool) -> Parser a -> Parser a
 sat p parser = do
@@ -165,10 +166,10 @@ expr = let
       v <- valOfSx <$> SxParse.sx
       case v of
         S.EmptyList -> return (S.VCon "'()")
-        _ -> return (S.Literal v))
-    -- swapping these two lines is the difference between es/ho
+        _ -> return (S.Literal v)) 
     <|> S.VCon <$> try vcon
     <|> S.Var <$> try (sat (not . reserved) name)
+
 
 -- record desugaring
 
@@ -176,6 +177,7 @@ nullp x = S.Apply (S.Var "null?") [x]
 pairp x = S.Apply (S.Var "pair?") [x]
 cons = U.cons
 
+-- uScheme style
 desugarRecord recname fieldnames =
               recordConstructor recname fieldnames :
               recordPredicate recname fieldnames :
@@ -184,7 +186,7 @@ desugarRecord recname fieldnames =
   where recordConstructor recname fieldnames =
           let con = "make-" ++ recname
               formals = map ("the-" ++) fieldnames
-              body = S.Apply (S.VCon con) (map S.Var formals)
+              body = cons (S.Literal (S.Sym con)) (varlist formals)
           in S.Define con formals body
         recordPredicate recname fieldnames =
           let tag = S.Sym ("make-" ++ recname)
@@ -240,7 +242,67 @@ desugarRecord recname fieldnames =
         varlist [] = S.Literal S.EmptyList
         varlist (x:xs) = cons (S.Var x) (varlist xs)
 
-single x = [x]
+-- eScheme style
+
+desugarRecord' recname fieldnames =
+                recordPredicate recname fieldnames :
+                recordAccessors recname 0 fieldnames ++
+                recordMutators recname 0 fieldnames
+  where recordConstructor recname fieldnames =
+          let con = "make-" ++ recname
+              formals = map ("the-" ++) fieldnames
+              body = S.Apply (S.VCon con) (map S.Var formals)
+          in S.Define con formals body
+        recordPredicate recname fieldnames =
+          let con = "make-" ++ recname
+              choices =
+                [ (P.Apply con (map (const P.Wildcard) fieldnames),
+                    S.Literal (S.Bool True))
+                , (P.Wildcard, S.Literal (S.Bool False))
+                ]
+              predname = recname ++ "?"
+              r = S.Var "r"
+              formals = ["r"]
+          in S.Define predname formals (S.Case (Case.T r choices))
+        recordAccessors recname n fields =
+          let con = "make-" ++ recname
+              pat = P.Apply con (map P.Var fields)
+              accessor field = 
+                let accname = recname ++ "-" ++ field
+                    choices = 
+                      [ (pat, S.Var field)
+                      , (P.Wildcard
+                        , S.Apply (S.Var "error") [S.Literal (S.Sym ("value passed to " ++ accname ++ " is not a " ++ recname ++ " record"))]
+                        )
+                      ]
+                    r = S.Var "r"
+                    formals = ["r"]
+                in S.Define accname formals (S.Case (Case.T r choices))
+          in map accessor fields
+        recordMutators recname n [] = []
+        recordMutators recname n (field:fields) =
+          let predname = recname ++ "?"
+              mutname = "set-" ++ recname ++ "-" ++ field ++ "!"
+              formals = ["r", "v"]
+              setfield = U.setcar (cdrs (n + 1, S.Var "r")) (S.Var "v")
+              body = S.IfX (S.Apply (S.Var predname) [S.Var "r"])
+                setfield
+                (err (S.Sym (concat ["value-passed-to"
+                                      , mutname
+                                      , "-is-not-a-"
+                                      , recname
+                                      ])))
+          in S.Define mutname formals body :
+             recordMutators recname (n + 1) fields
+        cdrs (0, xs) = xs
+        cdrs (n, xs) = U.cdr (cdrs (n-1, xs))
+
+        err x = S.Apply (S.Var "error") [S.Literal x]
+
+        varlist [] = S.Literal S.EmptyList
+        varlist (x:xs) = cons (S.Var x) (varlist xs)
+
+
 
 def :: Parser [S.Def]
 def = let
@@ -249,18 +311,12 @@ def = let
      <|> S.CheckExpect <$> try (tok "check-expect" *> expr) <*> try expr
      <|> S.CheckAssert <$> try (tok "check-assert" *> expr)
      <|> S.Use <$> try (tok "use " *> name)
-  in try (brackd (single <$> def'
- <|> desugarRecord <$> (tok "record" *> name) <*> brackd (many name)))
- <|> single . S.Exp <$> expr
-
--- comment :: Parser ()
--- comment = () <$ tok ";" <* manyTill anyChar endOfLine <* spaces
+  in try (brackd ((: []) <$> def'
+ <|> desugarRecord' <$> (tok "record" *> name) <*> brackd (many name)))
+ <|> (: []) . S.Exp <$> expr
 
 parse :: Parser [S.Def]
 parse = spaces *> (concat <$> manyTill def eof)
-
--- defs :: Parser [S.Def]
--- defs = many def -- ????
 
 freeIn exp y =
   let member y [] = False
