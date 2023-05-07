@@ -24,9 +24,9 @@ name = ParseUtils.lexeme $ (:) <$> satisfy (\x -> not (isSpace x || elem x reser
   <*> many (satisfy (\x -> not (isSpace x || elem x reserved)))
 
 sx :: Parser Sx.Sx
-sx = char '\'' *> (Sx.List <$> (tok "(" *> many sx' <* tok ")")
-              <|> nums
-              <|> Sx.Sym <$> name)
+sx = char '\'' *> (Sx.List <$> try (tok "(" *> many sx' <* tok ")")
+              <|> try nums
+              <|> Sx.Sym <$> try name)
     <|> nums where
       nums = try (Sx.Int <$> int)
         <|> Sx.Real <$> double

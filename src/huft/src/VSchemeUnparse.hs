@@ -4,6 +4,7 @@ import qualified VScheme as S
 import qualified Prettyprinter as P
 import qualified Case
 import qualified Pattern as Pat
+import AsmParse (eR0)
 -- sadly HLS cannot go any farther, cabal repl and :t is the move now
 -- see https://hackage.haskell.org/package/prettyprinter-1.7.1/docs/Prettyprinter.html#v:pretty
 
@@ -33,8 +34,14 @@ kw k docs = P.group $ P.parens $ P.pretty k <+> P.vsep docs
 wrap = P.group . P.parens . P.vsep
 wraps = P.group . P.brackets . P.vsep
 
--- nestedBindings (prefix', S.LetX (S.Let, [(x, e')], e)) = nestedBindings ((x, e') :: prefix', e)
--- nestedBindings (prefix', e) = (rev prefix', e)
+{- nested binding does such sugaring:
+   let x = e in let y = e' in e''
+   ==
+   (let* ([x = e] [y = e']) e'')
+-}
+nestedBindings:: ([(String, S.Exp)], S.Exp) -> ([(String, S.Exp)], S.Exp)
+nestedBindings (prefix', S.LetX S.Let [(x, e')] e) = nestedBindings ((x, e') : prefix', e)
+nestedBindings (prefix', e) = (reverse prefix', e)
 
 -- NEED TO DO LETX RESURGARING AT SOME POINT
 
@@ -59,6 +66,17 @@ exp (S.Apply (S.VCon k) []) = P.pretty k
 exp (S.Apply e es) = P.nest 3 $ wrap (exp e : map exp es)
 -- not sure how to use this
 -- exp (S.LetX S.LET [(x, e')], e)
+-- try let* sugaring
+exp (S.LetX S.Let bs@[(x, e')] e) = 
+    let (bs', expr) = nestedBindings (bs, e)
+     in case bs' of
+        [] -> exp expr
+        [_] -> P.nest 3 $ pplet "let" (bind bs') (exp expr)
+        _ -> P.nest 3 $ pplet "let*" (bind bs') (exp expr)
+    where
+        pplet k bs e = P.parens $ P.pretty k <+> (P.parens $ P.align (P.vsep bs)) <> P.line <> e
+        bind bs = [P.pretty "[" <> P.pretty x <+> exp e <> P.pretty "]" | (x, e) <- bs]
+
 exp (S.LetX lk bs e) = case lk of
     S.Let -> P.nest 3 $ pplet "let" bindings (exp e)
     S.LetRec -> P.nest 3 $ pplet "letrec" bindings (exp e)
@@ -66,6 +84,7 @@ exp (S.LetX lk bs e) = case lk of
         pplet k bs e = P.parens $ P.pretty k <+> (P.parens $ P.align (P.vsep bs)) <> P.line <> e
         bindings = [P.pretty "[" <> P.pretty x <+> exp e <> P.pretty "]" | (x, e) <- bs]
 -- ignore other letkinds because i dont quite get what wppscheme is trying to do
+
 exp (S.Lambda xs body) = P.nest 3 $ kw "lambda" [wrap (map P.pretty xs), exp body]
 -- module 12 case expressions
 exp (S.Case (Case.T e choices)) = 
@@ -93,8 +112,6 @@ ppexp = show . exp
 -- need to strip final new line?
 
 -- expString = show . ppexp
-
--- needa figure out where let* comes from
 
 --  test for let beding
 -- VU.exp (V.LetX V.Let [("x", (V.Literal (V.Int 1))), ("y", (V.Literal (V.Int 1))) ] (V.Literal (V.Int 1)))
