@@ -19,18 +19,23 @@ int = ParseUtils.int
 double = ParseUtils.double
 tok = ParseUtils.token
 reserved = "()[]#'\"`"
+
+brackd :: Parser a -> Parser a
+brackd p = tok "[" *> p <* tok "]"
+        <|> tok "(" *> p <* tok ")"
+
 name :: Parser String
 name = ParseUtils.lexeme $ (:) <$> satisfy (\x -> not (isSpace x || elem x reserved))
   <*> many (satisfy (\x -> not (isSpace x || elem x reserved)))
 
 sx :: Parser Sx.Sx
-sx = char '\'' *> (Sx.List <$> try (tok "(" *> many sx' <* tok ")")
-              <|> try nums
-              <|> Sx.Sym <$> try name)
+sx = char '\'' *> (Sx.List <$> brackd (many sx')
+              <|> nums
+              <|> Sx.Sym <$> name)
     <|> nums where
       nums = try (Sx.Int <$> int)
         <|> Sx.Real <$> double
         <|> Sx.Bool <$> bool
-      sx' = (Sx.List <$> (tok "(" *> many sx' <* tok ")"))
+      sx' = (Sx.List <$> brackd (many sx'))
         <|> nums
         <|> Sx.Sym <$> name

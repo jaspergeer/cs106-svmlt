@@ -399,6 +399,7 @@ static inline struct VTable_T   *forward_table   (struct VTable_T   *p);
 static inline void scan_closure (struct VMClosure  *p);
 static inline void scan_block   (struct VMBlock    *p);
 static inline void scan_table   (struct VTable_T   *p);
+static inline void scan_literal_pool (LPool lp);
 static inline void scan_value   (Value *vp);
   // forwards the payload, if allocated on the heap
 
@@ -619,6 +620,15 @@ static void scan_forwarded_payload(Value v) {
   }
 }
 
+static inline void scan_literal_pool (LPool lp) {
+  int nlits = LPool_nlits(lp);
+  Value *literals = lp->literals;
+  for (int i = 0; i < nlits; ++i) {
+    scan_value(&literals[i]);
+  }
+  lp->keys = forward_table(lp->keys);
+}
+
 // Scan an activation record. In file vmheap.c, implement function scan_activation. 
 // Ideally an activation contains exactly one reference to a heap-allocated payload, 
 // which should be a reference to the function whose activation it is.  
@@ -649,8 +659,6 @@ static void scan_vmstate(struct VMState *vm) {
 
   // roots: all global-variable slots that are in use
   for (int i = 0; i < vm->num_globals; ++i) {
-    // print("i = %d\n", i);
-    // print("value at %d is %v\n", i, &vm->globals[i]);
     scan_value(&vm->globals[i]);
   }
 
@@ -659,10 +667,7 @@ static void scan_vmstate(struct VMState *vm) {
   
 
   // roots: all literal slots that are in use
-  Value *literals = LPool_getlits(vm->literals);
-  for (int i = 0; i < LPool_nlits(vm->literals); ++i) {
-    scan_value(&literals[i]);
-  }
+  scan_literal_pool(vm->literals);
 
   // roots: each function on the call stack
   for (Activation *p = vm->stack_ptr; p >= vm->call_stack; --p) {

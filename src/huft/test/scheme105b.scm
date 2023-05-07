@@ -453,17 +453,14 @@
 ;; laws:
 ;;   (arg-max f xs) == (arg-max point-x ps)
 
-;; (record point [x y])
+(record point [x y])
 
-;; (define rightmost-point (ps)
-;;     (arg-max point-x ps))
+(define rightmost-point (ps)
+    (arg-max point-x ps))
 
-;;         (check-expect (rightmost-point '([make-point 1 2] [make-point 3 4])) 
-;;                                         '[make-point 3 4])
-;;         (check-expect (rightmost-point '([make-point 5 6] 
-;;                                          [make-point 1 2]
-;;                                          [make-point 3 4]
-;;                                          [make-point 5 7])) '[make-point 5 6])
-
-
-
+        (check-expect (rightmost-point '([make-point 1 2] [make-point 3 4])) 
+                                        '[make-point 3 4])
+        (check-expect (rightmost-point '([make-point 5 6] 
+                                         [make-point 1 2]
+                                         [make-point 3 4]
+                                         [make-point 5 7])) '[make-point 5 6])
