@@ -1,3 +1,5 @@
+#!/bin/bash
+
 BIN="../../../bin"
 
 # pre-compile `use` function

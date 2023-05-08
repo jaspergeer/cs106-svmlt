@@ -1,3 +1,8 @@
-We are attempting to claim points for both dynamic loading and automatic currying.
+Depth Points
 
-Evidence for both can be found in respectives subdirectories of sthe `depth` directory.
+Evidence for Module 2, Point 14: "Dynamic compilation and loading", can be 
+found in `depth/dload`. Start by reading file `DynLoad`.
+
+Evidence for Module 7, Point 13: "Curried functions", can be found in
+`depth/curry`. Start by reading file `AutoCurry`.
+
