@@ -1,43 +1,47 @@
+{-# LANGUAGE LambdaCase #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Use lambda-case" #-}
 module UFT where
 
+import Control.Exception (Exception, catch, throw)
 import Languages
-import Control.Exception (Exception, throw, catch)
-import Text.Parsec (runParser, ParseError)
+import Text.Parsec (ParseError, runParser)
 
-import GHC.IO.Handle (hGetContents', hPutStr, Handle)
-import Text.Parsec.String (Parser)
-import System.IO (hPutStrLn)
-import Error
-import Data.Functor ((<&>))
 import Control.Monad ((>=>))
+import Data.Functor ((<&>))
+import Error
+import GHC.IO.Handle (Handle, hGetContents, hPutStr)
+import System.IO (hPutStrLn)
+import Text.Parsec.String (Parser)
+
 -- import Control.Arrow ((>>>))
 
-import qualified Error as E
+import qualified Ambiguate
 import qualified Asm
 import qualified AsmParse
 import qualified AsmUnparse
+import qualified Assembler
+import qualified CSUtil
+import qualified ClConvert
+import qualified ClScheme
+import qualified CodeGen
+import qualified Disambiguate
+import qualified Error as E
+import qualified FOClUtil
+import qualified FOScheme
+import qualified FOUtil
+import qualified KNF
+import qualified KNormalize
+import qualified KnEmbed
+import qualified KnProject
+import qualified KnRename
 import qualified ObjectCode
 import qualified ObjectUnparser
-import qualified Assembler
+import qualified ParseUtils
 import qualified UnambiguousVScheme
 import qualified VScheme
 import qualified VSchemeParse
 import qualified VSchemeUnparse
-import qualified Disambiguate
-import qualified Ambiguate
-import qualified KNF
-import qualified KnEmbed
-import qualified KnProject
-import qualified KnRename
-import qualified CodeGen
-import qualified ParseUtils
-import qualified FOScheme
-import qualified FOUtil
-import qualified KNormalize
-import qualified ClScheme
-import qualified ClConvert
-import qualified FOClUtil
-import qualified CSUtil
 
 type Emitter a = Handle -> a -> IO ()
 type Reader a = Handle -> IO (E.Error a)
@@ -53,34 +57,36 @@ type Reader a = Handle -> IO (E.Error a)
 
 -- support for materialization
 
-data InternalException = Backward
-                       | NoTranslationTo Language
-                  deriving (Show)
+data InternalException
+  = Backward
+  | NoTranslationTo Language
+  deriving (Show)
 instance Exception InternalException
 
--- Reader functions 
+-- Reader functions
 
 schemeOfFile :: Reader [VScheme.Def]
-schemeOfFile infile = hGetContents' infile <&> ParseUtils.parseAndErr VSchemeParse.parse . VSchemeParse.deComment
+schemeOfFile infile = hGetContents infile <&> ParseUtils.parseAndErr VSchemeParse.parse . VSchemeParse.deComment
 
 schemexOfFile :: Reader [UnambiguousVScheme.Def]
 schemexOfFile = schemeOfFile ==> ((E.Error . Right) . map Disambiguate.disambiguate)
 
-  -- val eschemeOfFile : instream -> VScheme.def list error =
-  --   sourceReader EschemeParsers.defs
+-- val eschemeOfFile : instream -> VScheme.def list error =
+--   sourceReader EschemeParsers.defs
 
 eschemeOfFile :: Reader [VScheme.Def]
 eschemeOfFile = schemeOfFile -- we need to have eschemeParser.defs
 
 eschemexOfFile :: Reader [UnambiguousVScheme.Def]
 eschemexOfFile = eschemeOfFile ==> ((E.Error . Right) . map Disambiguate.disambiguate)
+
 -- use just call disambiguage
 
 vsOfFile :: Reader [Asm.Instr]
-vsOfFile infile = hGetContents' infile <&> ParseUtils.parseAndErr AsmParse.parse
+vsOfFile infile = hGetContents infile <&> ParseUtils.parseAndErr AsmParse.parse
 
 knOfFile :: Reader [KNF.Exp String]
-knOfFile = schemexOfFile ==> mapM KnProject.def  -- projection HO -> KN
+knOfFile = schemexOfFile ==> mapM KnProject.def -- projection HO -> KN
 
 -- val FO_of_file : instream -> FirstOrderScheme.def list error
 foOfFile :: Reader [FOScheme.Def]
@@ -111,16 +117,18 @@ vsOfkn :: [KNF.Exp ObjectCode.Reg] -> [Asm.Instr]
 -- (CodeGen is a infallible projection), and we want to delay
 -- monadic action to the last stage (==>)
 vsOfkn = CodeGen.codeGen
+
 -- flip composition (>>>) in Control.Arrow
 
 vsOf :: Language -> Reader [Asm.Instr]
 vsOf VS = vsOfFile
 vsOf inLang = knRegOf inLang ==> (return . vsOfkn)
+
 -- vsOf inLang = knOfFile ==> (knRegOfknString >=> return . vsOfkn)
 
 voOf :: Language -> Reader [ObjectCode.Instr]
-voOf VO     =  \_ -> return (Error $ Left "There is no reader for .vo")
-voOf inLang =  vsOf inLang ==> Assembler.translate
+voOf VO = \_ -> return (Error $ Left "There is no reader for .vo")
+voOf inLang = vsOf inLang ==> Assembler.translate
 
 knTextOf :: Language -> Reader [KNF.Exp String]
 knTextOf KN = knOfFile
@@ -138,11 +146,11 @@ knRegOfknString :: [KNF.Exp String] -> E.Error [KNF.Exp ObjectCode.Reg]
 knRegOfknString = mapM (KnRename.mapx KnRename.regOfName)
 
 knStringofknReg :: [KNF.Exp ObjectCode.Reg] -> E.Error [KNF.Exp String]
-knStringofknReg = mapM (KnRename.mapx (return .KnRename.nameOfReg))
+knStringofknReg = mapM (KnRename.mapx (return . KnRename.nameOfReg))
 
 knRegOf :: Language -> Reader [KNF.Exp ObjectCode.Reg]
 knRegOf KN = knOfFile ==> knRegOfknString
-knRegOf inlang = clOf inlang  ==> (return . map KNormalize.def)
+knRegOf inlang = clOf inlang ==> (return . map KNormalize.def)
 
 -- Emitter functions
 
@@ -178,17 +186,19 @@ data UFTException = NotForward Language Language
 instance Exception UFTException
 
 translate :: Language -> Language -> Handle -> Handle -> IO (E.Error (IO ()))
-translate inLang outLang infile outfile = catch
-  (case outLang of
-    VS -> vsOf inLang infile <&> (emitVS outfile <$>)
-    VO -> voOf inLang infile <&> (emitVO outfile <$>)
-    HO -> hoOf inLang infile <&> (emitHO outfile <$>)
-    KN -> knTextOf inLang infile <&> (emitKn outfile <$>)
-    FO -> foOf inLang infile <&> (emitFO outfile <$>)
-    CL -> clOf inLang infile <&> (emitCL outfile <$>)
-    HOX -> hoxOf inLang infile <&> (emitHO outfile <$>)
-    ES -> esOf inLang infile <&> (emitHO outfile <$>)
+translate inLang outLang infile outfile =
+  catch
+    ( case outLang of
+        VS -> vsOf inLang infile <&> (emitVS outfile <$>)
+        VO -> voOf inLang infile <&> (emitVO outfile <$>)
+        HO -> hoOf inLang infile <&> (emitHO outfile <$>)
+        KN -> knTextOf inLang infile <&> (emitKn outfile <$>)
+        FO -> foOf inLang infile <&> (emitFO outfile <$>)
+        CL -> clOf inLang infile <&> (emitCL outfile <$>)
+        HOX -> hoxOf inLang infile <&> (emitHO outfile <$>)
+        ES -> esOf inLang infile <&> (emitHO outfile <$>)
     )
-  (\e -> case e of
-    Backward -> throw (NotForward inLang outLang)
-    NoTranslationTo l -> throw (NotForward inLang l))
+    ( \case
+        Backward -> throw (NotForward inLang outLang)
+        NoTranslationTo l -> throw (NotForward inLang l)
+    )
