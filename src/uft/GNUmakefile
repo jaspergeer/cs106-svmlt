@@ -6,8 +6,8 @@ BIN=$(TOP)/bin
 BASES=pp all main wpp impossible
 MLBS=$(BASES:%=%.mlb)
 CMS=$(BASES:%=%.cm)
-SRCS=$(shell find ../huft/src -name '*.hs')
-HUFT=$(TOP)/huft
+SRCS=$(shell find ../uft/src -name '*.hs')
+UFT=$(TOP)/uft
 
 MAINS=uft
 
@@ -20,16 +20,16 @@ mosml: $(BIN)/uft
 clean:
 	rm -f *.ui *.uo
 	rm -f $(BIN)/uft $(BIN)/uft.opt
-	cd ../huft && cabal clean
+	cabal clean
 
 .PHONY: all
 
-all: $(BIN)/huft
+all: $(BIN)/uft
 
 msg='$1'
 
 $(BIN)/uft: $(SRCS)
-	cd ../huft && cabal build huft && ln -sf `cabal list-bin huft` ../../bin/uft
+	cabal build uft && ln -sf `cabal list-bin uft` ../../bin/uft
 
 millet.cm: $(CMS)
 	expand-cm main.cm > $@
