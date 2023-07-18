@@ -6,12 +6,12 @@ import qualified Pattern as P
 -- no need for ListUtil
 
 import Asm (Label)
+import Control.Monad (join)
 import qualified Data.List as L
 import Data.Maybe
 import qualified Data.Sequence as Env
 import Debug.Trace
 import qualified Env as E
-import Control.Monad (join)
 
 -- basic data sturctures
 
