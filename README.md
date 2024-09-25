@@ -1,4 +1,4 @@
-DISCLAIMER: This is the course material our group's implementation of a Scheme compiler for Professor Norman Ramsey's CS106: Virtual Machines and Language Translation. Credit for all course material and boilerplate code go to Professor Ramsey.
+DISCLAIMER: This is the course material and our group's implementation of a Scheme compiler for Professor Norman Ramsey's CS106: Virtual Machines and Language Translation. Credit for all course material and boilerplate code go to Professor Ramsey.
 
 This is the student-facing code repository for CS 106: 
 Simple Virtual Machines and Language Translation.
